@@ -54,5 +54,8 @@ class DatabaseSeeder extends Seeder
             ]
         );
         $user->assignRole('User');
+
+        // Seed Modules and Access
+        $this->call(ModuleSeeder::class);
     }
 }
