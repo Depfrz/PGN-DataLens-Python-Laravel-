@@ -14,7 +14,6 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             RoleSeeder::class,
-            ModuleSeeder::class,
         ]);
 
         // 1. Create Default Admin User
@@ -56,5 +55,8 @@ class DatabaseSeeder extends Seeder
             ]
         );
         $user->assignRole('User');
+
+        // Seed Modules and Access
+        $this->call(ModuleSeeder::class);
     }
 }

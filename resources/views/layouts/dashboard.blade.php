@@ -60,7 +60,7 @@
 
                 <!-- Management User -->
                 @can('view module management-user')
-                <a href="{{ route('management-user') }}" class="flex items-center px-4 py-3 rounded-xl transition-colors group {{ request()->routeIs('management-user') ? 'bg-white shadow-sm' : 'hover:bg-white/20' }}">
+                <a href="{{ route('management-user.index') }}" class="flex items-center px-4 py-3 rounded-xl transition-colors group {{ request()->routeIs('management-user.*') ? 'bg-white shadow-sm' : 'hover:bg-white/20' }}">
                     <div class="w-8 h-8 flex items-center justify-center mr-4">
                         <!-- User Group Icon -->
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-black">

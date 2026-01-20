@@ -6,9 +6,14 @@ use Illuminate\Database\Seeder;
 use App\Models\Module;
 use App\Models\User;
 use App\Models\ModuleAccess;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class ModuleSeeder extends Seeder
 {
+    /**
+     * Run the database seeds.
+     */
     public function run(): void
     {
         // 1. Daftar Semua Modul (Sistem + Dummy)
@@ -17,6 +22,7 @@ class ModuleSeeder extends Seeder
             [
                 'name' => 'Dashboard',
                 'slug' => 'dashboard',
+                'description' => 'Halaman utama sistem.',
                 'url' => '/dashboard',
                 'icon' => 'home',
                 'status' => true,
@@ -24,6 +30,7 @@ class ModuleSeeder extends Seeder
             [
                 'name' => 'Integrasi Sistem',
                 'slug' => 'integrasi-sistem',
+                'description' => 'Halaman manajemen integrasi sistem.',
                 'url' => '/integrasi-sistem',
                 'icon' => 'database',
                 'status' => true,
@@ -31,6 +38,7 @@ class ModuleSeeder extends Seeder
             [
                 'name' => 'Management User',
                 'slug' => 'management-user',
+                'description' => 'Halaman manajemen pengguna.',
                 'url' => '/management-user',
                 'icon' => 'users',
                 'status' => true,
@@ -38,6 +46,7 @@ class ModuleSeeder extends Seeder
             [
                 'name' => 'Data History',
                 'slug' => 'history',
+                'description' => 'Halaman riwayat data.',
                 'url' => '/history',
                 'icon' => 'clock',
                 'status' => true,
@@ -46,6 +55,7 @@ class ModuleSeeder extends Seeder
             [
                 'name' => 'HCM SIP-PGN',
                 'slug' => 'hcm-sip-pgn',
+                'description' => 'Sistem manajemen sumber daya manusia.',
                 'url' => '#',
                 'icon' => 'briefcase',
                 'status' => true,
@@ -53,6 +63,7 @@ class ModuleSeeder extends Seeder
             [
                 'name' => 'Project Management Office',
                 'slug' => 'pmo',
+                'description' => 'Sistem pemantauan proyek.',
                 'url' => '#',
                 'icon' => 'clipboard',
                 'status' => true,
@@ -60,36 +71,71 @@ class ModuleSeeder extends Seeder
             [
                 'name' => 'Procurement System',
                 'slug' => 'procurement',
+                'description' => 'Sistem pengadaan barang dan jasa.',
                 'url' => '#',
                 'icon' => 'shopping-cart',
                 'status' => true,
             ],
         ];
 
+        // 2. Create Modules and Permissions
         foreach ($modules as $moduleData) {
-            Module::firstOrCreate(
+            $module = Module::firstOrCreate(
                 ['slug' => $moduleData['slug']],
                 $moduleData
             );
+
+            // Create Permission for this Module (Legacy Spatie Logic)
+            $permissionName = 'view module ' . $module->slug;
+            Permission::firstOrCreate(['name' => $permissionName]);
         }
 
-        // 2. Assign Default Access for Testing (Optional)
-        // We can assign access to existing users if needed, or rely on Management User UI
+        // 3. Assign Permissions to Roles (Append, don't overwrite)
+        // Use givePermissionTo instead of syncPermissions to preserve RoleSeeder permissions
         
-        // Example: Assign Dashboard to everyone
+        $allModulePermissions = Permission::where('name', 'like', 'view module %')->get();
+
+        // Admin: Access All
+        $adminRole = Role::firstOrCreate(['name' => 'Admin']);
+        $adminRole->givePermissionTo($allModulePermissions);
+
+        // Supervisor: Access All except management-user
+        $supervisorRole = Role::firstOrCreate(['name' => 'Supervisor']);
+        $supervisorPermissions = $allModulePermissions->reject(function ($permission) {
+            return $permission->name === 'view module management-user';
+        });
+        $supervisorRole->givePermissionTo($supervisorPermissions);
+
+        // User: Access Dashboard & History
+        $userRole = Role::firstOrCreate(['name' => 'User']);
+        $userPermissions = $allModulePermissions->filter(function ($permission) {
+             return in_array($permission->name, ['view module dashboard', 'view module history']);
+        });
+        $userRole->givePermissionTo($userPermissions);
+
+        // SuperUser: Access Dashboard, History, Integrasi
+        $superUserRole = Role::firstOrCreate(['name' => 'SuperUser']);
+        $superUserPermissions = $allModulePermissions->filter(function ($permission) {
+             return in_array($permission->name, ['view module dashboard', 'view module history', 'view module integrasi-sistem']);
+        });
+        $superUserRole->givePermissionTo($superUserPermissions);
+
+        // 4. Assign ModuleAccess for Specific Users (Legacy/Hybrid support)
+        
+        // Example: Assign Dashboard to all users in ModuleAccess table
         $allUsers = User::all();
         $dashboardModule = Module::where('slug', 'dashboard')->first();
 
         if ($dashboardModule) {
             foreach ($allUsers as $user) {
-                ModuleAccess::firstOrCreate([
-                    'user_id' => $user->id,
-                    'module_id' => $dashboardModule->id
-                ], [
-                    'can_read' => true,
-                    'can_write' => false,
-                    'can_delete' => false,
-                ]);
+                ModuleAccess::updateOrCreate(
+                    ['user_id' => $user->id, 'module_id' => $dashboardModule->id],
+                    [
+                        'can_read' => true,
+                        'can_write' => false,
+                        'can_delete' => false,
+                    ]
+                );
             }
         }
     }
