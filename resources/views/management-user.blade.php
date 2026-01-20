@@ -256,11 +256,11 @@
                 </div>
                 <div class="space-y-4">
                     <p class="text-sm text-gray-600 mb-2">Pilih role untuk user <span class="font-semibold" x-text="selectedUser?.name"></span>:</p>
-                    <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
                 <template x-for="role in availableRoles" :key="role">
-                    <label class="flex items-center p-4 border border-gray-200 rounded-md shadow-sm cursor-pointer hover:bg-blue-50 hover:border-blue-200 transition-colors mb-3">
+                    <label class="flex items-center p-4 border border-gray-200 rounded-none shadow-sm cursor-pointer hover:bg-blue-50 hover:border-blue-200 transition-colors gap-4">
                         <input type="radio" name="role" :value="role" x-model="selectedUser.role" class="w-5 h-5 text-blue-600 border-gray-300 focus:ring-blue-500">
-                        <span class="ml-6 text-base font-medium text-gray-700" x-text="role"></span>
+                        <span class="text-base font-medium text-gray-700" x-text="role"></span>
                     </label>
                 </template>
             </div>
@@ -285,11 +285,11 @@
                 </div>
                 <div class="space-y-4">
                     <p class="text-sm text-gray-600 mb-2">Pilih hak akses untuk user <span class="font-semibold" x-text="selectedUser?.name"></span>:</p>
-                    <div class="space-y-4 max-h-[300px] overflow-y-auto pr-2">
+                    <div class="grid grid-cols-2 gap-4 max-h-[300px] overflow-y-auto pr-2">
                         <template x-for="access in availableAccess" :key="access">
-                            <label class="flex items-center p-4 border border-gray-200 rounded-md shadow-sm cursor-pointer hover:bg-blue-50 hover:border-blue-200 transition-colors mb-3">
+                            <label class="flex items-center p-4 border border-gray-200 rounded-none shadow-sm cursor-pointer hover:bg-blue-50 hover:border-blue-200 transition-colors gap-4">
                                 <input type="checkbox" :value="access" x-model="selectedAccess" class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
-                                <span class="ml-6 text-base font-medium text-gray-700" x-text="access"></span>
+                                <span class="text-base font-medium text-gray-700" x-text="access"></span>
                             </label>
                         </template>
                     </div>
