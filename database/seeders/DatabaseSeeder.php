@@ -22,6 +22,8 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => 'Admin',
                 'password' => bcrypt('password'),
+                'instansi' => 'PGN',
+                'jabatan' => 'Admin',
             ]
         );
         $admin->assignRole('Admin');
@@ -32,6 +34,8 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => 'Operational Supervisor',
                 'password' => bcrypt('password'),
+                'instansi' => 'PGN',
+                'jabatan' => 'Supervisor Operasional',
             ]
         );
         $supervisor->assignRole('Supervisor');
@@ -42,6 +46,8 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => 'Operational Staff',
                 'password' => bcrypt('password'),
+                'instansi' => 'PGN',
+                'jabatan' => 'Staff Operasional',
             ]
         );
         $superUser->assignRole('SuperUser');
@@ -52,6 +58,8 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => 'Guest User',
                 'password' => bcrypt('password'),
+                'instansi' => 'External',
+                'jabatan' => 'Tamu',
             ]
         );
         $user->assignRole('User');

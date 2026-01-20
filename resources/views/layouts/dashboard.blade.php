@@ -28,7 +28,9 @@
         <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" class="fixed inset-y-0 left-0 z-30 w-[280px] bg-[#439df1] flex flex-col transition-transform duration-300 lg:static lg:translate-x-0">
             <!-- Logo -->
             <div class="p-6 flex items-center justify-center">
-                <img src="{{ asset('images/pgn-logo.png') }}" alt="PGN Logo" class="w-[180px] h-auto object-contain">
+                <a href="{{ route('dashboard') }}">
+                    <img src="{{ asset('images/pgn-logo.png') }}" alt="PGN Logo" class="w-[180px] h-auto object-contain">
+                </a>
             </div>
 
             <!-- Navigation -->
@@ -104,12 +106,121 @@
                 <!-- Right Actions -->
                 <div class="flex items-center space-x-6">
                     <!-- Notification -->
-                    <button class="relative p-2 hover:bg-gray-100 rounded-full transition-colors duration-200">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-black">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
-                        </svg>
-                        <span class="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
-                    </button>
+                    <div x-data="{ 
+                        open: false, 
+                        notifications: [], 
+                        unreadCount: 0,
+                        async fetchNotifications() {
+                            try {
+                                const res = await fetch('{{ route('notifications.index') }}');
+                                const data = await res.json();
+                                this.notifications = data.notifications;
+                                this.unreadCount = data.unread_count;
+                            } catch (e) {
+                                console.error('Error fetching notifications:', e);
+                            }
+                        },
+                        async markAsRead(id) {
+                            await fetch('/notifications/mark-read/' + id, { 
+                                method: 'POST', 
+                                headers: { 
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                    'Content-Type': 'application/json'
+                                } 
+                            });
+                            this.fetchNotifications();
+                        },
+                        async markAllRead() {
+                            await fetch('{{ route('notifications.mark-all-read') }}', { 
+                                method: 'POST', 
+                                headers: { 
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                    'Content-Type': 'application/json'
+                                } 
+                            });
+                            this.fetchNotifications();
+                        }
+                    }" 
+                    x-init="fetchNotifications(); setInterval(() => fetchNotifications(), 30000)" 
+                    class="relative">
+                        <button @click="open = !open" class="relative p-2 hover:bg-gray-100 rounded-full transition-colors duration-200 focus:outline-none">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-black">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                            </svg>
+                            <span x-show="unreadCount > 0" class="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
+                        </button>
+
+                        <!-- Dropdown -->
+                        <div x-show="open" 
+                             @click.away="open = false"
+                             x-transition:enter="transition ease-out duration-200"
+                             x-transition:enter-start="opacity-0 scale-95"
+                             x-transition:enter-end="opacity-100 scale-100"
+                             x-transition:leave="transition ease-in duration-75"
+                             x-transition:leave-start="opacity-100 scale-100"
+                             x-transition:leave-end="opacity-0 scale-95"
+                             style="display: none;" 
+                             class="absolute right-0 mt-3 w-[450px] bg-white rounded-xl shadow-2xl z-50 border border-gray-100 overflow-hidden ring-1 ring-black ring-opacity-5">
+                            
+                            <!-- Header -->
+                            <div class="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-white">
+                                <h3 class="text-lg font-bold text-gray-900">Notifikasi</h3>
+                                <button @click="markAllRead()" class="text-xs text-blue-600 hover:text-blue-700 font-semibold hover:bg-blue-50 px-3 py-1.5 rounded-lg transition-all whitespace-nowrap">
+                                    Tandai semua dibaca
+                                </button>
+                            </div>
+
+                            <!-- Notification List -->
+                            <div class="max-h-[400px] overflow-y-auto custom-scrollbar">
+                                <template x-for="notification in notifications" :key="notification.id">
+                                    <div @click="markAsRead(notification.id)" 
+                                         :class="{'bg-blue-50/60': !notification.read_at, 'bg-white': notification.read_at}" 
+                                         class="px-5 py-4 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0 transition-colors group relative">
+                                        
+                                        <!-- Unread Indicator Dot -->
+                                        <div x-show="!notification.read_at" class="absolute left-2 top-5 w-2 h-2 bg-blue-500 rounded-full"></div>
+
+                                        <div class="flex justify-between items-start mb-1">
+                                            <p class="text-sm font-bold text-gray-900 group-hover:text-blue-600 transition-colors truncate pr-2" x-text="notification.data.module"></p>
+                                            <span class="text-[10px] font-medium text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full whitespace-nowrap" x-text="notification.created_at"></span>
+                                        </div>
+                                        
+                                        <p class="text-sm text-gray-600 leading-relaxed break-words" x-text="notification.data.description"></p>
+                                        
+                                        <div class="mt-2 flex items-center gap-2">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium"
+                                                  :class="{
+                                                      'bg-green-100 text-green-700': notification.data.action === 'create',
+                                                      'bg-red-100 text-red-700': notification.data.action === 'delete',
+                                                      'bg-yellow-100 text-yellow-700': notification.data.action === 'update',
+                                                      'bg-blue-100 text-blue-700': notification.data.action === 'login',
+                                                      'bg-gray-100 text-gray-700': notification.data.action === 'logout'
+                                                  }"
+                                                  x-text="notification.data.action">
+                                            </span>
+                                            <span class="text-[11px] text-gray-400" x-text="'• ' + notification.data.actor_name"></span>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <!-- Empty State -->
+                                <div x-show="notifications.length === 0" class="px-6 py-10 text-center flex flex-col items-center justify-center">
+                                    <div class="bg-gray-50 p-4 rounded-full mb-3">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 text-gray-400">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                                        </svg>
+                                    </div>
+                                    <p class="text-gray-900 font-medium text-sm">Tidak ada notifikasi</p>
+                                    <p class="text-gray-500 text-xs mt-1">Kami akan memberi tahu Anda jika ada pembaruan.</p>
+                                </div>
+                            </div>
+
+                            <!-- Footer -->
+                            <a href="{{ route('history') }}" class="block w-full py-3 text-center text-xs font-semibold text-gray-500 hover:text-blue-600 hover:bg-gray-50 border-t border-gray-100 transition-colors">
+                                Lihat Semua History
+                            </a>
+                        </div>
+                    </div>
 
                     <!-- User Profile -->
                     <div x-data="{ open: false }" class="relative">
@@ -140,7 +251,7 @@
                             </a>
                             
                             <!-- Logout -->
-                            <form method="POST" action="{{ route('logout') }}">
+                            <form method="POST" action="{{ route('logout') }}" onsubmit="return confirm('Apakah anda benar ingin keluar?');">
                                 @csrf
                                 <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-150">
                                     Logout

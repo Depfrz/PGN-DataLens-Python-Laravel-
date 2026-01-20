@@ -1,6 +1,11 @@
 <x-dashboard-layout>
-    <div class="bg-white rounded-[10px] p-6 min-h-[600px] flex flex-col">
+    <div x-data="{ deleteMode: false }" class="bg-white rounded-[10px] p-6 min-h-[600px] flex flex-col">
 
+        @if(session('success'))
+            <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+                <span class="block sm:inline">{{ session('success') }}</span>
+            </div>
+        @endif
 
         <!-- Page Title -->
         <h1 class="text-2xl lg:text-3xl font-bold text-black mb-6">Manajemen Modul Aplikasi</h1>
@@ -8,35 +13,53 @@
         <!-- Action Bar -->
         <div class="flex flex-col lg:flex-row items-center justify-between mb-8 gap-4">
             <div class="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4 w-full lg:w-auto">
-                <!-- Delete Module Button -->
-                <button style="background-color: #dc2626;" class="w-full sm:w-auto text-white text-base font-medium px-6 py-2.5 rounded-lg hover:opacity-90 transition-all shadow-sm hover:shadow">
-                    Hapus Modul
+                <!-- Delete Module Button (Toggle) -->
+                @hasrole('Supervisor|Admin')
+                <button @click="deleteMode = !deleteMode" 
+                        :class="deleteMode ? 'bg-gray-500 hover:bg-gray-600' : 'bg-red-600 hover:bg-red-700'"
+                        class="w-full sm:w-auto text-white text-base font-medium px-6 py-2.5 rounded-lg transition-all shadow-sm hover:shadow flex items-center justify-center gap-2">
+                    <!-- Icon Trash (Show when NOT in delete mode) -->
+                    <svg x-show="!deleteMode" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                    </svg>
+                    <!-- Icon X (Show when in delete mode) -->
+                    <svg x-show="deleteMode" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    <span x-text="deleteMode ? 'Batal' : 'Hapus Modul'"></span>
                 </button>
+                @endhasrole
                 
                 <!-- Add Module Button -->
-                <a href="{{ route('integrasi-sistem.create') }}" style="background-color: #16a34a;" class="w-full sm:w-auto text-white text-base font-medium px-6 py-2.5 rounded-lg hover:opacity-90 transition-all shadow-sm hover:shadow text-center">
+                @hasrole('Supervisor|Admin')
+                <a x-show="!deleteMode" href="{{ route('integrasi-sistem.create') }}" style="background-color: #16a34a;" class="w-full sm:w-auto text-white text-base font-medium px-6 py-2.5 rounded-lg hover:opacity-90 transition-all shadow-sm hover:shadow text-center">
                     Tambah Modul
                 </a>
+                @endhasrole
             </div>
 
             <!-- Search Bar -->
-            <div class="relative w-full lg:w-[350px]">
+            <form action="{{ route('integrasi-sistem.index') }}" method="GET" class="relative w-full lg:w-[350px]">
                 <input type="text" 
+                       name="search"
+                       value="{{ request('search') }}"
                        placeholder="Cari Modul..." 
                        class="w-full bg-gray-50 text-gray-900 text-base border border-gray-300 px-5 py-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all pr-10 placeholder-gray-500">
-                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 text-gray-400">
+                <button type="submit" class="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer hover:text-blue-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 text-gray-400 hover:text-blue-500">
                         <path fill-rule="evenodd" d="M10.5 3.75a6.75 6.75 0 100 13.5 6.75 6.75 0 000-13.5zM2.25 10.5a8.25 8.25 0 1114.59 5.28l4.69 4.69a.75.75 0 11-1.06 1.06l-4.69-4.69A8.25 8.25 0 012.25 10.5z" clip-rule="evenodd" />
                     </svg>
-                </div>
-            </div>
+                </button>
+            </form>
         </div>
 
         <!-- Module List Container -->
         <div class="flex flex-col gap-5">
             @forelse($modules as $module)
                 <!-- Module Card -->
-                <div class="group border border-gray-200 rounded-xl p-6 flex flex-col md:flex-row items-start gap-6 bg-white transition-all hover:shadow-md hover:border-blue-200">
+                <div :class="deleteMode ? 'border-red-400 bg-red-50 ring-1 ring-red-200' : 'border-gray-200 bg-white hover:border-blue-200'"
+                     class="group border rounded-xl p-6 flex flex-col md:flex-row items-start gap-6 transition-all hover:shadow-md relative">
+                    
                     <!-- Module Image -->
                     <div class="w-full md:w-[220px] h-[150px] bg-gray-100 rounded-lg flex-shrink-0 bg-cover bg-center overflow-hidden border border-gray-200 shadow-sm">
                         @if($module->icon)
@@ -61,7 +84,8 @@
 
                     <!-- Action -->
                     <div class="md:self-center flex flex-col items-center gap-2 w-full md:w-auto mt-4 md:mt-0">
-                        <a href="{{ $module->url ?? '#' }}" target="{{ $module->tab_type === 'new' ? '_blank' : '_self' }}" style="background-color: #2563eb;" class="w-full md:w-auto flex items-center justify-center gap-2 text-white px-6 py-2.5 rounded-lg hover:opacity-90 transition-all shadow-sm hover:shadow-md">
+                        <!-- Normal Mode: Visit Button -->
+                        <a x-show="!deleteMode" href="{{ $module->url ?? '#' }}" target="{{ $module->tab_type === 'new' ? '_blank' : '_self' }}" style="background-color: #2563eb;" class="w-full md:w-auto flex items-center justify-center gap-2 text-white px-6 py-2.5 rounded-lg hover:opacity-90 transition-all shadow-sm hover:shadow-md">
                             <span class="text-base font-semibold text-white">Kunjungi</span>
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M18 13V19C18 19.5304 17.7893 20.0391 17.4142 20.4142C17.0391 20.7893 16.5304 21 16 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V8C3 7.46957 3.21071 6.96086 3.58579 6.58579C3.96086 6.21071 4.46957 6 5 6H11" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -69,6 +93,20 @@
                                 <path d="M10 14L21 3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                         </a>
+
+                        <!-- Delete Mode: Delete Button -->
+                        @hasrole('Supervisor|Admin')
+                        <form x-show="deleteMode" action="{{ route('integrasi-sistem.destroy', $module->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus modul ini?');" class="w-full" style="display: none;">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="w-full md:w-auto flex items-center justify-center gap-2 text-white px-6 py-2.5 rounded-lg hover:opacity-90 transition-all shadow-sm hover:shadow-md bg-red-600">
+                                <span class="text-base font-semibold text-white">Hapus</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                                </svg>
+                            </button>
+                        </form>
+                        @endhasrole
                     </div>
                 </div>
             @empty

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Module;
 use App\Models\ModuleAccess;
+use App\Services\AuditService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -36,6 +37,7 @@ class ManagementUserController extends Controller
         });
 
         $availableRoles = Role::pluck('name');
+        // Get all available modules for access rights
         $availableAccess = Module::pluck('name');
 
         return view('management-user', compact('users', 'availableRoles', 'availableAccess'));
@@ -68,6 +70,8 @@ class ManagementUserController extends Controller
             $this->syncAccess($user, $request->hak_akses);
         }
 
+        AuditService::log(Auth::user(), 'create', 'Management User', "Membuat user baru: {$user->name} ({$user->email})");
+
         return response()->json(['message' => 'User created successfully', 'user' => $user]);
     }
 
@@ -84,6 +88,8 @@ class ManagementUserController extends Controller
         ]);
 
         $user->syncRoles([$request->role]);
+
+        AuditService::log(Auth::user(), 'update', 'Management User', "Mengubah role user {$user->name} menjadi {$request->role}");
 
         return response()->json(['message' => 'Role updated successfully']);
     }
@@ -119,8 +125,11 @@ class ManagementUserController extends Controller
             return response()->json(['message' => 'Cannot delete yourself'], 403);
         }
         
+        $userName = $user->name;
         $user->moduleAccesses()->delete();
         $user->delete();
+
+        AuditService::log(Auth::user(), 'delete', 'Management User', "Menghapus user: {$userName}");
 
         return response()->json(['message' => 'User deleted successfully']);
     }

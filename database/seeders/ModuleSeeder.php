@@ -20,9 +20,8 @@ class ModuleSeeder extends Seeder
         $modules = [
             // System Modules
             [
-                'name' => 'Dashboard',
+                'name' => 'Buku Saku',
                 'slug' => 'dashboard',
-                'description' => 'Halaman utama sistem.',
                 'url' => '/dashboard',
                 'icon' => 'home',
                 'status' => true,
@@ -30,7 +29,6 @@ class ModuleSeeder extends Seeder
             [
                 'name' => 'Integrasi Sistem',
                 'slug' => 'integrasi-sistem',
-                'description' => 'Halaman manajemen integrasi sistem.',
                 'url' => '/integrasi-sistem',
                 'icon' => 'database',
                 'status' => true,
@@ -38,7 +36,6 @@ class ModuleSeeder extends Seeder
             [
                 'name' => 'Management User',
                 'slug' => 'management-user',
-                'description' => 'Halaman manajemen pengguna.',
                 'url' => '/management-user',
                 'icon' => 'users',
                 'status' => true,
@@ -46,7 +43,6 @@ class ModuleSeeder extends Seeder
             [
                 'name' => 'Data History',
                 'slug' => 'history',
-                'description' => 'Halaman riwayat data.',
                 'url' => '/history',
                 'icon' => 'clock',
                 'status' => true,
@@ -55,7 +51,6 @@ class ModuleSeeder extends Seeder
             [
                 'name' => 'HCM SIP-PGN',
                 'slug' => 'hcm-sip-pgn',
-                'description' => 'Sistem manajemen sumber daya manusia.',
                 'url' => '#',
                 'icon' => 'briefcase',
                 'status' => true,
@@ -63,7 +58,6 @@ class ModuleSeeder extends Seeder
             [
                 'name' => 'Project Management Office',
                 'slug' => 'pmo',
-                'description' => 'Sistem pemantauan proyek.',
                 'url' => '#',
                 'icon' => 'clipboard',
                 'status' => true,
@@ -71,7 +65,6 @@ class ModuleSeeder extends Seeder
             [
                 'name' => 'Procurement System',
                 'slug' => 'procurement',
-                'description' => 'Sistem pengadaan barang dan jasa.',
                 'url' => '#',
                 'icon' => 'shopping-cart',
                 'status' => true,

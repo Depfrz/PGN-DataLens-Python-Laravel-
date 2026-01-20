@@ -3,20 +3,28 @@
 namespace App\Http\Controllers;
 
 use App\Models\Module;
+use App\Services\AuditService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 class IntegrasiSistemController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
         
-        // Supervisor & Admin see ALL modules
+        $query = Module::query();
+
+        // Search filter
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        // Supervisor & Admin see ALL modules (Active and Inactive)
         if ($user->hasRole(['Supervisor', 'Admin'])) {
-            $modules = Module::where('status', true)->get();
+            $modules = $query->get();
         } 
         // User & SuperUser see ONLY assigned modules
         else {
@@ -25,12 +33,29 @@ class IntegrasiSistemController extends Controller
                 ->where('can_read', true)
                 ->pluck('module_id');
             
-            $modules = Module::whereIn('id', $assignedModuleIds)
+            $modules = $query->whereIn('id', $assignedModuleIds)
                 ->where('status', true)
                 ->get();
         }
 
         return view('integrasi-sistem.index', compact('modules'));
+    }
+
+    public function destroy(Module $module)
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        if (!$user->hasRole(['Supervisor', 'Admin'])) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $moduleName = $module->name;
+        $module->delete();
+
+        AuditService::log($user, 'delete', 'Integrasi Sistem', "Menghapus modul {$moduleName}");
+
+        return redirect()->route('integrasi-sistem.index')->with('success', 'Modul berhasil dihapus.');
     }
 
     public function create()
@@ -80,6 +105,8 @@ class IntegrasiSistemController extends Controller
             'tab_type' => $validated['tab_type'] === 'New tab (Blank)' ? 'new' : 'current',
             // Icon handling to be added later if file upload is implemented
         ]);
+
+        AuditService::log($user, 'create', 'Integrasi Sistem', "Menambahkan modul baru: {$validated['name']}");
 
         return redirect()->route('integrasi-sistem.index')->with('success', 'Modul berhasil ditambahkan.');
     }
