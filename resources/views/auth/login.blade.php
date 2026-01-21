@@ -20,13 +20,15 @@
          style="background-image: url('{{ asset('images/login-bg.png') }}');">
         
         <!-- Card -->
-        <div class="bg-white rounded-[15px] shadow-2xl p-6 md:p-10 w-full max-w-[480px] mx-4 relative z-10 flex flex-col items-start transition-all duration-300">
+        <div class="bg-white dark:bg-gray-800 rounded-[15px] shadow-2xl p-6 md:p-10 w-full max-w-[480px] mx-4 relative z-10 flex flex-col items-start transition-all duration-300">
              
              <!-- Logo -->
-             <img src="{{ asset('images/pgn-logo.png') }}" alt="PGN Logo" class="w-[150px] h-auto mb-6 select-none">
+             <div>
+                 <img src="{{ asset('images/pgn-logo.png') }}" alt="PGN Logo" class="w-[150px] h-auto mb-6 select-none object-contain">
+             </div>
 
              <!-- Title -->
-             <h1 class="text-xl font-extrabold mb-2 text-black leading-tight tracking-tight select-none">
+             <h1 class="text-xl font-extrabold mb-2 text-black dark:text-white leading-tight tracking-tight select-none">
                  Welcome!<br>
                  What’s your email?
              </h1>
@@ -36,14 +38,14 @@
                 @csrf
 
                 @php
-                    $baseInputClasses = 'w-full h-[40px] px-3 text-xs border rounded-[5px] focus:ring-2 block shadow-sm transition-all duration-200 placeholder-gray-400';
+                    $baseInputClasses = 'w-full h-[40px] px-3 text-xs border rounded-[5px] focus:ring-2 block shadow-sm transition-all duration-200 placeholder-gray-400 dark:bg-gray-700 dark:text-white dark:border-gray-600';
                     $errorClasses = 'border-red-500 focus:ring-red-500 focus:border-red-500';
-                    $defaultClasses = 'border-gray-300 focus:ring-[#0492ff] focus:border-[#0492ff]';
+                    $defaultClasses = 'border-gray-300 dark:border-gray-600 focus:ring-[#0492ff] focus:border-[#0492ff]';
                 @endphp
                 
                 <!-- Email / Username -->
                 <div class="mb-4 group">
-                    <label for="email" class="block text-xs font-semibold text-gray-700 mb-1 group-focus-within:text-[#0492ff] transition-colors duration-200">Username</label>
+                    <label for="email" class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1 group-focus-within:text-[#0492ff] transition-colors duration-200">Username</label>
                     <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus 
                         class="{{ $baseInputClasses }} {{ $errors->has('email') ? $errorClasses : $defaultClasses }}"
                         placeholder="Enter your username or email">
@@ -52,7 +54,7 @@
 
                 <!-- Password -->
                 <div class="mb-6 group">
-                    <label for="password" class="block text-xs font-semibold text-gray-700 mb-1 group-focus-within:text-[#0492ff] transition-colors duration-200">Password</label>
+                    <label for="password" class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1 group-focus-within:text-[#0492ff] transition-colors duration-200">Password</label>
                     <input id="password" type="password" name="password" required autocomplete="current-password"
                         class="{{ $baseInputClasses }} {{ $errors->has('password') ? $errorClasses : $defaultClasses }}"
                         placeholder="Enter your password">
