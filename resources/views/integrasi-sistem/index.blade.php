@@ -1,5 +1,5 @@
 <x-dashboard-layout>
-    <div x-data="{ deleteMode: false }" class="bg-white rounded-[10px] p-6 min-h-[600px] flex flex-col">
+    <div x-data="{ deleteMode: false }" class="bg-white dark:bg-gray-800 rounded-[10px] p-6 min-h-[600px] flex flex-col transition-colors duration-200">
 
         @if(session('success'))
             <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
@@ -8,7 +8,7 @@
         @endif
 
         <!-- Page Title -->
-        <h1 class="text-2xl lg:text-3xl font-bold text-black mb-6">Manajemen Modul Aplikasi</h1>
+        <h1 class="text-2xl lg:text-3xl font-bold text-black dark:text-white mb-6 transition-colors">Manajemen Modul Aplikasi</h1>
 
         <!-- Action Bar -->
         <div class="flex flex-col lg:flex-row items-center justify-between mb-8 gap-4">
@@ -40,12 +40,14 @@
 
             <!-- Search Bar -->
             <form action="{{ route('integrasi-sistem.index') }}" method="GET" class="relative w-full lg:w-[350px]">
+                <label for="search" class="sr-only">Cari Modul</label>
                 <input type="text" 
+                       id="search"
                        name="search"
                        value="{{ request('search') }}"
                        placeholder="Cari Modul..." 
-                       class="w-full bg-gray-50 text-gray-900 text-base border border-gray-300 px-5 py-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all pr-10 placeholder-gray-500">
-                <button type="submit" class="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer hover:text-blue-500">
+                       class="w-full bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-base border border-gray-300 dark:border-gray-600 px-5 py-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all pr-10 placeholder-gray-500 dark:placeholder-gray-400">
+                <button type="submit" aria-label="Cari" class="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer hover:text-blue-500">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 text-gray-400 hover:text-blue-500">
                         <path fill-rule="evenodd" d="M10.5 3.75a6.75 6.75 0 100 13.5 6.75 6.75 0 000-13.5zM2.25 10.5a8.25 8.25 0 1114.59 5.28l4.69 4.69a.75.75 0 11-1.06 1.06l-4.69-4.69A8.25 8.25 0 012.25 10.5z" clip-rule="evenodd" />
                     </svg>
@@ -57,17 +59,17 @@
         <div class="flex flex-col gap-5">
             @forelse($modules as $module)
                 <!-- Module Card -->
-                <div :class="deleteMode ? 'border-red-400 bg-red-50 ring-1 ring-red-200' : 'border-gray-200 bg-white hover:border-blue-200'"
-                     class="group border rounded-xl p-6 flex flex-col md:flex-row items-start gap-6 transition-all hover:shadow-md relative">
+                <div :class="deleteMode ? 'border-red-400 bg-red-50 dark:bg-red-900/20 ring-1 ring-red-200 dark:ring-red-900/30' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-blue-200 dark:hover:border-blue-500 hover:shadow-lg hover:-translate-y-1'"
+                     class="group border rounded-xl p-6 flex flex-col md:flex-row items-start gap-6 transition-all duration-300 relative">
                     
                     <!-- Module Image -->
-                    <div class="w-full md:w-[220px] h-[150px] bg-gray-100 rounded-lg flex-shrink-0 bg-cover bg-center overflow-hidden border border-gray-200 shadow-sm">
+                    <div class="w-full md:w-[220px] h-[150px] bg-gray-100 dark:bg-gray-700 rounded-lg flex-shrink-0 bg-cover bg-center overflow-hidden border border-gray-200 dark:border-gray-600 shadow-sm">
                         @if($module->icon)
                             <img src="{{ asset('storage/' . $module->icon) }}" alt="{{ $module->name }}" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
                         @else
                             <!-- Placeholder image if asset is missing -->
-                            <div class="w-full h-full flex items-center justify-center bg-gray-50">
-                                <svg width="56" height="56" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-gray-300">
+                            <div class="w-full h-full flex items-center justify-center bg-gray-50 dark:bg-gray-700">
+                                <svg width="56" height="56" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-gray-300 dark:text-gray-500">
                                     <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
                             </div>
@@ -76,8 +78,8 @@
                     
                     <!-- Content -->
                     <div class="flex-1 min-w-0">
-                        <h3 class="text-xl font-bold text-gray-900 mb-2 truncate group-hover:text-blue-600 transition-colors">{{ $module->name }}</h3>
-                        <p class="text-base text-justify text-gray-600 leading-relaxed line-clamp-3" title="{{ $module->description }}">
+                        <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{{ $module->name }}</h3>
+                        <p class="text-base text-justify text-gray-600 dark:text-gray-300 leading-relaxed line-clamp-3" title="{{ $module->description }}">
                             {{ $module->description ?? 'Deskripsi tidak tersedia.' }}
                         </p>
                     </div>
@@ -121,7 +123,7 @@
                 </div>
             @empty
                 <div class="text-center py-10">
-                    <p class="text-gray-500 text-xl">Tidak ada modul yang tersedia untuk akun Anda.</p>
+                    <p class="text-gray-500 dark:text-gray-400 text-xl">Tidak ada modul yang tersedia untuk akun Anda.</p>
                 </div>
             @endforelse
         </div>

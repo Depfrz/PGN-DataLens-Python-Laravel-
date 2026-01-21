@@ -1,19 +1,19 @@
 <x-dashboard-layout>
     <div class="p-6">
-        <div class="bg-white rounded-[10px] p-6 lg:p-10 min-h-[800px] flex flex-col relative">
+        <div class="bg-white dark:bg-gray-800 rounded-[10px] p-6 lg:p-10 min-h-[800px] flex flex-col relative transition-colors duration-300">
             <!-- Back Button and Title -->
             <div class="flex items-center mb-8">
                 <a href="{{ route('integrasi-sistem.index') }}" class="mr-4 hover:opacity-75 transition-opacity">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M19 12H5" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M12 19L5 12L12 5" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-black dark:text-white">
+                        <path d="M19 12H5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                 </a>
-                <h1 class="text-[32px] font-bold text-black">Edit Modul Aplikasi</h1>
+                <h1 class="text-[32px] font-bold text-black dark:text-white">Edit Modul Aplikasi</h1>
             </div>
 
             <!-- Form Container -->
-            <div class="border border-black rounded-[15px] p-8 lg:p-10 w-full max-w-[1200px] mx-auto">
+            <div class="border border-black dark:border-gray-600 rounded-[15px] p-8 lg:p-10 w-full max-w-[1200px] mx-auto">
                 <form action="{{ route('integrasi-sistem.update', $module->id) }}" method="POST" 
                     x-data="{ 
                         categoryOpen: false, 
@@ -32,16 +32,16 @@
 
                     <!-- Nama Modul / Aplikasi -->
                     <div class="mb-6">
-                        <label class="block text-sm font-bold text-black mb-2">Nama Modul / Aplikasi</label>
+                        <label class="block text-sm font-bold text-black dark:text-gray-200 mb-2">Nama Modul / Aplikasi</label>
                         <input type="text" name="name" value="{{ $module->name }}" placeholder="Contoh : Buku Saku Digital" 
-                            class="w-full h-12 px-4 text-base font-normal border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400 transition-all">
+                            class="w-full h-12 px-4 text-base font-normal border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400 dark:placeholder-gray-500 bg-white dark:bg-gray-700 text-black dark:text-white transition-all">
                     </div>
 
                     <!-- Deskripsi Singkat -->
                     <div class="mb-6" x-data="{ count: $data.description.length, max: 150 }">
-                        <label class="block text-sm font-bold text-black mb-2">Deskripsi Singkat <span class="text-gray-500 font-normal text-xs ml-1">(Maks 150 karakter)</span></label>
+                        <label class="block text-sm font-bold text-black dark:text-gray-200 mb-2">Deskripsi Singkat <span class="text-gray-500 dark:text-gray-400 font-normal text-xs ml-1">(Maks 150 karakter)</span></label>
                         <textarea name="description" rows="4" maxlength="150" x-model="description" @input="count = $el.value.length" placeholder='Contoh: "Panduan teknis lapangan untuk QAQC."'
-                            class="w-full p-4 text-base font-normal border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400 resize-none transition-all"
+                            class="w-full p-4 text-base font-normal border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400 dark:placeholder-gray-500 bg-white dark:bg-gray-700 text-black dark:text-white resize-none transition-all"
                             :class="count > max ? 'border-red-500 ring-red-200' : ''"></textarea>
                         <div class="flex justify-end mt-1">
                             <span class="text-xs" :class="count > max ? 'text-red-600 font-bold' : 'text-gray-500'" x-text="`${count} / ${max} karakter`"></span>
@@ -53,11 +53,11 @@
 
                     <!-- Kategori -->
                     <div class="mb-6 relative">
-                        <label class="block text-sm font-bold text-black mb-2">Kategori</label>
+                        <label class="block text-sm font-bold text-black dark:text-gray-200 mb-2">Kategori</label>
                         <div class="relative">
                             <button type="button" @click="categoryOpen = !categoryOpen" @click.outside="categoryOpen = false"
-                                class="w-full h-12 px-4 text-left border border-gray-300 rounded-lg flex items-center justify-between bg-white focus:ring-2 focus:ring-blue-500 transition-all">
-                                <span class="text-base font-normal" :class="selectedCategory ? 'text-black' : 'text-gray-400'" x-text="selectedCategory || 'Pilih kategori...'"></span>
+                                class="w-full h-12 px-4 text-left border border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-between bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 transition-all">
+                                <span class="text-base font-normal" :class="selectedCategory ? 'text-black dark:text-white' : 'text-gray-400 dark:text-gray-400'" x-text="selectedCategory || 'Pilih kategori...'"></span>
                                 <svg class="w-5 h-5 transform transition-transform duration-200 text-gray-500" :class="categoryOpen ? 'rotate-180' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                 </svg>
@@ -71,11 +71,11 @@
                                 x-transition:leave="transition ease-in duration-75"
                                 x-transition:leave-start="transform opacity-100 scale-100"
                                 x-transition:leave-end="transform opacity-0 scale-95"
-                                class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-[300px] overflow-y-auto">
+                                class="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-[300px] overflow-y-auto">
                                 <template x-for="category in categories" :key="category">
                                     <div @click="selectedCategory = category; categoryOpen = false" 
-                                        class="px-4 py-3 text-sm hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors"
-                                        :class="selectedCategory === category ? 'bg-blue-50 text-blue-600' : 'text-gray-700'">
+                                        class="px-4 py-3 text-sm hover:bg-blue-50 dark:hover:bg-gray-600 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors"
+                                        :class="selectedCategory === category ? 'bg-blue-50 dark:bg-gray-600 text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-200'">
                                         <span x-text="category"></span>
                                     </div>
                                 </template>
@@ -86,18 +86,18 @@
 
                     <!-- Target URL / Endpoint -->
                     <div class="mb-6">
-                        <label class="block text-sm font-bold text-black mb-2">Target URL / Endpoint</label>
+                        <label class="block text-sm font-bold text-black dark:text-gray-200 mb-2">Target URL / Endpoint</label>
                         <input type="text" name="url" value="{{ $module->url }}" placeholder="Contoh Internal / Eksternal: /buku-saku atau https://dashboard-pertamina.com" 
-                            class="w-full h-12 px-4 text-base font-normal border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400 transition-all">
+                            class="w-full h-12 px-4 text-base font-normal border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400 dark:placeholder-gray-500 bg-white dark:bg-gray-700 text-black dark:text-white transition-all">
                     </div>
 
                     <!-- Tipe Tab -->
                     <div class="mb-6 relative">
-                        <label class="block text-sm font-bold text-black mb-2">Tipe Tab</label>
+                        <label class="block text-sm font-bold text-black dark:text-gray-200 mb-2">Tipe Tab</label>
                         <div class="relative">
                             <button type="button" @click="tabTypeOpen = !tabTypeOpen" @click.outside="tabTypeOpen = false"
-                                class="w-full h-12 px-4 text-left border border-gray-300 rounded-lg flex items-center justify-between bg-white focus:ring-2 focus:ring-blue-500 transition-all">
-                                <span class="text-base font-normal" :class="selectedTabType ? 'text-black' : 'text-gray-400'" x-text="selectedTabType || 'Pilih tipe tab...'"></span>
+                                class="w-full h-12 px-4 text-left border border-gray-300 dark:border-gray-600 rounded-lg flex items-center justify-between bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 transition-all">
+                                <span class="text-base font-normal" :class="selectedTabType ? 'text-black dark:text-white' : 'text-gray-400 dark:text-gray-400'" x-text="selectedTabType || 'Pilih tipe tab...'"></span>
                                 <svg class="w-5 h-5 transform transition-transform duration-200 text-gray-500" :class="tabTypeOpen ? 'rotate-180' : ''" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                 </svg>
@@ -111,11 +111,11 @@
                                 x-transition:leave="transition ease-in duration-75"
                                 x-transition:leave-start="transform opacity-100 scale-100"
                                 x-transition:leave-end="transform opacity-0 scale-95"
-                                class="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg">
+                                class="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg">
                                 <template x-for="type in tabTypes" :key="type">
                                     <div @click="selectedTabType = type; tabTypeOpen = false" 
-                                        class="px-4 py-3 text-sm hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors"
-                                        :class="selectedTabType === type ? 'bg-blue-50 text-blue-600' : 'text-gray-700'">
+                                        class="px-4 py-3 text-sm hover:bg-blue-50 dark:hover:bg-gray-600 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors"
+                                        :class="selectedTabType === type ? 'bg-blue-50 dark:bg-gray-600 text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-200'">
                                         <span x-text="type"></span>
                                     </div>
                                 </template>
