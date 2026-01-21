@@ -1,4 +1,4 @@
-<nav x-data="{ open: false }" class="bg-white border-b border-gray-100">
+<nav x-data="{ open: false, logoutConfirmOpen: false }" class="bg-white border-b border-gray-100">
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
@@ -38,16 +38,9 @@
                             {{ __('Profile') }}
                         </x-dropdown-link>
 
-                        <!-- Authentication -->
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-
-                            <x-dropdown-link :href="route('logout')"
-                                    onclick="event.preventDefault();
-                                                this.closest('form').submit();">
-                                {{ __('Log Out') }}
-                            </x-dropdown-link>
-                        </form>
+                        <x-dropdown-link href="#" @click.prevent="logoutConfirmOpen = true">
+                            {{ __('Logout') }}
+                        </x-dropdown-link>
                     </x-slot>
                 </x-dropdown>
             </div>
@@ -78,13 +71,13 @@
             @endcan
 
             @can('view module management-user')
-            <x-responsive-nav-link :href="route('management-user.index')" :active="request()->routeIs('management-user.*')">
+            <x-responsive-nav-link :href="route('management-user.index')" :active="request()->routeIs('management-user')">
                 {{ __('Management User') }}
             </x-responsive-nav-link>
             @endcan
 
             @can('view module history')
-            <x-responsive-nav-link :href="route('history')" :active="request()->routeIs('history')">
+            <x-responsive-nav-link :href="route('history.index')" :active="request()->routeIs('history.*')">
                 {{ __('Data History') }}
             </x-responsive-nav-link>
             @endcan
@@ -102,16 +95,43 @@
                     {{ __('Profile') }}
                 </x-responsive-nav-link>
 
-                <!-- Authentication -->
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
+                <x-responsive-nav-link href="#" @click.prevent="logoutConfirmOpen = true">
+                    {{ __('Logout') }}
+                </x-responsive-nav-link>
+            </div>
+        </div>
+    </div>
 
-                    <x-responsive-nav-link :href="route('logout')"
-                            onclick="event.preventDefault();
-                                        this.closest('form').submit();">
-                        {{ __('Log Out') }}
-                    </x-responsive-nav-link>
-                </form>
+    <form id="logout-form" method="POST" action="{{ route('logout') }}" class="hidden">
+        @csrf
+    </form>
+
+    <div x-show="logoutConfirmOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center" style="display: none;">
+        <div class="absolute inset-0 bg-black/0" @click="logoutConfirmOpen = false"></div>
+
+        <div role="dialog" aria-modal="true" class="relative mx-4 w-full max-w-md rounded-2xl bg-[#f1f1f1] px-8 py-10 text-center">
+            <p class="text-3xl font-bold leading-snug text-black">
+                Apakah Anda Yakin
+                <br>
+                Ingin Logout?
+            </p>
+
+            <div class="mt-10 flex items-center justify-between px-6">
+                <button
+                    type="button"
+                    class="min-w-36 rounded-3xl bg-[#9CFB56] px-8 py-2.5 text-xl font-semibold text-white"
+                    @click="logoutConfirmOpen = false; document.getElementById('logout-form').submit()"
+                >
+                    Ya
+                </button>
+
+                <a
+                    href="{{ route('dashboard') }}"
+                    class="min-w-36 rounded-3xl bg-[#B24B33] px-8 py-2.5 text-xl font-semibold text-white"
+                    @click="logoutConfirmOpen = false"
+                >
+                    Tidak
+                </a>
             </div>
         </div>
     </div>

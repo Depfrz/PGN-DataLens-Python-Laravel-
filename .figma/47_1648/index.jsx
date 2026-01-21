@@ -8,10 +8,10 @@ const Component = () => {
       <div className={styles.rectangle182}>
         <div className={styles.rectangle6}>
           <div className={styles.ionNotifcations}>
-            <img src="../image/mkmako7d-7q1e58o.svg" className={styles.frame1} />
+            <img src="../image/mkmr4xvg-xf94ju3.svg" className={styles.frame1} />
           </div>
           <p className={styles.admin}>Admin</p>
-          <img src="../image/mkmako7d-8vwxj3i.svg" className={styles.group} />
+          <img src="../image/mkmr4xvg-k0x9k1l.svg" className={styles.group} />
         </div>
         <div className={styles.group11}>
           <div className={styles.rectangle16}>
@@ -19,7 +19,7 @@ const Component = () => {
               <p className={styles.selamatDatangAdmin}>Selamat Datang, Admin.</p>
               <div className={styles.rectangle18}>
                 <img
-                  src="../image/mkmako7d-uay7fn2.svg"
+                  src="../image/mkmr4xvg-30rz597.svg"
                   className={styles.mdiBookOpenVariantOu}
                 />
                 <p className={styles.bukuSaku}>Buku Saku</p>
@@ -67,10 +67,10 @@ const Component = () => {
         <div className={styles.rectangle42}>
           <div className={styles.autoWrapper4}>
             <img
-              src="../image/mkmako7d-4eb3pqz.svg"
+              src="../image/mkmr4xvg-dyb7yfx.svg"
               className={styles.mdiSettings}
             />
-            <img src="../image/mkmako7d-jat06c3.svg" className={styles.mdiLogout} />
+            <img src="../image/mkmr4xvg-lcppolv.svg" className={styles.mdiLogout} />
           </div>
           <div className={styles.autoWrapper5}>
             <p className={styles.profilAkun}>Profil Akun</p>
@@ -80,15 +80,15 @@ const Component = () => {
       </div>
       <div className={styles.rectangle13}>
         <img
-          src="../image/mkmako7j-wza1dm3.png"
+          src="../image/mkmr4xvq-72ngt0x.png"
           className={styles.logoPertaminaGasNega}
         />
         <div className={styles.rectangle162}>
           <div className={styles.lineMdHomeTwotone}>
-            <img src="../image/mkmako7d-j2zzclk.svg" className={styles.vector} />
-            <img src="../image/mkmako7d-130wqj4.svg" className={styles.group2} />
+            <img src="../image/mkmr4xvg-aqkf2om.svg" className={styles.vector} />
+            <img src="../image/mkmr4xvg-wifth6m.svg" className={styles.group2} />
             <img
-              src="../image/mkmako7d-gbqyqxj.svg"
+              src="../image/mkmr4xvg-qj6ikpr.svg"
               className={styles.materialSymbolsHomeR}
             />
           </div>
@@ -96,7 +96,7 @@ const Component = () => {
         </div>
         <div className={styles.autoWrapper7}>
           <div className={styles.mdiAccountEyeOutline}>
-            <img src="../image/mkmako7d-x5ppipd.svg" className={styles.vector2} />
+            <img src="../image/mkmr4xvg-xto0yzz.svg" className={styles.vector2} />
           </div>
           <div className={styles.autoWrapper6}>
             <p className={styles.history}>History</p>
@@ -104,11 +104,11 @@ const Component = () => {
           </div>
         </div>
         <div className={styles.autoWrapper8}>
-          <img src="../image/mkmako7d-8jytxt5.svg" className={styles.group3} />
+          <img src="../image/mkmr4xvg-i6mvifi.svg" className={styles.group3} />
           <p className={styles.managamentUser}>Managament User</p>
         </div>
         <div className={styles.autoWrapper9}>
-          <img src="../image/mkmako7d-ylz7eyc.svg" className={styles.vector3} />
+          <img src="../image/mkmr4xvg-1er810j.svg" className={styles.vector3} />
           <p className={styles.managamentUser}>Integrasi Sistem</p>
         </div>
       </div>

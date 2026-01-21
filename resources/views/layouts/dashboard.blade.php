@@ -77,10 +77,8 @@
                 @can('view module integrasi-sistem')
                 <a href="{{ route('integrasi-sistem.index') }}" class="flex items-center px-4 py-3 rounded-xl transition-colors group {{ request()->routeIs('integrasi-sistem*') ? 'bg-white shadow-sm' : 'hover:bg-white/20' }}">
                     <div class="w-8 h-8 flex items-center justify-center mr-4">
-                        <!-- System/Monitor Icon -->
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-black">
-                            <path d="M19.5 3h-15A1.5 1.5 0 003 4.5v15A1.5 1.5 0 004.5 21h15a1.5 1.5 0 001.5-1.5v-15A1.5 1.5 0 0019.5 3zm-9 15H9v-2h1.5v2zm4.5 0h-1.5v-2h1.5v2zm-3-4.5H9v-2h1.5v2zm4.5 0h-1.5v-2h1.5v2z" />
-                            <path d="M6 7.5h12v9H6z" />
+                        <svg viewBox="0 0 46 46" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6">
+                            <path d="M8.33333 45.8333H37.5M14.0771 9.91042L18.4979 14.3312M18.4979 14.3312C19.67 13.1591 21.2591 12.5 22.9167 12.5M18.4979 14.3312C17.3258 15.5034 16.6667 17.0924 16.6667 18.75M16.6667 18.75H10.4167M16.6667 18.75C16.6667 20.4076 17.3258 21.9966 18.4979 23.1687M18.4979 23.1687L14.0771 27.5896M18.4979 23.1687C19.67 24.3409 21.2591 25 22.9167 25M22.9167 25V31.25M22.9167 25C24.5743 25 26.1633 24.3409 27.3354 23.1687M27.3354 23.1687L31.7562 27.5896M27.3354 23.1687C28.5075 21.9966 29.1667 20.4076 29.1667 18.75M35.4167 18.75H29.1667M29.1667 18.75C29.1667 17.0924 28.5075 15.5034 27.3354 14.3312M31.7562 9.91042L27.3354 14.3312M27.3354 14.3312C26.1633 13.1591 24.5743 12.5 22.9167 12.5M22.9167 12.5V6.25M0 37.5H45.8333V0H0V37.5ZM14.5833 45.8333H31.25V37.5H14.5833V45.8333Z" stroke="black" stroke-width="2" />
                         </svg>
                     </div>
                     <span class="text-sm font-bold text-black leading-tight">Integrasi<br>Sistem</span>
@@ -223,7 +221,7 @@
                     </div>
 
                     <!-- User Profile -->
-                    <div x-data="{ open: false }" class="relative">
+                    <div x-data="{ open: false, logoutConfirmOpen: false }" class="relative">
                         <div @click="open = !open" class="flex items-center space-x-4 cursor-pointer select-none">
                             <span class="text-sm font-normal text-black">{{ Auth::user()->name ?? 'Admin' }}</span>
                             <div class="w-8 h-8 rounded-full border-2 border-black flex items-center justify-center">
@@ -251,12 +249,43 @@
                             </a>
                             
                             <!-- Logout -->
-                            <form method="POST" action="{{ route('logout') }}" onsubmit="return confirm('Apakah anda benar ingin keluar?');">
-                                @csrf
-                                <button type="submit" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-150">
-                                    Logout
-                                </button>
-                            </form>
+                            <button type="button" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-150" @click="open = false; logoutConfirmOpen = true">
+                                Logout
+                            </button>
+                        </div>
+
+                        <form id="logout-form" method="POST" action="{{ route('logout') }}" class="hidden">
+                            @csrf
+                        </form>
+
+                        <div x-show="logoutConfirmOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center" style="display: none;">
+                            <div class="absolute inset-0 bg-black/0" @click="logoutConfirmOpen = false"></div>
+
+                            <div role="dialog" aria-modal="true" class="relative mx-4 w-full max-w-md rounded-2xl bg-[#f1f1f1] px-8 py-10 text-center">
+                                <p class="text-3xl font-bold leading-snug text-black">
+                                    Apakah Anda Yakin
+                                    <br>
+                                    Ingin Logout?
+                                </p>
+
+                                <div class="mt-10 flex items-center justify-between px-6">
+                                    <button
+                                        type="button"
+                                        class="min-w-36 rounded-3xl bg-[#9CFB56] px-8 py-2.5 text-xl font-semibold text-white"
+                                        @click="logoutConfirmOpen = false; document.getElementById('logout-form').submit()"
+                                    >
+                                        Ya
+                                    </button>
+
+                                    <a
+                                        href="{{ route('dashboard') }}"
+                                        class="min-w-36 rounded-3xl bg-[#B24B33] px-8 py-2.5 text-xl font-semibold text-white"
+                                        @click="logoutConfirmOpen = false"
+                                    >
+                                        Tidak
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
