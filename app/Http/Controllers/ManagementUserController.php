@@ -103,6 +103,8 @@ class ManagementUserController extends Controller
 
         $this->syncAccess($user, $request->hak_akses ?? []);
 
+        AuditService::log(Auth::user(), 'update', 'Management User', "Memperbarui hak akses user: {$user->name}");
+
         return response()->json(['message' => 'Access rights updated successfully']);
     }
 

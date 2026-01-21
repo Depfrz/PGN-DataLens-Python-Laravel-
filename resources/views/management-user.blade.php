@@ -6,6 +6,8 @@
         deleteUserModal: false,
         editRoleModal: false,
         editAccessModal: false,
+        showSuccessModal: false,
+        successMessage: '',
         selectedUser: null,
         selectedAccess: [],
         
@@ -27,6 +29,14 @@
         users: {{ Js::from($users) }},
         availableRoles: {{ Js::from($availableRoles) }},
         availableAccess: {{ Js::from($availableAccess) }},
+        
+        showSuccess(message) {
+            this.successMessage = message;
+            this.showSuccessModal = true;
+            setTimeout(() => {
+                this.showSuccessModal = false;
+            }, 5000);
+        },
         
         openResetPassword(user) {
             this.selectedUser = user;
@@ -121,7 +131,7 @@
                         this.users[index].hak_akses = [...this.selectedAccess];
                     }
                     this.editAccessModal = false;
-                    alert('Hak akses berhasil diperbarui');
+                    this.showSuccess('Hak akses berhasil diperbarui');
                 } else {
                     alert('Gagal memperbarui hak akses');
                 }
@@ -452,6 +462,43 @@
                         <button @click="saveAccess()" style="background-color: #2563eb !important; color: white !important;" class="px-5 py-2.5 !bg-blue-600 !text-white rounded-lg hover:!bg-blue-700 font-medium shadow-md hover:shadow-lg transition-all">Simpan</button>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Success Notification Modal -->
+        <div x-show="showSuccessModal" 
+             style="display: none;"
+             class="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 backdrop-blur-sm"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             role="alertdialog"
+             aria-modal="true"
+             aria-labelledby="success-title"
+             @keydown.escape.window="showSuccessModal = false">
+            
+            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4 transform transition-all flex flex-col items-center text-center"
+                 @click.away="showSuccessModal = false">
+                
+                <!-- Green Check Icon -->
+                <div class="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                </div>
+
+                <!-- Title & Message -->
+                <h3 id="success-title" class="text-xl font-bold text-gray-900 dark:text-white mb-2">Berhasil!</h3>
+                <p class="text-gray-600 dark:text-gray-300 mb-6" x-text="successMessage"></p>
+
+                <!-- Close Button -->
+                <button @click="showSuccessModal = false" 
+                        class="w-full py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white rounded-lg font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                    Tutup
+                </button>
             </div>
         </div>
     </div>
