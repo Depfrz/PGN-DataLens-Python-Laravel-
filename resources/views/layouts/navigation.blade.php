@@ -106,32 +106,49 @@
         @csrf
     </form>
 
-    <div x-show="logoutConfirmOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center" style="display: none;">
-        <div class="absolute inset-0 bg-black/0" @click="logoutConfirmOpen = false"></div>
+    <div x-show="logoutConfirmOpen" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         x-cloak 
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-0" 
+         style="display: none;">
+        
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" @click="logoutConfirmOpen = false"></div>
 
-        <div role="dialog" aria-modal="true" class="relative mx-4 w-full max-w-md rounded-2xl bg-[#f1f1f1] px-8 py-10 text-center">
-            <p class="text-3xl font-bold leading-snug text-black">
-                Apakah Anda Yakin
-                <br>
-                Ingin Logout?
-            </p>
-
-            <div class="mt-10 flex items-center justify-between px-6">
-                <button
-                    type="button"
-                    class="min-w-36 rounded-3xl bg-[#9CFB56] px-8 py-2.5 text-xl font-semibold text-white"
-                    @click="logoutConfirmOpen = false; document.getElementById('logout-form').submit()"
-                >
-                    Ya
-                </button>
-
-                <a
-                    href="{{ route('dashboard') }}"
-                    class="min-w-36 rounded-3xl bg-[#B24B33] px-8 py-2.5 text-xl font-semibold text-white"
-                    @click="logoutConfirmOpen = false"
-                >
-                    Tidak
-                </a>
+        <!-- Modal Panel -->
+        <div x-show="logoutConfirmOpen"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+             x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+             role="dialog" 
+             aria-modal="true" 
+             class="relative transform overflow-hidden rounded-2xl bg-white px-4 pb-4 pt-5 text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-md sm:p-6 ring-1 ring-black/5">
+            
+            <div class="flex flex-col items-center justify-center text-center p-4">
+                <h3 class="text-2xl font-black text-gray-900 mb-8" id="modal-title">
+                    Apakah Anda Yakin<br>Ingin Logout?
+                </h3>
+                
+                <div class="flex gap-6 w-full justify-center">
+                    <button type="button" 
+                            class="inline-flex w-32 justify-center items-center rounded-full bg-[#84cc16] px-6 py-3 text-lg font-bold text-white shadow-md hover:bg-[#65a30d] transition-transform transform hover:scale-105 focus:outline-none"
+                            @click="logoutConfirmOpen = false; document.getElementById('logout-form').submit()">
+                        Ya
+                    </button>
+                    <button type="button" 
+                            class="inline-flex w-32 justify-center items-center rounded-full bg-[#A0522D] px-6 py-3 text-lg font-bold text-white shadow-md hover:bg-[#8B4513] transition-transform transform hover:scale-105 focus:outline-none"
+                            @click="logoutConfirmOpen = false">
+                        Tidak
+                    </button>
+                </div>
             </div>
         </div>
     </div>

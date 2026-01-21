@@ -25,7 +25,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('integrasi-sistem.create');
 
     Route::post('/integrasi-sistem/tambah', [IntegrasiSistemController::class, 'store'])
-        ->middleware('role:Supervisor|Admin') // Restricted
+        ->middleware(['role:Supervisor|Admin', 'throttle:6,1']) // Restricted & Throttled (6 requests/min)
         ->name('integrasi-sistem.store');
 
     Route::delete('/integrasi-sistem/{module}', [IntegrasiSistemController::class, 'destroy'])
