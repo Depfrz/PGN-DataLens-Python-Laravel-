@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
@@ -16,10 +16,19 @@ class DashboardController extends Controller
         // Built-in features to exclude from the main dashboard grid as they are in the sidebar
         $excludedModules = ['Dashboard', 'Integrasi Sistem', 'Management User', 'Data History', 'History'];
 
+        $search = trim((string) $request->query('search', ''));
+
         if ($user->hasRole(['Supervisor', 'Admin'])) {
-            $modules = Module::where('status', true)
-                ->whereNotIn('name', $excludedModules)
-                ->get();
+            $query = Module::where('status', true)->whereNotIn('name', $excludedModules);
+
+            if ($search !== '') {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', '%' . $search . '%')
+                        ->orWhere('description', 'like', '%' . $search . '%');
+                });
+            }
+
+            $modules = $query->get();
             return view('dashboard', compact('modules'));
         }
         
@@ -30,10 +39,18 @@ class DashboardController extends Controller
 
         // Check if user has specific access rights configured
         if ($assignedModuleIds->isNotEmpty()) {
-            $modules = Module::whereIn('id', $assignedModuleIds)
+            $query = Module::whereIn('id', $assignedModuleIds)
                 ->where('status', true)
-                ->whereNotIn('name', $excludedModules)
-                ->get();
+                ->whereNotIn('name', $excludedModules);
+
+            if ($search !== '') {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', '%' . $search . '%')
+                        ->orWhere('description', 'like', '%' . $search . '%');
+                });
+            }
+
+            $modules = $query->get();
         } 
         // Fallback for standard users with no configured access (show none)
         else {

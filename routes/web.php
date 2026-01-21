@@ -59,6 +59,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('list-pengawasan.store');
     Route::patch('/list-pengawasan/{id}/keterangan', [ListPengawasanController::class, 'updateKeterangan'])
         ->name('list-pengawasan.update-keterangan');
+    Route::patch('/list-pengawasan/{id}', [ListPengawasanController::class, 'updatePengawas'])
+        ->name('list-pengawasan.update');
+    Route::patch('/list-pengawasan/{id}/status', [ListPengawasanController::class, 'updateStatus'])
+        ->name('list-pengawasan.update-status');
     Route::delete('/list-pengawasan/{id}', [ListPengawasanController::class, 'destroy'])
         ->name('list-pengawasan.destroy');
     Route::patch('/list-pengawasan/keterangan/rename', [ListPengawasanController::class, 'renameOption'])

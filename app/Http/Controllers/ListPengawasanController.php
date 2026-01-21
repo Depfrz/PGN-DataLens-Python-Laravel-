@@ -7,9 +7,25 @@ use App\Models\ModuleAccess;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class ListPengawasanController extends Controller
 {
+    private const ALLOWED_STATUS = ['OFF', 'On Progress', 'Done'];
+
+    private function normalizeStatus(?string $status): string
+    {
+        if (!$status) {
+            return 'On Progress';
+        }
+
+        if ($status === 'Active') {
+            return 'On Progress';
+        }
+
+        return $status;
+    }
+
     private function canWriteForModule($user): bool
     {
         if ($user->hasRole(['Admin', 'Supervisor'])) {
@@ -49,7 +65,7 @@ class ListPengawasanController extends Controller
         $search = $request->query('search', '');
 
         $pengawasQuery = DB::table('pengawas')
-            ->select('id', 'name', 'tanggal', 'status')
+            ->select('id', 'name', 'divisi', 'tanggal', 'status', 'created_at')
             ->orderBy('created_at', 'desc');
 
         if ($search !== '') {
@@ -68,8 +84,9 @@ class ListPengawasanController extends Controller
             return [
                 'id' => $p->id,
                 'nama' => $p->name,
-                'tanggal' => $p->tanggal ? \Carbon\Carbon::parse($p->tanggal)->format('d-m-Y') : '-',
-                'status' => $p->status,
+                'divisi' => $p->divisi ?? '-',
+                'tanggal' => $p->created_at ? \Carbon\Carbon::parse($p->created_at)->format('d-m-Y H:i') : '-',
+                'status' => $this->normalizeStatus($p->status),
                 'keterangan' => $labels,
             ];
         })->toArray();
@@ -89,15 +106,19 @@ class ListPengawasanController extends Controller
 
         $data = $request->validate([
             'nama' => ['required', 'string', 'max:255'],
+            'divisi' => ['nullable', 'string', 'max:255'],
             'keterangan' => ['array'],
             'keterangan.*' => ['string', 'max:255'],
-            'tanggal' => ['nullable', 'date'],
+            'status' => ['nullable', 'string', Rule::in(self::ALLOWED_STATUS)],
         ]);
+
+        $status = $data['status'] ?? 'On Progress';
 
         $pengawasId = DB::table('pengawas')->insertGetId([
             'name' => $data['nama'],
-            'tanggal' => $data['tanggal'] ?? null,
-            'status' => 'Active',
+            'divisi' => $data['divisi'] ?? null,
+            'tanggal' => null,
+            'status' => $status,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -120,7 +141,39 @@ class ListPengawasanController extends Controller
             );
         }
 
-        return response()->json(['message' => 'Pengawas berhasil ditambahkan', 'id' => $pengawasId]);
+        return response()->json([
+            'message' => 'Pengawas berhasil ditambahkan',
+            'id' => $pengawasId,
+            'divisi' => $data['divisi'] ?? '-',
+            'tanggal' => now()->format('d-m-Y H:i'),
+            'status' => $status,
+        ]);
+    }
+
+    public function updatePengawas(Request $request, int $id)
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        if (!$this->canWriteForModule($user)) {
+            return response()->json(['message' => 'Unauthorized action.'], 403);
+        }
+
+        $data = $request->validate([
+            'nama' => ['required', 'string', 'max:255'],
+            'divisi' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $updated = DB::table('pengawas')->where('id', $id)->update([
+            'name' => $data['nama'],
+            'divisi' => $data['divisi'] ?? null,
+            'updated_at' => now(),
+        ]);
+
+        if (!$updated) {
+            return response()->json(['message' => 'Pengawas tidak ditemukan'], 404);
+        }
+
+        return response()->json(['message' => 'Pengawas berhasil diperbarui']);
     }
 
     public function updateKeterangan(Request $request, int $id)
@@ -172,6 +225,30 @@ class ListPengawasanController extends Controller
         DB::table('pengawas')->where('id', $id)->delete();
 
         return response()->json(['message' => 'Pengawas berhasil dihapus']);
+    }
+
+    public function updateStatus(Request $request, int $id)
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        if (!$this->canWriteForModule($user)) {
+            return response()->json(['message' => 'Unauthorized action.'], 403);
+        }
+
+        $data = $request->validate([
+            'status' => ['required', 'string', Rule::in(self::ALLOWED_STATUS)],
+        ]);
+
+        $updated = DB::table('pengawas')->where('id', $id)->update([
+            'status' => $data['status'],
+            'updated_at' => now(),
+        ]);
+
+        if (!$updated) {
+            return response()->json(['message' => 'Pengawas tidak ditemukan'], 404);
+        }
+
+        return response()->json(['message' => 'Status berhasil diperbarui']);
     }
 
     public function renameOption(Request $request)

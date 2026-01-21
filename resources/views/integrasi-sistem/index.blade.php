@@ -64,8 +64,31 @@
                     
                     <!-- Module Image -->
                     <div class="w-full md:w-[220px] h-[150px] bg-gray-100 dark:bg-gray-700 rounded-lg flex-shrink-0 bg-cover bg-center overflow-hidden border border-gray-200 dark:border-gray-600 shadow-sm">
-                        @if($module->icon)
-                            <img src="{{ asset('storage/' . $module->icon) }}" alt="{{ $module->name }}" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
+                        @php
+                            $previewUrl = null;
+                            $initials = collect(preg_split('/\s+/', trim((string) $module->name)))
+                                ->filter()
+                                ->take(2)
+                                ->map(fn ($w) => mb_strtoupper(mb_substr($w, 0, 1)))
+                                ->implode('');
+                            if ($initials === '') {
+                                $initials = mb_strtoupper(mb_substr((string) $module->name, 0, 2));
+                            }
+                            $placeholderSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2563eb"/><stop offset="1" stop-color="#9333ea"/></linearGradient></defs><rect width="192" height="192" rx="28" fill="url(#g)"/><text x="96" y="112" text-anchor="middle" font-family="Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial" font-size="64" font-weight="800" fill="white">' . e($initials) . '</text></svg>';
+                            $placeholderDataUri = 'data:image/svg+xml;charset=UTF-8,' . rawurlencode($placeholderSvg);
+
+                            if ($module->icon && (Str::contains($module->icon, ['/', '\\']) || Str::contains(Str::lower($module->icon), ['.png', '.jpg', '.jpeg', '.webp', '.svg']))) {
+                                $previewUrl = asset('storage/' . $module->icon);
+                            } elseif (!empty($module->url) && $module->url !== '#') {
+                                $absoluteUrl = Str::startsWith($module->url, ['http://', 'https://']) ? $module->url : url($module->url);
+                                $previewUrl = 'https://www.google.com/s2/favicons?sz=128&domain_url=' . urlencode($absoluteUrl);
+                            }
+                        @endphp
+
+                        @if($previewUrl)
+                            <div class="w-full h-full flex items-center justify-center bg-gray-50 dark:bg-gray-800">
+                                <img src="{{ $previewUrl }}" alt="{{ $module->name }}" class="w-[96px] h-[96px] object-contain" onerror="this.onerror=null;this.src='{{ $placeholderDataUri }}';">
+                            </div>
                         @else
                             <!-- Placeholder image if asset is missing -->
                             <div class="w-full h-full flex items-center justify-center bg-gray-50 dark:bg-gray-700">

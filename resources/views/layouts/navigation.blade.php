@@ -6,7 +6,7 @@
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
                     <a href="{{ route('dashboard') }}">
-                        <x-application-logo class="block h-9 w-auto fill-current text-gray-800" />
+                        <img src="{{ asset('images/pgn-logo.png') }}" alt="PGN Logo" class="h-8 w-auto object-contain select-none">
                     </a>
                 </div>
 
@@ -106,49 +106,55 @@
         @csrf
     </form>
 
-    <div x-show="logoutConfirmOpen" 
-         x-transition:enter="transition ease-out duration-300"
+    <div x-show="logoutConfirmOpen"
+         x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="opacity-0"
          x-transition:enter-end="opacity-100"
-         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave="transition ease-in duration-150"
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0"
-         x-cloak 
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-0" 
+         x-cloak
+         class="fixed inset-0 z-50 flex items-center justify-center p-4"
          style="display: none;">
         
-        <!-- Backdrop -->
-        <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" @click="logoutConfirmOpen = false"></div>
+        <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" @click="logoutConfirmOpen = false"></div>
 
-        <!-- Modal Panel -->
-        <div x-show="logoutConfirmOpen"
-             x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+        <div role="dialog"
+             aria-modal="true"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 translate-y-2 sm:translate-y-0 sm:scale-95"
              x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
-             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave="transition ease-in duration-150"
              x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
-             x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-             role="dialog" 
-             aria-modal="true" 
-             class="relative transform overflow-hidden rounded-2xl bg-white px-4 pb-4 pt-5 text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-md sm:p-6 ring-1 ring-black/5">
+             x-transition:leave-end="opacity-0 translate-y-2 sm:translate-y-0 sm:scale-95"
+             class="relative w-full max-w-md rounded-2xl bg-white dark:bg-gray-800 shadow-2xl ring-1 ring-black/5 border border-gray-100 dark:border-gray-700 p-6">
             
-            <div class="flex flex-col items-center justify-center text-center p-4">
-                <h3 class="text-2xl font-black text-gray-900 mb-8" id="modal-title">
-                    Apakah Anda Yakin<br>Ingin Logout?
-                </h3>
-                
-                <div class="flex gap-6 w-full justify-center">
-                    <button type="button" 
-                            class="inline-flex w-32 justify-center items-center rounded-full bg-[#84cc16] px-6 py-3 text-lg font-bold text-white shadow-md hover:bg-[#65a30d] transition-transform transform hover:scale-105 focus:outline-none"
-                            @click="logoutConfirmOpen = false; document.getElementById('logout-form').submit()">
-                        Ya
-                    </button>
-                    <button type="button" 
-                            class="inline-flex w-32 justify-center items-center rounded-full bg-[#A0522D] px-6 py-3 text-lg font-bold text-white shadow-md hover:bg-[#8B4513] transition-transform transform hover:scale-105 focus:outline-none"
-                            @click="logoutConfirmOpen = false">
-                        Tidak
-                    </button>
+            <div class="flex items-start gap-4">
+                <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-6 w-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9.303 3.376c.866 1.5-.217 3.374-1.948 3.374H4.645c-1.73 0-2.813-1.874-1.948-3.374L10.052 3.25c.866-1.5 3.03-1.5 3.896 0l7.355 12.876ZM12 15.75h.007v.008H12v-.008Z" />
+                    </svg>
                 </div>
+
+                <div class="min-w-0 flex-1">
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">Logout</h3>
+                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">Apakah Anda yakin ingin keluar dari aplikasi?</p>
+                </div>
+
+                <button type="button" class="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 dark:hover:text-gray-200 transition-colors" @click="logoutConfirmOpen = false" aria-label="Tutup">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="mt-6 flex flex-col sm:flex-row gap-3 sm:justify-end">
+                <button type="button" class="w-full sm:w-auto rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-100 px-5 py-2.5 text-sm font-semibold transition-colors" @click="logoutConfirmOpen = false">
+                    Batal
+                </button>
+                <button type="button" class="w-full sm:w-auto rounded-xl bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 text-sm font-semibold shadow-sm transition-colors" @click="logoutConfirmOpen = false; document.getElementById('logout-form').submit()">
+                    Logout
+                </button>
             </div>
         </div>
     </div>

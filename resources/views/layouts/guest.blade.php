@@ -27,7 +27,7 @@
         <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
             <div>
                 <a href="/">
-                    <x-application-logo class="w-20 h-20 fill-current text-gray-500" />
+                    <img src="{{ asset('images/pgn-logo.png') }}" alt="PGN Logo" class="w-[180px] h-auto object-contain select-none">
                 </a>
             </div>
 

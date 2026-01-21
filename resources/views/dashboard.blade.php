@@ -1,7 +1,26 @@
 <x-dashboard-layout>
     <div class="bg-white dark:bg-gray-800 rounded-[10px] p-6 min-h-[800px] transition-colors duration-300">
         <!-- Welcome Message -->
-        <h1 class="text-lg lg:text-xl font-semibold text-black dark:text-white mb-10">Selamat Datang, {{ Auth::user()->name ?? 'Admin' }}.</h1>
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-10">
+            <h1 class="text-lg lg:text-xl font-semibold text-black dark:text-white">Selamat Datang, {{ Auth::user()->name ?? 'Admin' }}.</h1>
+
+            <form action="{{ route('dashboard') }}" method="GET" class="relative w-full lg:w-[360px]">
+                <label for="search" class="sr-only">Cari Modul</label>
+                <input
+                    id="search"
+                    name="search"
+                    value="{{ request('search') }}"
+                    type="text"
+                    placeholder="Cari Modul..."
+                    class="w-full bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-base border border-gray-300 dark:border-gray-600 px-5 py-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all pr-10 placeholder-gray-500 dark:placeholder-gray-400"
+                >
+                <button type="submit" aria-label="Cari" class="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer hover:text-blue-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 text-gray-400 hover:text-blue-500">
+                        <path fill-rule="evenodd" d="M10.5 3.75a6.75 6.75 0 100 13.5 6.75 6.75 0 000-13.5zM2.25 10.5a8.25 8.25 0 1114.59 5.28l4.69 4.69a.75.75 0 11-1.06 1.06l-4.69-4.69A8.25 8.25 0 012.25 10.5z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+            </form>
+        </div>
 
         <!-- Cards Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -11,12 +30,35 @@
             @endphp
 
             @forelse($modules as $index => $module)
+                @php
+                    $previewUrl = null;
+                    $initials = collect(preg_split('/\s+/', trim((string) $module->name)))
+                        ->filter()
+                        ->take(2)
+                        ->map(fn ($w) => mb_strtoupper(mb_substr($w, 0, 1)))
+                        ->implode('');
+                    if ($initials === '') {
+                        $initials = mb_strtoupper(mb_substr((string) $module->name, 0, 2));
+                    }
+                    $placeholderSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 192 192"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2563eb"/><stop offset="1" stop-color="#9333ea"/></linearGradient></defs><rect width="192" height="192" rx="28" fill="url(#g)"/><text x="96" y="112" text-anchor="middle" font-family="Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial" font-size="64" font-weight="800" fill="white">' . e($initials) . '</text></svg>';
+                    $placeholderDataUri = 'data:image/svg+xml;charset=UTF-8,' . rawurlencode($placeholderSvg);
+                    if ($module->icon && (Str::contains($module->icon, ['/', '\\']) || Str::contains(Str::lower($module->icon), ['.png', '.jpg', '.jpeg', '.webp', '.svg']))) {
+                        $previewUrl = asset('storage/' . $module->icon);
+                    } elseif (!empty($module->url) && $module->url !== '#') {
+                        $absoluteUrl = Str::startsWith($module->url, ['http://', 'https://']) ? $module->url : url($module->url);
+                        $previewUrl = 'https://www.google.com/s2/favicons?sz=64&domain_url=' . urlencode($absoluteUrl);
+                    }
+                @endphp
+
                 <a href="{{ $module->url }}" 
                    target="{{ ($module->tab_type === 'new' || Str::startsWith($module->url, ['http://', 'https://'])) ? '_blank' : '_self' }}"
                    rel="{{ ($module->tab_type === 'new' || Str::startsWith($module->url, ['http://', 'https://'])) ? 'noopener noreferrer' : '' }}"
                    class="flex flex-col items-center text-center group transition-transform hover:scale-105 duration-200">
                     <!-- Badge -->
                     <div style="background-color: {{ $colors[$index % count($colors)] }}" class="text-white rounded-[15px] px-6 py-2 mb-4 flex items-center shadow-md min-w-[180px] justify-center z-10">
+                        @if($previewUrl)
+                            <img src="{{ $previewUrl }}" alt="{{ $module->name }}" class="w-5 h-5 mr-2 object-contain bg-white/20 rounded p-0.5" onerror="this.onerror=null;this.src='{{ $placeholderDataUri }}';">
+                        @else
                         <!-- Dynamic Icon based on module icon name or default -->
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 mr-2">
                             @if($module->icon === 'home')
@@ -37,6 +79,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
                             @endif
                         </svg>
+                        @endif
                         <span class="font-bold text-xs">{{ $module->name }}</span>
                     </div>
                     <!-- Content Box -->

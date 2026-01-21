@@ -4,14 +4,19 @@
         addModal: false,
         editKeteranganModal: false,
         deleteModal: false,
+        renameModal: false,
         selectedPengawas: null,
         selectedKeterangan: [],
         newLabel: '',
-        newPengawas: { nama: '', tanggal: '', keterangan: [], new_keterangan: '' },
+        renameOld: '',
+        renameNew: '',
+        editingId: null,
+        editPengawas: { nama: '', divisi: '' },
+        newPengawas: { nama: '', divisi: '', status: 'On Progress', keterangan: [], new_keterangan: '' },
         items: {{ Js::from($items) }},
         options: {{ Js::from($options) }},
         openAdd() {
-            this.newPengawas = { nama: '', tanggal: '', keterangan: [], new_keterangan: '' };
+            this.newPengawas = { nama: '', divisi: '', status: 'On Progress', keterangan: [], new_keterangan: '' };
             this.addModal = true;
         },
         addNewKeteranganToForm() {
@@ -31,7 +36,8 @@
                     },
                     body: JSON.stringify({
                         nama: this.newPengawas.nama,
-                        tanggal: this.newPengawas.tanggal || null,
+                        divisi: this.newPengawas.divisi,
+                        status: this.newPengawas.status,
                         keterangan: this.newPengawas.keterangan
                     })
                 });
@@ -40,13 +46,78 @@
                     this.items.unshift({
                         id: data.id,
                         nama: this.newPengawas.nama,
-                        tanggal: this.newPengawas.tanggal || '-',
-                        status: 'Active',
+                        divisi: data.divisi || this.newPengawas.divisi || '-',
+                        tanggal: data.tanggal || '-',
+                        status: data.status || 'On Progress',
                         keterangan: [...this.newPengawas.keterangan]
                     });
                     this.addModal = false;
                 } else {
                     alert('Gagal menambah pengawas');
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Terjadi kesalahan sistem');
+            }
+        },
+        async setStatus(item, status) {
+            const previous = item.status;
+            item.status = status;
+            try {
+                const response = await fetch(`/list-pengawasan/${item.id}/status`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
+                    },
+                    body: JSON.stringify({ status })
+                });
+                if (!response.ok) {
+                    item.status = previous;
+                    const d = await response.json().catch(() => ({}));
+                    alert(d.message || 'Gagal memperbarui status');
+                }
+            } catch (e) {
+                item.status = previous;
+                console.error(e);
+                alert('Terjadi kesalahan sistem');
+            }
+        },
+        startEdit(item) {
+            this.editingId = item.id;
+            this.editPengawas = { nama: item.nama, divisi: item.divisi && item.divisi !== '-' ? item.divisi : '' };
+        },
+        cancelEdit() {
+            this.editingId = null;
+            this.editPengawas = { nama: '', divisi: '' };
+        },
+        async saveEdit(item) {
+            const payload = {
+                nama: this.editPengawas.nama?.trim() || '',
+                divisi: this.editPengawas.divisi?.trim() || null
+            };
+
+            if (!payload.nama) {
+                alert('Nama wajib diisi');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/list-pengawasan/${item.id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
+                    },
+                    body: JSON.stringify(payload)
+                });
+                if (response.ok) {
+                    item.nama = payload.nama;
+                    item.divisi = payload.divisi || '-';
+                    this.cancelEdit();
+                } else {
+                    const d = await response.json().catch(() => ({}));
+                    alert(d.message || 'Gagal memperbarui data');
                 }
             } catch (e) {
                 console.error(e);
@@ -65,6 +136,20 @@
             if (!this.options.includes(label)) this.options.push(label);
             if (!this.selectedKeterangan.includes(label)) this.selectedKeterangan.push(label);
             this.newLabel = '';
+        },
+        openRename(opt) {
+            this.renameOld = opt;
+            this.renameNew = opt;
+            this.renameModal = true;
+        },
+        async saveRename() {
+            const next = this.renameNew?.trim();
+            if (!next || next === this.renameOld) {
+                this.renameModal = false;
+                return;
+            }
+            await this.renameOption(this.renameOld, next);
+            this.renameModal = false;
         },
         async saveKeterangan() {
             try {
@@ -183,25 +268,89 @@
         <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden dark:bg-gray-800 dark:border-gray-700">
             <div class="grid grid-cols-12 gap-4 px-6 py-4 text-[11px] font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                 <div class="col-span-3">Nama</div>
-                <div class="col-span-3">Tanggal</div>
+                <div class="col-span-3">Divisi</div>
+                <div class="col-span-2">Tanggal</div>
                 <div class="col-span-2">Status</div>
-                <div class="col-span-4 text-center">Keterangan</div>
+                <div class="col-span-2 text-center">Keterangan</div>
             </div>
 
             <div class="divide-y divide-gray-100 dark:divide-gray-700">
                 <template x-for="item in items.filter(i => i.nama.toLowerCase().includes(search.toLowerCase()))" :key="item.id">
                     <div class="px-6 py-6">
                         <div class="grid grid-cols-12 gap-4 items-start">
-                            <div class="col-span-3 text-gray-900 font-semibold text-base dark:text-white" x-text="item.nama"></div>
-                            <div class="col-span-3 text-gray-700 text-sm dark:text-gray-300" x-text="item.tanggal"></div>
-                            <div class="col-span-2">
-                                <span class="inline-flex items-center rounded-full bg-green-100 px-4 py-1 text-sm font-semibold text-green-700 border border-green-200 dark:bg-green-900/30 dark:text-green-200 dark:border-green-800" x-text="item.status"></span>
+                            <div class="col-span-3">
+                                <div class="flex items-start gap-2">
+                                    <div class="min-w-0 flex-1">
+                                        <template x-if="editingId === item.id">
+                                            <input x-model="editPengawas.nama" type="text" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm font-semibold text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100" />
+                                        </template>
+                                        <template x-if="editingId !== item.id">
+                                            <div class="text-gray-900 font-semibold text-base dark:text-white truncate" x-text="item.nama"></div>
+                                        </template>
+                                    </div>
+
+                                    <template x-if="editingId !== item.id">
+                                        <button @click="startEdit(item)" class="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors dark:text-gray-400 dark:hover:text-blue-300 dark:hover:bg-blue-900/20" title="Edit Nama & Divisi">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+                                                <path d="M21.731 2.269a2.625 2.625 0 00-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 000-3.712zM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 00-1.32 2.214l-.8 2.685a.75.75 0 00.933.933l2.685-.8a5.25 5.25 0 002.214-1.32L19.513 8.2z" />
+                                            </svg>
+                                        </button>
+                                    </template>
+
+                                    <template x-if="editingId === item.id">
+                                        <div class="flex items-center gap-1">
+                                            <button @click="saveEdit(item)" class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors dark:hover:bg-green-900/20" title="Simpan">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                                                    <path fill-rule="evenodd" d="M16.704 4.294a.75.75 0 01.002 1.06l-8.25 8.25a.75.75 0 01-1.06 0l-3.75-3.75a.75.75 0 011.06-1.06l3.22 3.22 7.72-7.72a.75.75 0 011.058 0z" clip-rule="evenodd" />
+                                                </svg>
+                                            </button>
+                                            <button @click="cancelEdit()" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors dark:hover:bg-red-900/20" title="Batal">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </template>
+                                </div>
                             </div>
-                            <div class="col-span-4">
-                                <div class="flex items-center justify-between">
-                                    <div @click="openEditKeterangan(item)" class="flex items-center justify-center space-x-2 cursor-pointer bg-blue-50 hover:bg-blue-100 p-2 rounded-lg transition-colors border border-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 dark:border-blue-800">
-                                        <span class="text-sm font-medium text-blue-700 dark:text-blue-200" x-text="item.keterangan.length ? item.keterangan.join(', ') : 'Pilih Keterangan'"></span>
-                                        <div class="w-6 h-6 bg-blue-200 rounded flex items-center justify-center dark:bg-blue-800">
+
+                            <div class="col-span-3">
+                                <template x-if="editingId === item.id">
+                                    <input x-model="editPengawas.divisi" type="text" placeholder="Divisi" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 dark:placeholder:text-gray-500" />
+                                </template>
+                                <template x-if="editingId !== item.id">
+                                    <div class="text-gray-700 text-sm dark:text-gray-300 truncate" x-text="item.divisi || '-'"></div>
+                                </template>
+                            </div>
+
+                            <div class="col-span-2 text-gray-700 text-sm dark:text-gray-300" x-text="item.tanggal"></div>
+                            <div class="col-span-2">
+                                <div class="flex flex-wrap items-center rounded-lg border border-gray-200 bg-white p-1 shadow-sm dark:border-gray-700 dark:bg-gray-900 gap-1">
+                                    <button
+                                        type="button"
+                                        class="px-2.5 py-1 text-[11px] font-semibold rounded-md transition-colors"
+                                        :class="item.status === 'OFF' ? 'bg-red-600 text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'"
+                                        @click="setStatus(item, 'OFF')"
+                                    >OFF</button>
+                                    <button
+                                        type="button"
+                                        class="px-2.5 py-1 text-[11px] font-semibold rounded-md transition-colors"
+                                        :class="item.status === 'On Progress' ? 'bg-amber-600 text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'"
+                                        @click="setStatus(item, 'On Progress')"
+                                    >On Progress</button>
+                                    <button
+                                        type="button"
+                                        class="px-2.5 py-1 text-[11px] font-semibold rounded-md transition-colors"
+                                        :class="item.status === 'Done' ? 'bg-green-600 text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'"
+                                        @click="setStatus(item, 'Done')"
+                                    >Done</button>
+                                </div>
+                            </div>
+                            <div class="col-span-2 min-w-0">
+                                <div class="flex items-center gap-2">
+                                    <div @click="openEditKeterangan(item)" class="min-w-0 flex-1 flex items-center justify-between gap-2 cursor-pointer bg-blue-50 hover:bg-blue-100 p-2 rounded-lg transition-colors border border-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 dark:border-blue-800">
+                                        <span class="min-w-0 flex-1 text-sm font-medium text-blue-700 dark:text-blue-200 truncate" x-text="item.keterangan.length ? item.keterangan.join(', ') : 'Pilih Keterangan'"></span>
+                                        <div class="w-6 h-6 bg-blue-200 rounded flex items-center justify-center flex-shrink-0 dark:bg-blue-800">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 text-blue-700 dark:text-blue-200">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
                                             </svg>
@@ -237,8 +386,31 @@
                         <input x-model="newPengawas.nama" type="text" placeholder="Masukkan nama pengawas" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 dark:placeholder:text-gray-500">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-200">Tanggal</label>
-                        <input x-model="newPengawas.tanggal" type="date" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100">
+                        <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-200">Divisi</label>
+                        <input x-model="newPengawas.divisi" type="text" placeholder="Masukkan divisi" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 dark:placeholder:text-gray-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-200">Status</label>
+                        <div class="inline-flex items-center rounded-lg border border-gray-200 bg-white p-1 shadow-sm dark:border-gray-700 dark:bg-gray-900">
+                            <button
+                                type="button"
+                                class="px-4 py-2 text-sm font-semibold rounded-md transition-colors"
+                                :class="newPengawas.status === 'OFF' ? 'bg-red-600 text-white' : 'text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800'"
+                                @click="newPengawas.status = 'OFF'"
+                            >OFF</button>
+                            <button
+                                type="button"
+                                class="px-4 py-2 text-sm font-semibold rounded-md transition-colors"
+                                :class="newPengawas.status === 'On Progress' ? 'bg-amber-600 text-white' : 'text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800'"
+                                @click="newPengawas.status = 'On Progress'"
+                            >On Progress</button>
+                            <button
+                                type="button"
+                                class="px-4 py-2 text-sm font-semibold rounded-md transition-colors"
+                                :class="newPengawas.status === 'Done' ? 'bg-green-600 text-white' : 'text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800'"
+                                @click="newPengawas.status = 'Done'"
+                            >Done</button>
+                        </div>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-200">Keterangan</label>
@@ -283,7 +455,7 @@
                                     <span class="text-sm font-medium text-gray-700 dark:text-gray-200" x-text="opt"></span>
                                 </label>
                                 <div class="flex items-center gap-2">
-                                    <button @click="const v=prompt('Ganti nama:', opt); if(v && v.trim() && v.trim()!==opt){ renameOption(opt, v.trim()); }" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors dark:text-blue-300 dark:hover:bg-blue-900/20" title="Rename">
+                                    <button @click="openRename(opt)" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors dark:text-blue-300 dark:hover:bg-blue-900/20" title="Rename">
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
                                             <path d="M21.731 2.269a2.625 2.625 0 00-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 000-3.712zM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 00-1.32 2.214l-.8 2.685a.75.75 0 00.933.933l2.685-.8a5.25 5.25 0 002.214-1.32L19.513 8.2z" />
                                         </svg>
@@ -304,6 +476,38 @@
                     <div class="flex justify-end space-x-3 mt-6">
                         <button @click="editKeteranganModal = false" class="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition-colors dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Batal</button>
                         <button @click="saveKeterangan()" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow-md hover:shadow-lg transition-all">Simpan</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rename Keterangan Modal -->
+        <div x-show="renameModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity" style="display: none;">
+            <div class="bg-white rounded-2xl p-6 w-[520px] shadow-2xl transform transition-all border border-gray-100 dark:bg-gray-800 dark:border-gray-700">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-900 dark:text-white">Ganti Nama Keterangan</h2>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Ubah nama keterangan agar lebih rapi dan konsisten.</p>
+                    </div>
+                    <button @click="renameModal = false" class="text-gray-400 hover:text-gray-600 transition-colors dark:hover:text-gray-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-200">Nama Saat Ini</label>
+                        <input x-model="renameOld" type="text" readonly class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-sm text-gray-700 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-200">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-200">Nama Baru</label>
+                        <input x-model="renameNew" type="text" placeholder="Masukkan nama baru" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 dark:placeholder:text-gray-500">
+                    </div>
+                    <div class="flex justify-end space-x-3 pt-2">
+                        <button @click="renameModal = false" class="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition-colors dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Batal</button>
+                        <button @click="saveRename()" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow-md hover:shadow-lg transition-all">Simpan</button>
                     </div>
                 </div>
             </div>
