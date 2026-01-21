@@ -38,7 +38,7 @@
                     </div>
                     <!-- Content Box -->
                     <div class="bg-[#fcf9f9] rounded-[10px] p-6 w-full h-[400px] flex items-start justify-center pt-8 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                        <p class="text-sm font-bold text-black max-w-[260px] leading-relaxed">
+                        <p class="text-sm font-bold text-black max-w-[260px] leading-relaxed break-words text-justify line-clamp-[12] overflow-hidden" title="{{ $module->description ?? 'Akses cepat ke modul ' . $module->name }}">
                             {{ $module->description ?? 'Akses cepat ke modul ' . $module->name }}
                         </p>
                     </div>

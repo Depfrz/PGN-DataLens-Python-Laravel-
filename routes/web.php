@@ -28,6 +28,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware(['role:Supervisor|Admin', 'throttle:6,1']) // Restricted & Throttled (6 requests/min)
         ->name('integrasi-sistem.store');
 
+    Route::get('/integrasi-sistem/{module}/edit', [IntegrasiSistemController::class, 'edit'])
+        ->middleware('role:Supervisor|Admin')
+        ->name('integrasi-sistem.edit');
+
+    Route::put('/integrasi-sistem/{module}', [IntegrasiSistemController::class, 'update'])
+        ->middleware('role:Supervisor|Admin')
+        ->name('integrasi-sistem.update');
+
     Route::delete('/integrasi-sistem/{module}', [IntegrasiSistemController::class, 'destroy'])
         ->middleware('role:Supervisor|Admin')
         ->name('integrasi-sistem.destroy');

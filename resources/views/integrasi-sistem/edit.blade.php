@@ -9,35 +9,36 @@
                         <path d="M12 19L5 12L12 5" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                 </a>
-                <h1 class="text-[32px] font-bold text-black">Tambah Modul Aplikasi</h1>
+                <h1 class="text-[32px] font-bold text-black">Edit Modul Aplikasi</h1>
             </div>
 
             <!-- Form Container -->
             <div class="border border-black rounded-[15px] p-8 lg:p-10 w-full max-w-[1200px] mx-auto">
-                <form action="{{ route('integrasi-sistem.store') }}" method="POST" 
+                <form action="{{ route('integrasi-sistem.update', $module->id) }}" method="POST" 
                     x-data="{ 
                         categoryOpen: false, 
                         tabTypeOpen: false,
-                        selectedCategory: '',
-                        selectedTabType: '',
-                        isImportant: true,
+                        selectedCategory: '{{ $module->category ?? '' }}',
+                        selectedTabType: '{{ $module->tab_type === 'new' ? 'New tab (Blank)' : 'Current Tab' }}',
+                        isImportant: {{ $module->status ? 'true' : 'false' }},
                         isSubmitting: false,
-                        description: '',
+                        description: '{{ $module->description }}',
                         categories: ['Project Management Office', 'City Gas Project', 'Corporate Finance', 'Human Capital Management', 'Procurement', 'Information and Communication Technology'],
                         tabTypes: ['Current Tab', 'New tab (Blank)']
                     }"
                     @submit="isSubmitting = true">
                     @csrf
+                    @method('PUT')
 
                     <!-- Nama Modul / Aplikasi -->
                     <div class="mb-6">
                         <label class="block text-sm font-bold text-black mb-2">Nama Modul / Aplikasi</label>
-                        <input type="text" name="name" placeholder="Contoh : Buku Saku Digital" 
+                        <input type="text" name="name" value="{{ $module->name }}" placeholder="Contoh : Buku Saku Digital" 
                             class="w-full h-12 px-4 text-base font-normal border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400 transition-all">
                     </div>
 
                     <!-- Deskripsi Singkat -->
-                    <div class="mb-6" x-data="{ count: 0, max: 150 }">
+                    <div class="mb-6" x-data="{ count: $data.description.length, max: 150 }">
                         <label class="block text-sm font-bold text-black mb-2">Deskripsi Singkat <span class="text-gray-500 font-normal text-xs ml-1">(Maks 150 karakter)</span></label>
                         <textarea name="description" rows="4" maxlength="150" x-model="description" @input="count = $el.value.length" placeholder='Contoh: "Panduan teknis lapangan untuk QAQC."'
                             class="w-full p-4 text-base font-normal border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400 resize-none transition-all"
@@ -86,7 +87,7 @@
                     <!-- Target URL / Endpoint -->
                     <div class="mb-6">
                         <label class="block text-sm font-bold text-black mb-2">Target URL / Endpoint</label>
-                        <input type="text" name="url" placeholder="Contoh Internal / Eksternal: /buku-saku atau https://dashboard-pertamina.com" 
+                        <input type="text" name="url" value="{{ $module->url }}" placeholder="Contoh Internal / Eksternal: /buku-saku atau https://dashboard-pertamina.com" 
                             class="w-full h-12 px-4 text-base font-normal border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-gray-400 transition-all">
                     </div>
 
@@ -156,9 +157,9 @@
                             style="background-color: #16a34a;" 
                             class="text-white text-lg font-bold px-8 py-2.5 rounded-lg transition-all shadow hover:shadow-md focus:ring-4 focus:ring-green-300 w-full sm:w-auto flex items-center justify-center space-x-2">
                             
-                            <!-- Icon Plus (Default) -->
+                            <!-- Icon Check (Default for Edit) -->
                             <svg x-show="!isSubmitting" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                             </svg>
                             
                             <!-- Loading Spinner -->
@@ -167,7 +168,7 @@
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
 
-                            <span x-text="isSubmitting ? 'Menyimpan...' : 'Tambah Modul'"></span>
+                            <span x-text="isSubmitting ? 'Menyimpan...' : 'Simpan Perubahan'"></span>
                         </button>
                     </div>                </form>
             </div>
