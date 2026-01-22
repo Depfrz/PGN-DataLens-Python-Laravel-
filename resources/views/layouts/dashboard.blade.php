@@ -118,7 +118,7 @@
         <!-- Main Content Wrapper -->
         <div class="flex-1 flex flex-col overflow-hidden">
             <!-- Top Header -->
-            <header class="bg-white dark:bg-gray-800 border-b border-transparent dark:border-gray-700 h-[80px] shadow-sm flex items-center justify-between px-4 lg:px-8 z-20 transition-colors duration-300">
+            <header class="relative bg-white dark:bg-gray-800 border-b border-transparent dark:border-gray-700 h-[80px] shadow-sm flex items-center justify-between px-4 lg:px-8 z-40 transition-colors duration-300">
                 <!-- Mobile Menu Button -->
                 <button @click="sidebarOpen = true" class="lg:hidden p-2 -ml-2 mr-2">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 dark:text-white">
@@ -208,12 +208,12 @@
                              x-transition:leave-start="opacity-100 scale-100"
                              x-transition:leave-end="opacity-0 scale-95"
                              style="display: none;" 
-                             class="absolute right-0 mt-3 w-72 sm:w-96 md:w-[450px] max-w-[calc(100vw-2rem)] bg-white dark:bg-gray-800 rounded-xl shadow-2xl z-50 border border-gray-100 dark:border-gray-700 overflow-hidden ring-1 ring-black ring-opacity-5">
+                             class="absolute right-0 mt-3 w-[calc(100vw-2rem)] sm:w-[450px] bg-white dark:bg-gray-800 rounded-xl shadow-2xl z-50 border border-gray-100 dark:border-gray-700 overflow-hidden ring-1 ring-black ring-opacity-5">
                             
                             <!-- Header -->
-                            <div class="px-4 py-3 sm:px-5 sm:py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-white dark:bg-gray-800">
-                                <h3 class="text-base sm:text-lg font-bold text-gray-900 dark:text-white">Notifikasi</h3>
-                                <button @click="markAllRead()" class="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold hover:bg-blue-50 dark:hover:bg-gray-700 px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg transition-all whitespace-nowrap">
+                            <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-white dark:bg-gray-800">
+                                <h3 class="text-lg font-bold text-gray-900 dark:text-white">Notifikasi</h3>
+                                <button @click="markAllRead()" class="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold hover:bg-blue-50 dark:hover:bg-gray-700 px-3 py-1.5 rounded-lg transition-all whitespace-nowrap">
                                     Tandai semua dibaca
                                 </button>
                             </div>
@@ -223,10 +223,10 @@
                                 <template x-for="notification in notifications" :key="notification.id">
                                     <div @click="markAsRead(notification.id)" 
                                          :class="{'bg-blue-50/60 dark:bg-blue-900/20': !notification.read_at, 'bg-white dark:bg-gray-800': notification.read_at}" 
-                                         class="px-4 py-3 sm:px-5 sm:py-4 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-100 dark:border-gray-700 last:border-0 transition-colors group relative">
+                                         class="px-5 py-4 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-100 dark:border-gray-700 last:border-0 transition-colors group relative">
                                         
                                         <!-- Unread Indicator Dot -->
-                                        <div x-show="!notification.read_at" class="absolute left-2 top-4 sm:top-5 w-2 h-2 bg-blue-500 rounded-full"></div>
+                                        <div x-show="!notification.read_at" class="absolute left-2 top-5 w-2 h-2 bg-blue-500 rounded-full"></div>
 
                                         <div class="flex justify-between items-start mb-1">
                                             <p class="text-sm font-bold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate pr-2 flex-1" x-text="notification.data.module"></p>
