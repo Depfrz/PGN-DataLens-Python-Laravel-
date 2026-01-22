@@ -130,7 +130,7 @@
                 <div></div>
 
                 <!-- Right Actions -->
-                <div class="flex items-center space-x-6">
+                <div class="flex items-center space-x-2 sm:space-x-6">
                     <!-- Dark Mode Toggle -->
                     <div x-data="{
                         darkMode: localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches),
@@ -208,35 +208,35 @@
                              x-transition:leave-start="opacity-100 scale-100"
                              x-transition:leave-end="opacity-0 scale-95"
                              style="display: none;" 
-                             class="absolute right-0 mt-3 w-[450px] bg-white dark:bg-gray-800 rounded-xl shadow-2xl z-50 border border-gray-100 dark:border-gray-700 overflow-hidden ring-1 ring-black ring-opacity-5">
+                             class="absolute right-0 mt-3 w-72 sm:w-96 md:w-[450px] max-w-[calc(100vw-2rem)] bg-white dark:bg-gray-800 rounded-xl shadow-2xl z-50 border border-gray-100 dark:border-gray-700 overflow-hidden ring-1 ring-black ring-opacity-5">
                             
                             <!-- Header -->
-                            <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-white dark:bg-gray-800">
-                                <h3 class="text-lg font-bold text-gray-900 dark:text-white">Notifikasi</h3>
-                                <button @click="markAllRead()" class="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold hover:bg-blue-50 dark:hover:bg-gray-700 px-3 py-1.5 rounded-lg transition-all whitespace-nowrap">
+                            <div class="px-4 py-3 sm:px-5 sm:py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-white dark:bg-gray-800">
+                                <h3 class="text-base sm:text-lg font-bold text-gray-900 dark:text-white">Notifikasi</h3>
+                                <button @click="markAllRead()" class="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold hover:bg-blue-50 dark:hover:bg-gray-700 px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg transition-all whitespace-nowrap">
                                     Tandai semua dibaca
                                 </button>
                             </div>
 
                             <!-- Notification List -->
-                            <div class="max-h-[400px] overflow-y-auto custom-scrollbar">
+                            <div class="max-h-[60vh] sm:max-h-[400px] overflow-y-auto custom-scrollbar">
                                 <template x-for="notification in notifications" :key="notification.id">
                                     <div @click="markAsRead(notification.id)" 
                                          :class="{'bg-blue-50/60 dark:bg-blue-900/20': !notification.read_at, 'bg-white dark:bg-gray-800': notification.read_at}" 
-                                         class="px-5 py-4 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-100 dark:border-gray-700 last:border-0 transition-colors group relative">
+                                         class="px-4 py-3 sm:px-5 sm:py-4 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-100 dark:border-gray-700 last:border-0 transition-colors group relative">
                                         
                                         <!-- Unread Indicator Dot -->
-                                        <div x-show="!notification.read_at" class="absolute left-2 top-5 w-2 h-2 bg-blue-500 rounded-full"></div>
+                                        <div x-show="!notification.read_at" class="absolute left-2 top-4 sm:top-5 w-2 h-2 bg-blue-500 rounded-full"></div>
 
                                         <div class="flex justify-between items-start mb-1">
-                                            <p class="text-sm font-bold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate pr-2" x-text="notification.data.module"></p>
-                                            <span class="text-[10px] font-medium text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full whitespace-nowrap" x-text="notification.created_at"></span>
+                                            <p class="text-sm font-bold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate pr-2 flex-1" x-text="notification.data.module"></p>
+                                            <span class="text-[10px] font-medium text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full whitespace-nowrap ml-2" x-text="notification.created_at"></span>
                                         </div>
                                         
-                                        <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed break-words" x-text="notification.data.description"></p>
+                                        <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed break-words line-clamp-2" x-text="notification.data.description"></p>
                                         
-                                        <div class="mt-2 flex items-center gap-2">
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium"
+                                        <div class="mt-2 flex flex-wrap items-center gap-2">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium max-w-[120px] truncate"
                                                   :class="{
                                                       'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300': notification.data.action === 'create',
                                                       'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300': notification.data.action === 'delete',
@@ -244,9 +244,10 @@
                                                       'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300': notification.data.action === 'login',
                                                       'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300': notification.data.action === 'logout'
                                                   }"
-                                                  x-text="notification.data.action">
+                                                  x-text="notification.data.action"
+                                                  title="Action Status">
                                             </span>
-                                            <span class="text-[11px] text-gray-400" x-text="'• ' + notification.data.actor_name"></span>
+                                            <span class="text-[11px] text-gray-400 truncate max-w-[150px]" x-text="'• ' + notification.data.actor_name"></span>
                                         </div>
                                     </div>
                                 </template>
@@ -272,8 +273,8 @@
 
                     <!-- User Profile -->
                     <div x-data="{ open: false, logoutConfirmOpen: false }" class="relative">
-                        <div @click="open = !open" class="flex items-center space-x-4 cursor-pointer select-none">
-                            <span class="text-sm font-medium text-gray-700 dark:text-gray-200 transition-colors">{{ Auth::user()->name ?? 'Admin' }}</span>
+                        <div @click="open = !open" class="flex items-center space-x-2 sm:space-x-4 cursor-pointer select-none">
+                            <span class="hidden sm:block text-sm font-medium text-gray-700 dark:text-gray-200 transition-colors">{{ Auth::user()->name ?? 'Admin' }}</span>
                             <div class="w-8 h-8 rounded-full border-2 border-gray-300 dark:border-gray-500 flex items-center justify-center transition-colors bg-gray-100 dark:bg-gray-700 overflow-hidden">
                                 @if(Auth::user()?->profile_photo_path)
                                     <img src="{{ asset('storage/' . Auth::user()->profile_photo_path) }}" alt="Foto Profil" class="w-full h-full object-cover">
