@@ -10,7 +10,7 @@
         <!-- File Upload -->
         <div class="mb-6">
             <label class="block text-sm font-medium text-gray-700 mb-2">File Dokumen</label>
-            <div id="dropZone" class="border-2 border-dashed border-gray-300 rounded-lg p-10 text-center cursor-pointer hover:bg-gray-50 transition-colors relative">
+            <div id="dropZone" class="border-2 border-dashed border-gray-300 rounded-lg p-6 sm:p-10 text-center cursor-pointer hover:bg-gray-50 transition-colors relative">
                 <input type="file" name="file" id="fileInput" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50" required accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx">
                 
                 <div id="emptyState">
@@ -51,7 +51,7 @@
         <div class="mb-6">
             <label class="block text-sm font-medium text-gray-700 mb-2">Kategori</label>
             <div class="bg-white rounded-lg border border-gray-200 p-4">
-                <div class="flex gap-4 mb-4">
+                <div class="flex flex-col sm:flex-row gap-4 mb-4">
                     <input type="text" id="searchCategory" placeholder="Cari kategori..." class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
                     <div class="flex flex-1 gap-2">
                         <input type="text" id="newCategory" placeholder="Nama kategori baru..." class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">

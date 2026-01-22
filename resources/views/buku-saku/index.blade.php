@@ -4,15 +4,15 @@
     </div>
 
     <!-- Search Section -->
-    <div class="bg-white p-6 rounded-lg shadow-sm mb-8">
+    <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm mb-8">
         <h3 class="text-lg font-semibold text-gray-800 mb-4">Pencarian Dokumen</h3>
-        <form action="{{ route('buku-saku.index') }}" method="GET" class="flex gap-4">
+        <form action="{{ route('buku-saku.index') }}" method="GET" class="flex flex-col sm:flex-row gap-4">
             <div class="flex-1">
                 <input type="text" name="q" value="{{ $query ?? '' }}" 
                     class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
                     placeholder="Cari dokumen relevan, misal: welder" required>
             </div>
-            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg shadow transition-colors">
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg shadow transition-colors w-full sm:w-auto">
                 Cari
             </button>
         </form>
@@ -28,31 +28,31 @@
         </div>
         <div class="grid grid-cols-1 gap-4">
             @foreach($documents as $doc)
-                <div class="border rounded-lg p-4 hover:shadow-md transition-shadow flex items-start justify-between bg-white">
-                    <div class="flex items-start gap-4">
-                        <div>
-                            <h3 class="font-bold text-lg text-gray-800">
+                <div class="border rounded-lg p-4 hover:shadow-md transition-shadow flex items-start justify-between bg-white gap-4">
+                    <div class="flex items-start gap-4 flex-1 min-w-0">
+                        <div class="flex-1 min-w-0">
+                            <h3 class="font-bold text-lg text-gray-800 break-words">
                                 <a href="{{ route('buku-saku.show', $doc->id) }}" class="hover:text-blue-600 hover:underline">
                                     {{ $doc->title }}
                                 </a>
                             </h3>
                             
                             <!-- Metadata -->
-                            <div class="flex items-center gap-2 text-sm text-gray-500 mb-2">
-                                <span class="uppercase">{{ $doc->file_type }}</span>
-                                <span>&bull;</span>
+                            <div class="flex flex-wrap items-center gap-2 text-sm text-gray-500 mb-2">
+                                <span class="uppercase bg-gray-100 px-2 py-0.5 rounded text-xs font-semibold">{{ $doc->file_type }}</span>
+                                <span class="hidden sm:inline">&bull;</span>
                                 <span>{{ $doc->file_size }}</span>
-                                <span>&bull;</span>
+                                <span class="hidden sm:inline">&bull;</span>
                                 <span>{{ $doc->created_at->diffForHumans() }}</span>
                             </div>
 
-                            <p class="text-sm text-gray-600 mb-2">{{ $doc->description }}</p>
+                            <p class="text-sm text-gray-600 mb-2 line-clamp-2">{{ $doc->description }}</p>
                             
                             <!-- Tags above Status -->
                             @if($doc->tags)
-                                <div class="mb-2">
+                                <div class="mb-2 flex flex-wrap gap-1">
                                     @foreach(explode(',', $doc->tags) as $tag)
-                                        <span class="inline-block bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded mr-1 mb-1">{{ trim($tag) }}</span>
+                                        <span class="inline-block bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded">{{ trim($tag) }}</span>
                                     @endforeach
                                 </div>
                             @endif
@@ -63,7 +63,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 flex-shrink-0">
                         <!-- Favorite Button -->
                         <form action="{{ route('buku-saku.toggle-favorite', $doc->id) }}" method="POST">
                             @csrf

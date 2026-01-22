@@ -130,8 +130,15 @@ class BukuSakuController extends Controller
             'status' => 'pending', // Default status
         ]);
 
-        // Notify Admins and Supervisors
-        $approvers = User::role(['Admin', 'Supervisor'])->get();
+        // Notify Admins, Supervisors, and users with 'Pengecekan File' access
+        $approvers = User::whereHas('roles', function($q) {
+            $q->whereIn('name', ['Admin', 'Supervisor']);
+        })->orWhereHas('moduleAccesses', function($q) {
+            $q->whereHas('module', function($m) {
+                $m->where('name', 'Pengecekan File');
+            })->where('can_read', true);
+        })->get();
+
         Notification::send($approvers, new SystemNotification(
             'upload',
             'Buku Saku',
@@ -166,8 +173,15 @@ class BukuSakuController extends Controller
                 Auth::user()->name
             ));
         } else {
-             // User deleted their own document, notify admins
-            $admins = User::role('Admin')->get();
+             // User deleted their own document, notify admins and checkers
+            $admins = User::whereHas('roles', function($q) {
+                $q->whereIn('name', ['Admin', 'Supervisor']);
+            })->orWhereHas('moduleAccesses', function($q) {
+                $q->whereHas('module', function($m) {
+                    $m->where('name', 'Pengecekan File');
+                })->where('can_read', true);
+            })->get();
+            
             Notification::send($admins, new SystemNotification(
                 'delete',
                 'Buku Saku',
@@ -287,7 +301,8 @@ class BukuSakuController extends Controller
     public function download(BukuSakuDocument $document)
     {
         if (Storage::disk('public')->exists($document->file_path)) {
-            return Storage::disk('public')->download($document->file_path, $document->title . '.' . $document->file_type);
+            $path = Storage::disk('public')->path($document->file_path);
+            return response()->download($path, $document->title . '.' . $document->file_type);
         }
         return redirect()->back()->with('error', 'File tidak ditemukan.');
     }
@@ -295,7 +310,8 @@ class BukuSakuController extends Controller
     public function preview(BukuSakuDocument $document)
     {
         if (Storage::disk('public')->exists($document->file_path)) {
-            return Storage::disk('public')->response($document->file_path);
+            $path = Storage::disk('public')->path($document->file_path);
+            return response()->file($path);
         }
         return redirect()->back()->with('error', 'File tidak ditemukan.');
     }

@@ -9,13 +9,13 @@
     </div>
 
     <div class="bg-white rounded-lg shadow-lg overflow-hidden h-[80vh] flex flex-col">
-        <div class="p-4 border-b flex justify-between items-center bg-gray-50">
+        <div class="p-4 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center bg-gray-50 gap-4">
             <div>
-                <h1 class="text-xl font-bold text-gray-800">{{ $document->title }}</h1>
-                <p class="text-sm text-gray-500">{{ $document->description }}</p>
+                <h1 class="text-xl font-bold text-gray-800 break-words">{{ $document->title }}</h1>
+                <p class="text-sm text-gray-500 break-words">{{ $document->description }}</p>
             </div>
-            <div class="flex items-center gap-2">
-                <a href="{{ route('buku-saku.download', $document->id) }}" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-medium">
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+                <a href="{{ route('buku-saku.download', $document->id) }}" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm font-medium text-center w-full sm:w-auto">
                     Download
                 </a>
             </div>

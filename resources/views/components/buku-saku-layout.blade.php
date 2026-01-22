@@ -1,14 +1,34 @@
 <x-app-layout>
-    <div class="py-12">
+    <div class="py-0">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="flex flex-col md:flex-row gap-6">
-                <!-- Sidebar -->
-                <div class="w-full md:w-64 flex-shrink-0">
-                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                        <div class="p-4 bg-blue-600 text-white font-bold text-lg rounded-t-lg">
-                            Buku Saku
-                        </div>
-                        <nav class="flex flex-col p-2 space-y-1">
+            <div class="flex flex-col md:flex-row gap-0 md:gap-6" x-data="{ sidebarOpen: false }">
+    
+    <!-- Mobile Backdrop -->
+    <div x-show="sidebarOpen" 
+         x-transition:enter="transition-opacity ease-linear duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition-opacity ease-linear duration-300"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         @click="sidebarOpen = false" 
+         class="fixed inset-0 z-40 bg-gray-900/50 md:hidden" 
+         style="display: none;"></div>
+
+    <!-- Sidebar -->
+    <div :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" 
+         class="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transition-transform duration-300 md:translate-x-0 md:static md:block md:shadow-none md:bg-transparent md:w-64 flex-shrink-0">
+        <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg sticky top-6 h-full md:h-auto overflow-y-auto md:overflow-visible">
+            <div class="p-4 bg-blue-600 text-white font-bold text-lg rounded-t-none md:rounded-t-lg flex justify-between items-center">
+                <span>Buku Saku</span>
+                <!-- Close Button (Mobile Only) -->
+                <button @click="sidebarOpen = false" class="md:hidden text-white hover:bg-blue-700 rounded p-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <nav class="flex flex-col p-2 space-y-1">
                             @if(auth()->user()->hasModuleAccess('Beranda'))
                             <a href="{{ route('buku-saku.index') }}" 
                                class="flex items-center px-4 py-2 text-sm font-medium rounded-md {{ request()->routeIs('buku-saku.index') ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50' }}">
@@ -64,8 +84,16 @@
 
                 <!-- Main Content -->
                 <div class="flex-1">
-                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg min-h-[500px]">
-                        <div class="p-6 text-gray-900">
+                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg min-h-[500px] relative">
+                    <!-- Mobile Sidebar Toggle (Attached to Left) -->
+                    <button @click="sidebarOpen = true" class="md:hidden absolute left-0 top-4 z-10 inline-flex items-center justify-center p-2 rounded-r-md rounded-l-none bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+
+                    <div class="p-4 sm:p-6 text-gray-900 pl-14 sm:pl-6">
+
                             @if(session('success'))
                                 <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
                                     <strong class="font-bold">Berhasil!</strong>

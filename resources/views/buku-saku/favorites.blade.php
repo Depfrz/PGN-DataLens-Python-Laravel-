@@ -11,21 +11,21 @@
     @else
         <div class="grid grid-cols-1 gap-4">
             @foreach($documents as $doc)
-                <div class="border rounded-lg p-4 hover:shadow-md transition-shadow flex items-start justify-between bg-white">
-                    <div class="flex items-start gap-4">
-                        <div>
-                            <h3 class="font-bold text-lg text-gray-800">{{ $doc->title }}</h3>
-                            <p class="text-sm text-gray-500 mb-1">{{ $doc->description }}</p>
-                            <div class="flex items-center gap-3 text-xs text-gray-400">
-                                <span>{{ $doc->file_type }}</span>
-                                <span>&bull;</span>
+                <div class="border rounded-lg p-4 hover:shadow-md transition-shadow flex items-start justify-between bg-white gap-4">
+                    <div class="flex items-start gap-4 flex-1 min-w-0">
+                        <div class="flex-1 min-w-0">
+                            <h3 class="font-bold text-lg text-gray-800 break-words">{{ $doc->title }}</h3>
+                            <p class="text-sm text-gray-500 mb-1 line-clamp-2">{{ $doc->description }}</p>
+                            <div class="flex flex-wrap items-center gap-3 text-xs text-gray-400">
+                                <span class="uppercase bg-gray-100 px-2 py-0.5 rounded">{{ $doc->file_type }}</span>
+                                <span class="hidden sm:inline">&bull;</span>
                                 <span>{{ $doc->file_size }}</span>
-                                <span>&bull;</span>
+                                <span class="hidden sm:inline">&bull;</span>
                                 <span>{{ $doc->created_at->diffForHumans() }}</span>
                             </div>
                         </div>
                     </div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 flex-shrink-0">
                         <!-- Unfavorite Button -->
                         <form action="{{ route('buku-saku.toggle-favorite', $doc->id) }}" method="POST">
                             @csrf
