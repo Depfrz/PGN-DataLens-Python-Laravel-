@@ -28,10 +28,83 @@
         <!-- Modules Grid -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             @forelse($modules as $module)
-                @php
-                    // Logic for Icon/Preview
-                    $previewUrl = null;
-                    $initials = collect(preg_split('/\s+/', trim((string) $module->name)))
+                @if($module->name === 'Buku Saku')
+                    <!-- Special Layout for Buku Saku -->
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm hover:shadow-xl border border-gray-100 dark:border-gray-700 transition-all duration-300 flex flex-col h-full overflow-hidden">
+                        <div class="flex items-center gap-4 mb-4 pb-4 border-b border-gray-100 dark:border-gray-700">
+                            <div class="w-12 h-12 bg-blue-50 dark:bg-gray-700/50 rounded-xl flex items-center justify-center text-blue-600 dark:text-blue-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ $module->name }}</h3>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Akses Cepat</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex-1 flex flex-col gap-2 overflow-y-auto">
+                            @if(auth()->user()->hasModuleAccess('Beranda'))
+                            <a href="{{ route('buku-saku.index') }}" class="flex items-center gap-3 p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors group/item">
+                                <div class="text-gray-400 group-hover/item:text-blue-500 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                    </svg>
+                                </div>
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover/item:text-blue-700 dark:group-hover/item:text-blue-300">Beranda</span>
+                            </a>
+                            @endif
+
+                            @if(auth()->user()->hasModuleAccess('Dokumen Favorit'))
+                            <a href="{{ route('buku-saku.favorites') }}" class="flex items-center gap-3 p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors group/item">
+                                <div class="text-gray-400 group-hover/item:text-blue-500 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                                    </svg>
+                                </div>
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover/item:text-blue-700 dark:group-hover/item:text-blue-300">Dokumen Favorit</span>
+                            </a>
+                            @endif
+
+                            @if(auth()->user()->hasModuleAccess('Riwayat Dokumen'))
+                            <a href="{{ route('buku-saku.history') }}" class="flex items-center gap-3 p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors group/item">
+                                <div class="text-gray-400 group-hover/item:text-blue-500 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover/item:text-blue-700 dark:group-hover/item:text-blue-300">Riwayat Dokumen</span>
+                            </a>
+                            @endif
+
+                            @if(auth()->user()->hasModuleAccess('Pengecekan File'))
+                            <a href="{{ route('buku-saku.approval') }}" class="flex items-center gap-3 p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors group/item">
+                                <div class="text-gray-400 group-hover/item:text-blue-500 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                                    </svg>
+                                </div>
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover/item:text-blue-700 dark:group-hover/item:text-blue-300">Pengecekan File</span>
+                            </a>
+                            @endif
+
+                            @if(auth()->user()->hasModuleAccess('Upload Dokumen'))
+                            <a href="{{ route('buku-saku.upload') }}" class="flex items-center gap-3 p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors group/item">
+                                <div class="text-gray-400 group-hover/item:text-blue-500 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                    </svg>
+                                </div>
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover/item:text-blue-700 dark:group-hover/item:text-blue-300">Upload Dokumen</span>
+                            </a>
+                            @endif
+                        </div>
+                    </div>
+                @else
+                    @php
+                        // Logic for Icon/Preview
+                        $previewUrl = null;
+                        $initials = collect(preg_split('/\s+/', trim((string) $module->name)))
                         ->filter()
                         ->take(2)
                         ->map(fn ($w) => mb_strtoupper(mb_substr($w, 0, 1)))
@@ -110,6 +183,7 @@
                     </div>
                     @endif
                 </a>
+            @endif
             @empty
                 <div class="col-span-full flex flex-col items-center justify-center py-20 text-center">
                     <div class="w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-6">
