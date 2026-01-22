@@ -464,54 +464,35 @@
                             @php
                                 // Cari Main Module (yang namanya sama dengan nama Group)
                                 $mainModule = $modules->firstWhere('name', $group);
-                                
-                                // Jika group memiliki banyak modul (seperti Buku Saku), kita sembunyikan baris Main Module dari list item
-                                // agar tidak duplikat, dan kita auto-sync aksesnya.
-                                $hideMainModuleRow = $modules->count() > 1 && $mainModule;
                             @endphp
                             <div class="mb-6">
                                 <div class="flex items-center justify-between mb-3 pb-2 border-b border-gray-100 dark:border-gray-700">
                                     <h3 class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">
                                         {{ $group }}
                                     </h3>
-                                    
-                                    @if($mainModule)
-                                        <!-- Header Checkbox for Dashboard Visibility (Only if Main Module exists) -->
-                                        <label class="flex items-center gap-2 cursor-pointer" title="Tampil di Dashboard Utama">
-                                            <span class="text-xs text-gray-500 dark:text-gray-400">Tampil di Dashboard</span>
-                                            <input type="checkbox" 
-                                                   value="{{ $mainModule->name }}" 
-                                                   x-model="dashboardAccess" 
-                                                   @change="$el.checked && !selectedAccess.includes('{{ $mainModule->name }}') ? selectedAccess.push('{{ $mainModule->name }}') : null"
-                                                   class="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500">
-                                        </label>
-                                    @endif
                                 </div>
                                 
                                 <div class="grid grid-cols-1 gap-3">
                                     @foreach($modules as $module)
-                                        @if($hideMainModuleRow && $module->id === $mainModule->id)
-                                            @continue
-                                        @endif
-
                                         <div class="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-200 dark:hover:border-blue-800 transition-colors">
-                                            <label class="flex items-center gap-3 cursor-pointer">
-                                                <input type="checkbox" value="{{ $module->name }}" x-model="selectedAccess" class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                            <label class="flex items-center gap-3 cursor-pointer w-full">
+                                                <input type="checkbox" 
+                                                       value="{{ $module->name }}" 
+                                                       x-model="selectedAccess" 
+                                                       @change="
+                                                           if ($el.checked) {
+                                                               // Auto-enable dashboard access for relevant modules
+                                                               if (!dashboardAccess.includes('{{ $module->name }}') && !{{ Js::from($subModules) }}.includes('{{ $module->name }}')) {
+                                                                   dashboardAccess.push('{{ $module->name }}');
+                                                               }
+                                                           } else {
+                                                               // Remove from dashboard access if disabled
+                                                               dashboardAccess = dashboardAccess.filter(i => i !== '{{ $module->name }}');
+                                                           }
+                                                       "
+                                                       class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
                                                 <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ $module->name }}</span>
                                             </label>
-                                            
-                                            {{-- 
-                                                Tampilkan checkbox dashboard di baris item HANYA JIKA:
-                                                1. Bukan Main Module (karena Main Module dikontrol header)
-                                                2. Bukan Sub-Module (seperti Beranda, dll)
-                                                3. Atau jika ini Main Module tapi dalam grup single (List Pengawasan), tapi kita sudah putuskan header mengontrol main module.
-                                                   Jadi, jika $mainModule ada dan ini adalah $mainModule, kita hide checkbox itemnya.
-                                            --}}
-                                            @if(!in_array($module->name, $subModules) && (!$mainModule || $module->id !== $mainModule->id))
-                                            <label class="flex items-center gap-2 cursor-pointer" x-show="selectedAccess.includes('{{ $module->name }}')" x-transition title="Tampil di Beranda">
-                                                <input type="checkbox" value="{{ $module->name }}" x-model="dashboardAccess" class="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500">
-                                            </label>
-                                            @endif
                                         </div>
                                     @endforeach
                                 </div>

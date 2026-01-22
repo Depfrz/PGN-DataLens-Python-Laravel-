@@ -44,7 +44,9 @@ class DashboardController extends Controller
         }
         // Fallback for Admin/Supervisor if no specific access is configured (Show All)
         elseif ($user->hasRole(['Supervisor', 'Admin'])) {
-            $query = Module::where('status', true)->whereNotIn('name', $excludedModules);
+            $query = Module::where('status', true)
+                ->whereNotIn('name', $excludedModules)
+                ->orderBy('order', 'asc');
 
             if ($search !== '') {
                 $query->where(function ($q) use ($search) {
