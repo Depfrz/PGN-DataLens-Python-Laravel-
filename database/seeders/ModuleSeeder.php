@@ -18,19 +18,55 @@ class ModuleSeeder extends Seeder
     {
         // 1. Daftar Semua Modul (Sistem + Dummy)
         $modules = [
-            // System Modules
+            // Group: Buku Saku
             [
                 'name' => 'Buku Saku',
-                'slug' => 'dashboard',
-                'url' => '/dashboard',
+                'slug' => 'buku-saku',
+                'url' => '/buku-saku',
                 'icon' => 'home',
+                'group' => 'Buku Saku',
                 'status' => true,
             ],
+            [
+                'name' => 'Dokumen Favorit',
+                'slug' => 'buku-saku-favorites',
+                'url' => '/buku-saku/favorites',
+                'icon' => 'star',
+                'group' => 'Buku Saku',
+                'status' => true,
+            ],
+            [
+                'name' => 'Riwayat Dokumen',
+                'slug' => 'buku-saku-history',
+                'url' => '/buku-saku/history',
+                'icon' => 'clock',
+                'group' => 'Buku Saku',
+                'status' => true,
+            ],
+            [
+                'name' => 'Pengecekan File',
+                'slug' => 'buku-saku-approval',
+                'url' => '/buku-saku/approval',
+                'icon' => 'check-circle',
+                'group' => 'Buku Saku',
+                'status' => true,
+            ],
+            [
+                'name' => 'Upload Dokumen',
+                'slug' => 'buku-saku-upload',
+                'url' => '/buku-saku/upload',
+                'icon' => 'upload',
+                'group' => 'Buku Saku',
+                'status' => true,
+            ],
+
+            // Group: Web Utama
             [
                 'name' => 'Integrasi Sistem',
                 'slug' => 'integrasi-sistem',
                 'url' => '/integrasi-sistem',
                 'icon' => 'database',
+                'group' => 'Web Utama',
                 'status' => true,
             ],
             [
@@ -38,6 +74,7 @@ class ModuleSeeder extends Seeder
                 'slug' => 'management-user',
                 'url' => '/management-user',
                 'icon' => 'users',
+                'group' => 'Web Utama',
                 'status' => true,
             ],
             [
@@ -45,21 +82,27 @@ class ModuleSeeder extends Seeder
                 'slug' => 'history',
                 'url' => '/history',
                 'icon' => 'clock',
+                'group' => 'Web Utama',
                 'status' => true,
             ],
+
+            // Group: List Pengawasan
             [
                 'name' => 'List Pengawasan',
                 'slug' => 'list-pengawasan',
                 'url' => '/list-pengawasan',
                 'icon' => 'clipboard',
+                'group' => 'List Pengawasan',
                 'status' => true,
             ],
-            // Business Modules
+
+            // Group: Lainnya (Business Modules)
             [
                 'name' => 'HCM SIP-PGN',
                 'slug' => 'hcm-sip-pgn',
                 'url' => '#',
                 'icon' => 'briefcase',
+                'group' => 'Lainnya',
                 'status' => true,
             ],
             [
@@ -67,6 +110,7 @@ class ModuleSeeder extends Seeder
                 'slug' => 'pmo',
                 'url' => '#',
                 'icon' => 'clipboard',
+                'group' => 'Lainnya',
                 'status' => true,
             ],
             [
@@ -74,6 +118,7 @@ class ModuleSeeder extends Seeder
                 'slug' => 'procurement',
                 'url' => '#',
                 'icon' => 'shopping-cart',
+                'group' => 'Lainnya',
                 'status' => true,
             ],
         ];
@@ -84,6 +129,8 @@ class ModuleSeeder extends Seeder
                 ['slug' => $moduleData['slug']],
                 $moduleData
             );
+            // Ensure group is updated if module existed
+            $module->update($moduleData);
 
             // Create Permission for this Module (Legacy Spatie Logic)
             $permissionName = 'view module ' . $module->slug;
@@ -98,45 +145,5 @@ class ModuleSeeder extends Seeder
         // Admin: Access All
         $adminRole = Role::firstOrCreate(['name' => 'Admin']);
         $adminRole->givePermissionTo($allModulePermissions);
-
-        // Supervisor: Access All except management-user
-        $supervisorRole = Role::firstOrCreate(['name' => 'Supervisor']);
-        $supervisorPermissions = $allModulePermissions->reject(function ($permission) {
-            return $permission->name === 'view module management-user';
-        });
-        $supervisorRole->givePermissionTo($supervisorPermissions);
-
-        // User: Access Dashboard & History
-        $userRole = Role::firstOrCreate(['name' => 'User']);
-        $userPermissions = $allModulePermissions->filter(function ($permission) {
-             return in_array($permission->name, ['view module dashboard', 'view module history']);
-        });
-        $userRole->givePermissionTo($userPermissions);
-
-        // SuperUser: Access Dashboard, History, Integrasi
-        $superUserRole = Role::firstOrCreate(['name' => 'SuperUser']);
-        $superUserPermissions = $allModulePermissions->filter(function ($permission) {
-             return in_array($permission->name, ['view module dashboard', 'view module history', 'view module integrasi-sistem']);
-        });
-        $superUserRole->givePermissionTo($superUserPermissions);
-
-        // 4. Assign ModuleAccess for Specific Users (Legacy/Hybrid support)
-        
-        // Example: Assign Dashboard to all users in ModuleAccess table
-        $allUsers = User::all();
-        $dashboardModule = Module::where('slug', 'dashboard')->first();
-
-        if ($dashboardModule) {
-            foreach ($allUsers as $user) {
-                ModuleAccess::updateOrCreate(
-                    ['user_id' => $user->id, 'module_id' => $dashboardModule->id],
-                    [
-                        'can_read' => true,
-                        'can_write' => false,
-                        'can_delete' => false,
-                    ]
-                );
-            }
-        }
     }
 }

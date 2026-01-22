@@ -17,6 +17,8 @@ class Module extends Model
         'icon',
         'status',
         'tab_type',
+        'group',
+        'order',
     ];
 
     public function moduleAccesses()

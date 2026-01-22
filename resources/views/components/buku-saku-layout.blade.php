@@ -29,7 +29,7 @@
                 </button>
             </div>
             <nav class="flex flex-col p-2 space-y-1">
-                            @if(auth()->user()->hasModuleAccess('Beranda'))
+                            @if(auth()->user()->hasModuleAccess('Buku Saku'))
                             <a href="{{ route('buku-saku.index') }}" 
                                class="flex items-center px-4 py-2 text-sm font-medium rounded-md {{ request()->routeIs('buku-saku.index') ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50' }}">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="mr-3 h-5 w-5 {{ request()->routeIs('buku-saku.index') ? 'text-blue-500' : 'text-gray-400' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
