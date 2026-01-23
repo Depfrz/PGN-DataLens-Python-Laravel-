@@ -67,7 +67,7 @@
                     <div class="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-transparent dark:from-blue-900/10 dark:to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                     
                     <!-- Status Indicator -->
-                    <div class="absolute top-4 left-4 z-20">
+                    <div class="absolute top-4 left-4 z-10">
                          @if($module->status)
                             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
                                 <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
@@ -83,7 +83,7 @@
 
                     <!-- External Link Indicator (Optional, subtle) -->
                     @if($module->tab_type === 'new' || Str::startsWith($module->url, ['http://', 'https://']))
-                    <div class="absolute top-4 right-4 text-gray-300 dark:text-gray-600 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors z-20">
+                    <div class="absolute top-4 right-4 text-gray-300 dark:text-gray-600 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors z-10">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                         </svg>

@@ -118,7 +118,7 @@
         <!-- Main Content Wrapper -->
         <div class="flex-1 flex flex-col overflow-hidden">
             <!-- Top Header -->
-            <header class="bg-white dark:bg-gray-800 border-b border-transparent dark:border-gray-700 h-[80px] shadow-sm flex items-center justify-between px-4 lg:px-8 z-20 transition-colors duration-300">
+            <header class="relative bg-white dark:bg-gray-800 border-b border-transparent dark:border-gray-700 h-[80px] shadow-sm flex items-center justify-between px-4 lg:px-8 z-20 transition-colors duration-300">
                 <!-- Mobile Menu Button -->
                 <button @click="sidebarOpen = true" class="lg:hidden p-2 -ml-2 mr-2">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 dark:text-white">
@@ -208,45 +208,63 @@
                              x-transition:leave-start="opacity-100 scale-100"
                              x-transition:leave-end="opacity-0 scale-95"
                              style="display: none;" 
-                             class="absolute right-0 mt-3 w-[450px] bg-white dark:bg-gray-800 rounded-xl shadow-2xl z-50 border border-gray-100 dark:border-gray-700 overflow-hidden ring-1 ring-black ring-opacity-5">
+                             class="fixed inset-x-4 top-[80px] sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-3 sm:w-[400px] md:w-[450px] bg-white dark:bg-gray-800 rounded-xl shadow-2xl z-50 border border-gray-100 dark:border-gray-700 overflow-hidden ring-1 ring-black ring-opacity-5">
                             
                             <!-- Header -->
-                            <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-white dark:bg-gray-800">
-                                <h3 class="text-lg font-bold text-gray-900 dark:text-white">Notifikasi</h3>
+                            <div class="px-4 py-3 sm:px-5 sm:py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-white dark:bg-gray-800 sticky top-0 z-10">
+                                <h3 class="text-base sm:text-lg font-bold text-gray-900 dark:text-white">Notifikasi</h3>
                                 <button @click="markAllRead()" class="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold hover:bg-blue-50 dark:hover:bg-gray-700 px-3 py-1.5 rounded-lg transition-all whitespace-nowrap">
                                     Tandai semua dibaca
                                 </button>
                             </div>
 
                             <!-- Notification List -->
-                            <div class="max-h-[400px] overflow-y-auto custom-scrollbar">
+                            <div class="max-h-[60vh] sm:max-h-[400px] overflow-y-auto custom-scrollbar">
                                 <template x-for="notification in notifications" :key="notification.id">
                                     <div @click="markAsRead(notification.id)" 
                                          :class="{'bg-blue-50/60 dark:bg-blue-900/20': !notification.read_at, 'bg-white dark:bg-gray-800': notification.read_at}" 
-                                         class="px-5 py-4 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-100 dark:border-gray-700 last:border-0 transition-colors group relative">
+                                         class="px-4 py-3 sm:px-5 sm:py-4 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-100 dark:border-gray-700 last:border-0 transition-colors group relative flex gap-3 sm:gap-4 items-start">
                                         
-                                        <!-- Unread Indicator Dot -->
-                                        <div x-show="!notification.read_at" class="absolute left-2 top-5 w-2 h-2 bg-blue-500 rounded-full"></div>
+                                        <!-- Unread Indicator Dot (Mobile: smaller) -->
+                                        <div x-show="!notification.read_at" class="absolute left-1.5 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-blue-500 rounded-full sm:hidden"></div>
+                                        <div x-show="!notification.read_at" class="hidden sm:block absolute left-2 top-5 w-2 h-2 bg-blue-500 rounded-full"></div>
 
-                                        <div class="flex justify-between items-start mb-1">
-                                            <p class="text-sm font-bold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate pr-2" x-text="notification.data.module"></p>
-                                            <span class="text-[10px] font-medium text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full whitespace-nowrap" x-text="notification.created_at"></span>
+                                        <!-- App Icon / Module Icon -->
+                                        <div class="flex-shrink-0 mt-1">
+                                            <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                                                <!-- Dynamic Icon based on module (simplified fallback) -->
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+                                                    <path fill-rule="evenodd" d="M5.25 9a6.75 6.75 0 0113.5 0v.75c0 2.123.8 4.057 2.118 5.52a.75.75 0 01-.297 1.206c-1.544.57-3.16.99-4.831 1.243a3.75 3.75 0 11-7.48 0 24.585 24.585 0 01-4.831-1.244.75.75 0 01-.298-1.205A8.217 8.217 0 005.25 9.75V9zm4.502 8.9a2.25 2.25 0 104.496 0 25.057 25.057 0 01-4.496 0z" clip-rule="evenodd" />
+                                                </svg>
+                                            </div>
                                         </div>
-                                        
-                                        <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed break-words" x-text="notification.data.description"></p>
-                                        
-                                        <div class="mt-2 flex items-center gap-2">
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium"
-                                                  :class="{
-                                                      'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300': notification.data.action === 'create',
-                                                      'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300': notification.data.action === 'delete',
-                                                      'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300': notification.data.action === 'update',
-                                                      'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300': notification.data.action === 'login',
-                                                      'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300': notification.data.action === 'logout'
-                                                  }"
-                                                  x-text="notification.data.action">
-                                            </span>
-                                            <span class="text-[11px] text-gray-400" x-text="'• ' + notification.data.actor_name"></span>
+
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex justify-between items-start mb-1 gap-2">
+                                                <p class="text-sm font-bold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate" x-text="notification.data.module"></p>
+                                                <span class="text-[10px] font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap flex-shrink-0" x-text="new Date(notification.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})"></span>
+                                            </div>
+                                            
+                                            <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed line-clamp-2" x-text="notification.data.description"></p>
+                                            
+                                            <div class="mt-2 flex flex-wrap items-center gap-2">
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium uppercase tracking-wide"
+                                                      :class="{
+                                                          'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300': notification.data.action === 'create',
+                                                          'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300': notification.data.action === 'delete',
+                                                          'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300': notification.data.action === 'update',
+                                                          'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300': notification.data.action === 'login',
+                                                          'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300': notification.data.action === 'logout'
+                                                      }"
+                                                      x-text="notification.data.action">
+                                                </span>
+                                                <span class="text-[11px] text-gray-400 flex items-center gap-1">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3">
+                                                        <path d="M10 8a3 3 0 100-6 3 3 0 000 6zM3.465 14.493a1.23 1.23 0 00.41 1.412A9.957 9.957 0 0010 18c2.31 0 4.438-.784 6.131-2.1.43-.333.604-.903.408-1.41a7.002 7.002 0 00-13.074.003z" />
+                                                    </svg>
+                                                    <span x-text="notification.data.actor_name"></span>
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
                                 </template>
@@ -367,7 +385,7 @@
             </header>
 
             <!-- Content Scroll Area -->
-            <main class="flex-1 overflow-y-auto p-8">
+            <main class="flex-1 overflow-y-auto p-8 relative z-0">
                 {{ $slot }}
             </main>
         </div>
