@@ -4,74 +4,82 @@
     </div>
 
     <!-- Search Section -->
-    <div class="bg-white p-3 sm:p-4 rounded-lg shadow-sm mb-6">
-        <h3 class="text-base font-semibold text-gray-800 mb-3">Pencarian Dokumen</h3>
-        <form action="{{ route('buku-saku.index') }}" method="GET" class="flex flex-col sm:flex-row gap-3">
+    <div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm mb-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-3">Pencarian Dokumen</h3>
+        <form action="{{ route('buku-saku.index') }}" method="GET" class="flex flex-col sm:flex-row gap-4">
             <div class="flex-1">
                 <input type="text" name="q" value="{{ $query ?? '' }}" 
-                    class="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" 
+                    class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base" 
                     placeholder="Cari dokumen relevan, misal: welder" required>
             </div>
-            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-5 rounded-lg shadow transition-colors w-full sm:w-auto text-sm">
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-6 rounded-lg shadow transition-colors w-full sm:w-auto text-base">
                 Cari
             </button>
         </form>
     </div>
 
     @if($documents->isNotEmpty())
-        <div class="mb-3 text-sm text-gray-600">
+        <div class="mb-4 text-base text-gray-600">
             @if($hasSearch && (!isset($resultsNotFound) || !$resultsNotFound))
                 Ditemukan {{ $documents->count() }} dokumen yang relevan.
             @else
                 Dokumen Terbaru ({{ $documents->count() }})
             @endif
         </div>
-        <div class="grid grid-cols-1 gap-3">
+        <div class="grid grid-cols-1 gap-4">
             @foreach($documents as $doc)
-                <div class="border rounded-lg p-3 hover:shadow-md transition-shadow flex items-start justify-between bg-white gap-3">
-                    <div class="flex items-start gap-3 flex-1 min-w-0">
+                <div class="border rounded-lg p-4 hover:shadow-md transition-shadow flex items-start justify-between bg-white gap-4">
+                    <div class="flex items-start gap-4 flex-1 min-w-0">
                         <div class="flex-1 min-w-0">
-                            <h3 class="font-bold text-sm text-gray-800 break-words">
+                            <h3 class="font-bold text-base text-gray-800 break-words mb-1">
                                 <a href="{{ route('buku-saku.show', $doc->id) }}" class="hover:text-blue-600 hover:underline">
                                     {{ $doc->title }}
                                 </a>
                             </h3>
                             
                             <!-- Metadata -->
-                            <div class="flex flex-wrap items-center gap-2 text-xs text-gray-500 mb-1.5">
-                                <span class="uppercase bg-gray-100 px-1.5 py-0.5 rounded font-semibold">{{ $doc->file_type }}</span>
+                            <div class="flex flex-wrap items-center gap-3 text-sm text-gray-500 mb-2">
+                                <span class="uppercase bg-gray-100 px-2 py-0.5 rounded font-bold">{{ $doc->file_type }}</span>
                                 <span class="hidden sm:inline">&bull;</span>
                                 <span>{{ $doc->file_size }}</span>
                                 <span class="hidden sm:inline">&bull;</span>
                                 <span>{{ $doc->created_at->diffForHumans() }}</span>
                             </div>
 
-                            <p class="text-xs text-gray-600 mb-1.5 line-clamp-2">{{ $doc->description }}</p>
+                            <p class="text-sm text-gray-600 mb-2 line-clamp-2">{{ $doc->description }}</p>
                             
                             <!-- Tags above Validity -->
                             @if($doc->tags)
-                                <div class="mb-1.5 flex flex-wrap gap-1">
+                                <div class="mb-2 flex flex-wrap gap-1.5">
                                     @foreach(explode(',', $doc->tags) as $tag)
-                                        <span class="inline-block bg-gray-100 text-gray-600 text-xs px-1.5 py-0.5 rounded">{{ trim($tag) }}</span>
+                                        <span class="inline-block bg-gray-100 text-gray-600 text-sm px-2 py-0.5 rounded">{{ trim($tag) }}</span>
                                     @endforeach
                                 </div>
                             @endif
                             
                             <!-- Validity / Countdown -->
-                            <div class="text-xs font-medium mt-1">
+                            <div class="text-sm font-bold mt-1">
                                 @if($doc->valid_until)
                                     @php
                                         $now = \Carbon\Carbon::now();
-                                        $diff = $now->diffInDays($doc->valid_until, false);
-                                        $isExpired = $diff < 0;
-                                        $color = $isExpired ? 'text-red-600' : ($diff < 365 ? ($diff < 30 ? 'text-red-500' : 'text-yellow-600') : 'text-green-600');
-                                        $countdownText = $isExpired ? 'Sudah Kadaluarsa' : ($diff . ' Hari Lagi');
+                                        $diffInYears = $now->floatDiffInYears($doc->valid_until, false);
                                     @endphp
-                                    <span class="{{ $color }}">
-                                        Masa Berlaku: {{ $doc->valid_until->format('d M Y') }} ({{ $countdownText }})
-                                    </span>
+                                    
+                                    @if($diffInYears < 0)
+                                        <span class="text-red-600">
+                                            Status: Expired ({{ $doc->valid_until->format('d M Y') }})
+                                        </span>
+                                    @elseif($diffInYears <= 1)
+                                        <span class="text-red-600">
+                                            Status: <span class="countdown-timer" data-target="{{ $doc->valid_until->toIso8601String() }}">Hitung mundur...</span>
+                                        </span>
+                                    @else
+                                        <span class="text-green-600">
+                                            Status: Masih Berlaku ({{ $doc->valid_until->format('d M Y') }})
+                                        </span>
+                                    @endif
                                 @else
-                                    <span class="text-gray-500">Masa Berlaku: -</span>
+                                    <span class="text-gray-500 font-normal">Status: -</span>
                                 @endif
                             </div>
                         </div>

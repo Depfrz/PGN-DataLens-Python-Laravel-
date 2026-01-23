@@ -9,15 +9,15 @@
             <p>Anda belum memiliki dokumen favorit.</p>
         </div>
     @else
-        <div class="grid grid-cols-1 gap-3">
+        <div class="grid grid-cols-1 gap-4">
             @foreach($documents as $doc)
-                <div class="border rounded-lg p-3 hover:shadow-md transition-shadow flex items-start justify-between bg-white gap-3">
-                    <div class="flex items-start gap-3 flex-1 min-w-0">
+                <div class="border rounded-lg p-4 hover:shadow-md transition-shadow flex items-start justify-between bg-white gap-4">
+                    <div class="flex items-start gap-4 flex-1 min-w-0">
                         <div class="flex-1 min-w-0">
-                            <h3 class="font-bold text-sm text-gray-800 break-words">{{ $doc->title }}</h3>
-                            <p class="text-xs text-gray-500 mb-1 line-clamp-2">{{ $doc->description }}</p>
-                            <div class="flex flex-wrap items-center gap-2 text-xs text-gray-400">
-                                <span class="uppercase bg-gray-100 px-1.5 py-0.5 rounded">{{ $doc->file_type }}</span>
+                            <h3 class="font-bold text-base text-gray-800 break-words mb-1">{{ $doc->title }}</h3>
+                            <p class="text-sm text-gray-500 mb-2 line-clamp-2">{{ $doc->description }}</p>
+                            <div class="flex flex-wrap items-center gap-3 text-sm text-gray-400">
+                                <span class="uppercase bg-gray-100 px-2 py-0.5 rounded font-bold">{{ $doc->file_type }}</span>
                                 <span class="hidden sm:inline">&bull;</span>
                                 <span>{{ $doc->file_size }}</span>
                                 <span class="hidden sm:inline">&bull;</span>

@@ -8,7 +8,7 @@
         
         <!-- File Upload -->
         <div class="mb-6">
-            <label class="block text-sm font-medium text-gray-700 mb-2">File Dokumen</label>
+            <label class="block text-sm font-bold text-gray-700 mb-2">File Dokumen</label>
             <div id="dropZone" class="border-2 border-dashed border-gray-300 rounded-lg p-4 sm:p-6 text-center cursor-pointer hover:bg-gray-50 transition-colors relative">
                 <input type="file" name="file" id="fileInput" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50" required accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx">
                 
@@ -18,8 +18,8 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                         </svg>
                     </div>
-                    <p class="text-sm text-blue-600 font-medium"><span class="hover:underline">Klik untuk upload</span> <span class="text-gray-600 font-normal">atau drag & drop</span></p>
-                    <p class="text-xs text-gray-500 mt-1">PDF, Word (DOC/DOCX) hingga 15MB</p>
+                    <p class="text-base text-blue-600 font-medium"><span class="hover:underline">Klik untuk upload</span> <span class="text-gray-600 font-normal">atau drag & drop</span></p>
+                    <p class="text-sm text-gray-500 mt-1">PDF, Word (DOC/DOCX) hingga 30MB</p>
                 </div>
 
                 <div id="fileState" class="hidden">
@@ -28,32 +28,50 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                     </div>
-                    <p id="fileNameDisplay" class="text-sm text-gray-800 font-medium truncate max-w-xs mx-auto"></p>
-                    <p id="fileSizeDisplay" class="text-xs text-gray-500 mt-1"></p>
+                    <p id="fileNameDisplay" class="text-base text-gray-800 font-medium truncate max-w-xs mx-auto"></p>
+                    <p id="fileSizeDisplay" class="text-sm text-gray-500 mt-1"></p>
                 </div>
             </div>
         </div>
 
         <!-- Title (Auto-filled but editable) -->
         <div class="mb-6">
-            <label for="titleInput" class="block text-sm font-medium text-gray-700 mb-2">Judul Dokumen</label>
-            <input type="text" name="title" id="titleInput" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-1.5" required>
+            <label for="titleInput" class="block text-base font-bold text-gray-700 mb-2">Judul Dokumen</label>
+            <input type="text" name="title" id="titleInput" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-2 text-base" required>
         </div>
 
         <!-- Valid Until -->
         <div class="mb-6">
-            <label for="validUntilInput" class="block text-sm font-medium text-gray-700 mb-2">Tanggal Masa Berlaku</label>
-            <input type="date" name="valid_until" id="validUntilInput" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-1.5" placeholder="Pilih tanggal">
-            <p class="text-xs text-gray-500 mt-1">Biarkan kosong jika tidak ada masa berlaku.</p>
+            <label for="validUntilInput" class="block text-base font-bold text-gray-700 mb-2">Tanggal Mulai Berlaku</label>
+            <div class="relative">
+                <input type="date" name="valid_until" id="validUntilInput" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-2 text-base cursor-pointer" placeholder="Pilih tanggal">
+            </div>
+            <p class="text-sm text-gray-500 mt-1">Dokumen akan berlaku selama 5 tahun dari tanggal ini.</p>
         </div>
+
+        <style>
+            /* Hide the default calendar icon */
+            input[type="date"]::-webkit-calendar-picker-indicator {
+                background: transparent;
+                bottom: 0;
+                color: transparent;
+                cursor: pointer;
+                height: auto;
+                left: 0;
+                position: absolute;
+                right: 0;
+                top: 0;
+                width: auto;
+            }
+        </style>
 
         <!-- Tags (Checklist) -->
         <div class="mb-6">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+            <label class="block text-base font-bold text-gray-700 mb-2">Tags</label>
             
             <div class="border border-gray-300 rounded-lg overflow-hidden">
                 <!-- Toolbar (Search + Add) -->
-                <div class="bg-gray-50 p-3 border-b border-gray-200 flex flex-col md:flex-row gap-3">
+                <div class="bg-gray-50 p-4 border-b border-gray-200 flex flex-col md:flex-row gap-4">
                     <!-- Search Box -->
                     <div class="flex-1 relative">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -61,13 +79,13 @@
                                 <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
                             </svg>
                         </div>
-                        <input type="text" id="searchTagInput" class="w-full rounded-md border-gray-300 pl-10 text-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Cari tags...">
+                        <input type="text" id="searchTagInput" class="w-full rounded-md border-gray-300 pl-10 text-base focus:ring-blue-500 focus:border-blue-500" placeholder="Cari tags...">
                     </div>
                     <!-- Add New Box -->
                     <div class="flex-1 flex gap-2">
-                        <input type="text" id="newTagInput" class="w-full rounded-md border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Tags baru...">
-                        <button type="button" id="addTagBtn" class="bg-blue-600 text-white px-4 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center min-w-[44px] shadow-sm" title="Tambah Tag">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <input type="text" id="newTagInput" class="w-full rounded-md border-gray-300 text-base focus:ring-blue-500 focus:border-blue-500" placeholder="Tags baru...">
+                        <button type="button" id="addTagBtn" class="bg-blue-600 text-white px-5 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center min-w-[48px] shadow-sm" title="Tambah Tag">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                             </svg>
                         </button>
@@ -75,13 +93,13 @@
                 </div>
 
                 <!-- Grid Container -->
-                <div id="tagsContainer" class="grid grid-cols-1 gap-3 max-h-80 overflow-y-auto p-4 bg-white">
+                <div id="tagsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-80 overflow-y-auto p-4 bg-white">
                     @foreach($availableTags as $tag)
                     <label class="relative flex items-center p-3 rounded-lg border border-gray-200 hover:bg-blue-50 hover:border-blue-200 cursor-pointer transition-all tag-item group bg-white">
                         <input type="checkbox" name="tags[]" value="{{ $tag->name }}" class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300 mr-3">
-                        <span class="text-sm text-gray-700 font-medium flex-1 tag-name truncate">{{ $tag->name }}</span>
+                        <span class="text-base text-gray-700 font-medium flex-1 tag-name truncate">{{ $tag->name }}</span>
                         <button type="button" class="text-gray-400 hover:text-red-500 delete-tag-btn opacity-0 group-hover:opacity-100 transition-opacity p-1 ml-2 z-10" data-id="{{ $tag->id }}" title="Hapus Tag">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
                         </button>
@@ -93,8 +111,8 @@
 
         <!-- Deskripsi -->
         <div class="mb-8">
-            <label for="description" class="block text-sm font-medium text-gray-700 mb-2">Deskripsi (Opsional)</label>
-            <textarea name="description" id="description" rows="4" placeholder="Tambahkan keterangan singkat tentang dokumen ini..." class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-3"></textarea>
+            <label for="description" class="block text-base font-bold text-gray-700 mb-2">Deskripsi (Opsional)</label>
+            <textarea name="description" id="description" rows="4" placeholder="Tambahkan keterangan singkat tentang dokumen ini..." class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-4 text-base"></textarea>
         </div>
 
         <!-- Submit -->

@@ -105,7 +105,7 @@ class BukuSakuController extends Controller
             'description' => 'nullable|string',
             'tags' => 'nullable|array', // Now an array from checklist
             'tags.*' => 'string',
-            'file' => 'required|file|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx|max:15360', // Max 15MB
+            'file' => 'required|file|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx|max:30720', // Max 15MB
             'valid_until' => 'nullable|date',
         ]);
 
@@ -133,12 +133,12 @@ class BukuSakuController extends Controller
             'status' => 'approved', // Auto-approved
             'approved_by' => Auth::id(),
             'approved_at' => now(),
-            'valid_until' => $request->valid_until,
+            'valid_until' => $request->valid_until ? \Carbon\Carbon::parse($request->valid_until)->addYears(5) : null,
         ]);
 
-        // Notify All Users about new document (since it's auto-approved)
-        $otherUsers = User::where('id', '!=', Auth::id())->get();
-        Notification::send($otherUsers, new SystemNotification(
+        // Notify All Users about new document
+        $allUsers = User::all();
+        Notification::send($allUsers, new SystemNotification(
             'new_document',
             'Buku Saku',
             'Dokumen baru tersedia: "' . $request->title . '"',
@@ -181,14 +181,14 @@ class BukuSakuController extends Controller
             'description' => 'nullable|string',
             'tags' => 'nullable|array',
             'tags.*' => 'string',
-            'file' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx|max:15360',
+            'file' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx|max:30720',
             'valid_until' => 'nullable|date',
         ]);
 
         $data = [
             'title' => $request->title,
             'description' => $request->description,
-            'valid_until' => $request->valid_until,
+            'valid_until' => $request->valid_until ? \Carbon\Carbon::parse($request->valid_until)->addYears(5) : null,
         ];
 
         // Update tags
