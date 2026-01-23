@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Carbon\Carbon;
 
 class ListPengawasanController extends Controller
 {
@@ -66,7 +67,7 @@ class ListPengawasanController extends Controller
         $search = $request->query('search', '');
 
         $pengawasQuery = DB::table('pengawas')
-            ->select('id', 'name', 'divisi', 'tanggal', 'status', 'created_at', 'bukti_path', 'bukti_original_name', 'bukti_mime', 'bukti_size', 'bukti_uploaded_at')
+            ->select('id', 'name', 'divisi', 'tanggal', 'deadline', 'status', 'created_at', 'bukti_path', 'bukti_original_name', 'bukti_mime', 'bukti_size', 'bukti_uploaded_at')
             ->orderBy('created_at', 'desc');
 
         if ($search !== '') {
@@ -82,11 +83,17 @@ class ListPengawasanController extends Controller
                 ->pluck('keterangan_options.name')
                 ->toArray();
 
+            $createdAt = $p->created_at ? Carbon::parse($p->created_at) : null;
+            $deadline = $p->deadline ? Carbon::parse($p->deadline) : null;
+
             return [
                 'id' => $p->id,
                 'nama' => $p->name,
                 'divisi' => $p->divisi ?? '-',
-                'tanggal' => $p->created_at ? \Carbon\Carbon::parse($p->created_at)->format('d-m-Y H:i') : '-',
+                'created_at' => $createdAt ? $createdAt->toISOString() : null,
+                'tanggal' => $createdAt ? $createdAt->format('d-m-Y H:i') : '-',
+                'deadline' => $deadline ? $deadline->format('Y-m-d') : null,
+                'deadline_display' => $deadline ? $deadline->format('d-m-Y') : '-',
                 'status' => $this->normalizeStatus($p->status),
                 'keterangan' => $labels,
                 'bukti' => [
@@ -102,7 +109,9 @@ class ListPengawasanController extends Controller
 
         $options = DB::table('keterangan_options')->orderBy('name')->pluck('name')->toArray();
 
-        return view('list-pengawasan.index', compact('items', 'options'));
+        $canWrite = $this->canWriteForModule($user);
+
+        return view('list-pengawasan.index', compact('items', 'options', 'canWrite'));
     }
 
     public function store(Request $request)
@@ -118,6 +127,7 @@ class ListPengawasanController extends Controller
             'divisi' => ['nullable', 'string', 'max:255'],
             'keterangan' => ['array'],
             'keterangan.*' => ['string', 'max:255'],
+            'deadline' => ['nullable', 'date'],
             'status' => ['nullable', 'string', Rule::in(self::ALLOWED_STATUS)],
         ]);
 
@@ -127,6 +137,7 @@ class ListPengawasanController extends Controller
             'name' => $data['nama'],
             'divisi' => $data['divisi'] ?? null,
             'tanggal' => null,
+            'deadline' => $data['deadline'] ?? null,
             'status' => $status,
             'created_at' => now(),
             'updated_at' => now(),
@@ -155,6 +166,7 @@ class ListPengawasanController extends Controller
             'id' => $pengawasId,
             'divisi' => $data['divisi'] ?? '-',
             'tanggal' => now()->format('d-m-Y H:i'),
+            'deadline' => $data['deadline'] ?? null,
             'status' => $status,
         ]);
     }
@@ -258,6 +270,33 @@ class ListPengawasanController extends Controller
         }
 
         return response()->json(['message' => 'Status berhasil diperbarui']);
+    }
+
+    public function updateDeadline(Request $request, int $id)
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        if (!$this->canWriteForModule($user)) {
+            return response()->json(['message' => 'Unauthorized action.'], 403);
+        }
+
+        $data = $request->validate([
+            'deadline' => ['nullable', 'date'],
+        ]);
+
+        $updated = DB::table('pengawas')->where('id', $id)->update([
+            'deadline' => $data['deadline'] ?? null,
+            'updated_at' => now(),
+        ]);
+
+        if (!$updated) {
+            return response()->json(['message' => 'Proyek tidak ditemukan'], 404);
+        }
+
+        return response()->json([
+            'message' => 'Deadline berhasil diperbarui',
+            'deadline' => $data['deadline'] ?? null,
+        ]);
     }
 
     public function uploadBukti(Request $request, int $id)

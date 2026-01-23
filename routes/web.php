@@ -63,6 +63,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('list-pengawasan.update');
     Route::patch('/list-pengawasan/{id}/status', [ListPengawasanController::class, 'updateStatus'])
         ->name('list-pengawasan.update-status');
+    Route::patch('/list-pengawasan/{id}/deadline', [ListPengawasanController::class, 'updateDeadline'])
+        ->name('list-pengawasan.update-deadline');
     Route::post('/list-pengawasan/{id}/bukti', [ListPengawasanController::class, 'uploadBukti'])
         ->name('list-pengawasan.upload-bukti');
     Route::delete('/list-pengawasan/{id}/bukti', [ListPengawasanController::class, 'deleteBukti'])
