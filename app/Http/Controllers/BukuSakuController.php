@@ -152,8 +152,11 @@ class BukuSakuController extends Controller
     {
         $document = BukuSakuDocument::findOrFail($id);
         
+        /** @var User $user */
+        $user = Auth::user();
+
         // Check permission (Owner or Admin/Supervisor)
-        if ($document->user_id !== Auth::id() && !Auth::user()->hasAnyRole(['Admin', 'Supervisor'])) {
+        if ($document->user_id !== $user->id && !$user->hasAnyRole(['Admin', 'Supervisor'])) {
              return redirect()->back()->with('error', 'Anda tidak memiliki izin untuk mengedit dokumen ini.');
         }
 
@@ -165,8 +168,11 @@ class BukuSakuController extends Controller
     {
         $document = BukuSakuDocument::findOrFail($id);
 
+        /** @var User $user */
+        $user = Auth::user();
+
         // Check permission
-        if ($document->user_id !== Auth::id() && !Auth::user()->hasAnyRole(['Admin', 'Supervisor'])) {
+        if ($document->user_id !== $user->id && !$user->hasAnyRole(['Admin', 'Supervisor'])) {
              return redirect()->back()->with('error', 'Anda tidak memiliki izin untuk mengedit dokumen ini.');
         }
 
