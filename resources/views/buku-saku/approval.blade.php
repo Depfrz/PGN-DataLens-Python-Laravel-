@@ -65,7 +65,7 @@
                                     </div>
                                 @elseif($diffInYears <= 1)
                                     <div class="text-sm font-bold text-red-600">
-                                        <span class="countdown-timer" data-target="{{ $doc->valid_until->toIso8601String() }}">Hitung mundur...</span>
+                                        <span class="countdown-timer tabular-nums" data-target="{{ $doc->valid_until->toIso8601String() }}">Hitung mundur...</span>
                                     </div>
                                     <div class="text-xs text-red-500 font-semibold mt-0.5">
                                         Exp: {{ $doc->valid_until->format('d/m/Y') }}

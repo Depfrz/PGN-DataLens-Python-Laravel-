@@ -180,7 +180,10 @@
                     months--;
                 }
                 
-                el.innerHTML = `${months} Bulan, ${days} Hari, ${hours} Jam, ${minutes} Menit, ${seconds} Detik`;
+                // Pad with leading zeros
+                const pad = (num) => String(num).padStart(2, '0');
+                
+                el.innerHTML = `${months} Bulan, ${days} Hari, ${pad(hours)} Jam, ${pad(minutes)} Menit, ${pad(seconds)} Detik`;
             }
 
             function updateAllVisible() {
