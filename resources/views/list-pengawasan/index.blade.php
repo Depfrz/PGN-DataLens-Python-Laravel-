@@ -1,4 +1,4 @@
-<x-dashboard-layout>
+<x-dashboard-layout title="List Pengawasan">
     <div x-data="{
         canWrite: {{ Js::from($canWrite ?? false) }},
         lpPerms: {{ Js::from($lpPermissions ?? []) }},

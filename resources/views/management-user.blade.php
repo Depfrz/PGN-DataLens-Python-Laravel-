@@ -1,4 +1,4 @@
-<x-dashboard-layout>
+<x-dashboard-layout title="Management User">
     <div x-data="{
         search: '',
         addUserModal: false,

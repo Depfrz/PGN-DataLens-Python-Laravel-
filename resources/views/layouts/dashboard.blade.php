@@ -5,7 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'PGN One Portal') }}</title>
+    <title>PGN OnePortal - {{ $title ?? 'Dashboard' }}</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="{{ asset('images/pgn-logo.svg') }}">
+    <link rel="alternate icon" href="{{ asset('images/pgn-logo.png') }}">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -48,24 +52,47 @@
     </script>
 </head>
 <body class="font-sans antialiased bg-[#d9d9d9] dark:bg-gray-900 transition-colors duration-300">
-    <div x-data="{ sidebarOpen: false }" class="flex h-screen overflow-hidden bg-[#d9d9d9] dark:bg-gray-900 transition-colors">
+    <div x-data="{ 
+        sidebarOpen: false, 
+        sidebarDesktopOpen: (function() {
+            const stored = localStorage.getItem('sidebarDesktopOpen');
+            return stored === null ? true : stored === 'true';
+        })(),
+        toggleSidebarDesktop() {
+            this.sidebarDesktopOpen = !this.sidebarDesktopOpen;
+            localStorage.setItem('sidebarDesktopOpen', this.sidebarDesktopOpen);
+        }
+    }" class="flex h-screen overflow-hidden bg-[#d9d9d9] dark:bg-gray-900 transition-colors">
         <!-- Mobile Sidebar Overlay -->
-        <div x-show="sidebarOpen" @click="sidebarOpen = false" class="fixed inset-0 z-20 bg-black bg-opacity-50 lg:hidden" style="display: none;"></div>
+        <div x-show="sidebarOpen" @click="sidebarOpen = false" class="fixed inset-0 z-20 bg-black bg-opacity-50 lg:hidden" style="display: none;"
+             x-transition:enter="transition-opacity ease-linear duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition-opacity ease-linear duration-300"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"></div>
 
         <!-- Sidebar -->
-        <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" class="fixed inset-y-0 left-0 z-30 w-[280px] bg-[#439df1] dark:bg-gray-800 flex flex-col transition-transform duration-300 lg:static lg:translate-x-0 border-r border-blue-400/30 dark:border-gray-700">
+        <aside :class="{
+                'translate-x-0': sidebarOpen, 
+                '-translate-x-full': !sidebarOpen,
+                'lg:translate-x-0': true,
+                'lg:w-[280px]': sidebarDesktopOpen,
+                'lg:w-0': !sidebarDesktopOpen
+               }" 
+               class="fixed inset-y-0 left-0 z-30 w-[280px] bg-[#439df1] dark:bg-gray-800 flex flex-col transition-all duration-300 lg:static border-r border-blue-400/30 dark:border-gray-700 overflow-hidden">
             <!-- Logo -->
-            <div class="p-6 flex items-center justify-center bg-[#439df1] dark:bg-gray-800 transition-colors">
-                <a href="{{ route('dashboard') }}" class="block">
-                    <img src="{{ asset('images/pgn-logo.png') }}" alt="PGN Logo" class="w-[160px] h-auto object-contain">
+            <div class="p-6 flex items-center justify-center bg-[#439df1] dark:bg-gray-800 transition-colors border-b border-blue-400/30 dark:border-gray-700 shrink-0 h-[80px]">
+                <a href="{{ route('dashboard') }}" class="block w-full">
+                    <img src="{{ asset('images/pgn-logo.png') }}" alt="PGN Logo" class="w-[160px] h-auto object-contain mx-auto">
                 </a>
             </div>
 
             <!-- Navigation -->
-            <nav class="flex-1 px-4 space-y-4 mt-4">
+            <nav class="flex-1 px-4 space-y-4 mt-4 overflow-y-auto">
                 <!-- Dashboard -->
-                <a href="{{ route('dashboard') }}" class="flex items-center px-4 py-3 rounded-xl transition-colors group {{ request()->routeIs('dashboard') ? 'bg-white dark:bg-gray-700 shadow-sm' : 'hover:bg-white/20 dark:hover:bg-gray-700' }}">
-                    <div class="w-8 h-8 flex items-center justify-center mr-4">
+                <a href="{{ route('dashboard') }}" class="flex items-center px-4 py-3 rounded-xl transition-colors group whitespace-nowrap {{ request()->routeIs('dashboard') ? 'bg-white dark:bg-gray-700 shadow-sm' : 'hover:bg-white/20 dark:hover:bg-gray-700' }}">
+                    <div class="w-8 h-8 flex items-center justify-center mr-4 shrink-0">
                         <!-- Home Icon -->
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-black dark:text-white group-hover:text-black dark:group-hover:text-white transition-colors">
                             <path d="M11.47 3.84a.75.75 0 011.06 0l8.69 8.69a.75.75 0 101.06-1.06l-8.689-8.69a2.25 2.25 0 00-3.182 0l-8.69 8.69a.75.75 0 001.061 1.06l8.69-8.69z" />
@@ -77,8 +104,8 @@
 
                 <!-- Data History -->
                 @can('view module history')
-                <a href="{{ route('history') }}" class="flex items-center px-4 py-3 rounded-xl transition-colors group {{ request()->routeIs('history') ? 'bg-white dark:bg-gray-700 shadow-sm' : 'hover:bg-white/20 dark:hover:bg-gray-700' }}">
-                    <div class="w-8 h-8 flex items-center justify-center mr-4">
+                <a href="{{ route('history') }}" class="flex items-center px-4 py-3 rounded-xl transition-colors group whitespace-nowrap {{ request()->routeIs('history') ? 'bg-white dark:bg-gray-700 shadow-sm' : 'hover:bg-white/20 dark:hover:bg-gray-700' }}">
+                    <div class="w-8 h-8 flex items-center justify-center mr-4 shrink-0">
                         <!-- History Icon -->
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-black dark:text-white group-hover:text-black dark:group-hover:text-white transition-colors">
                             <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12.75 6a.75.75 0 00-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 000-1.5h-3.75V6z" clip-rule="evenodd" />
@@ -90,8 +117,8 @@
 
                 <!-- Management User -->
                 @can('view module management-user')
-                <a href="{{ route('management-user.index') }}" class="flex items-center px-4 py-3 rounded-xl transition-colors group {{ request()->routeIs('management-user.*') ? 'bg-white dark:bg-gray-700 shadow-sm' : 'hover:bg-white/20 dark:hover:bg-gray-700' }}">
-                    <div class="w-8 h-8 flex items-center justify-center mr-4">
+                <a href="{{ route('management-user.index') }}" class="flex items-center px-4 py-3 rounded-xl transition-colors group whitespace-nowrap {{ request()->routeIs('management-user.*') ? 'bg-white dark:bg-gray-700 shadow-sm' : 'hover:bg-white/20 dark:hover:bg-gray-700' }}">
+                    <div class="w-8 h-8 flex items-center justify-center mr-4 shrink-0">
                         <!-- User Group Icon -->
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-black dark:text-white group-hover:text-black dark:group-hover:text-white transition-colors">
                             <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z" clip-rule="evenodd" />
@@ -103,8 +130,8 @@
 
                 <!-- Integrasi Sistem -->
                 @can('view module integrasi-sistem')
-                <a href="{{ route('integrasi-sistem.index') }}" class="flex items-center px-4 py-3 rounded-xl transition-colors group {{ request()->routeIs('integrasi-sistem*') ? 'bg-white dark:bg-gray-700 shadow-sm' : 'hover:bg-white/20 dark:hover:bg-gray-700' }}">
-                    <div class="w-8 h-8 flex items-center justify-center mr-4">
+                <a href="{{ route('integrasi-sistem.index') }}" class="flex items-center px-4 py-3 rounded-xl transition-colors group whitespace-nowrap {{ request()->routeIs('integrasi-sistem*') ? 'bg-white dark:bg-gray-700 shadow-sm' : 'hover:bg-white/20 dark:hover:bg-gray-700' }}">
+                    <div class="w-8 h-8 flex items-center justify-center mr-4 shrink-0">
                         <svg viewBox="0 0 46 46" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-6 h-6">
                             <path d="M8.33333 45.8333H37.5M14.0771 9.91042L18.4979 14.3312M18.4979 14.3312C19.67 13.1591 21.2591 12.5 22.9167 12.5M18.4979 14.3312C17.3258 15.5034 16.6667 17.0924 16.6667 18.75M16.6667 18.75H10.4167M16.6667 18.75C16.6667 20.4076 17.3258 21.9966 18.4979 23.1687M18.4979 23.1687L14.0771 27.5896M18.4979 23.1687C19.67 24.3409 21.2591 25 22.9167 25M22.9167 25V31.25M22.9167 25C24.5743 25 26.1633 24.3409 27.3354 23.1687M27.3354 23.1687L31.7562 27.5896M27.3354 23.1687C28.5075 21.9966 29.1667 20.4076 29.1667 18.75M35.4167 18.75H29.1667M29.1667 18.75C29.1667 17.0924 28.5075 15.5034 27.3354 14.3312M31.7562 9.91042L27.3354 14.3312M27.3354 14.3312C26.1633 13.1591 24.5743 12.5 22.9167 12.5M22.9167 12.5V6.25M0 37.5H45.8333V0H0V37.5ZM14.5833 45.8333H31.25V37.5H14.5833V45.8333Z" stroke="currentColor" stroke-width="2" class="text-black dark:text-white group-hover:text-black dark:group-hover:text-white transition-colors" />
                         </svg>
@@ -116,15 +143,24 @@
         </aside>
 
         <!-- Main Content Wrapper -->
-        <div class="flex-1 flex flex-col overflow-hidden">
+        <div class="flex-1 flex flex-col overflow-hidden w-full transition-all duration-300">
             <!-- Top Header -->
             <header class="relative bg-white dark:bg-gray-800 border-b border-transparent dark:border-gray-700 h-[80px] shadow-sm flex items-center justify-between px-4 lg:px-8 z-20 transition-colors duration-300">
-                <!-- Mobile Menu Button -->
-                <button @click="sidebarOpen = true" class="lg:hidden p-2 -ml-2 mr-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 dark:text-white">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-                    </svg>
-                </button>
+                <div class="flex items-center gap-4">
+                    <!-- Mobile Menu Button -->
+                    <button @click="sidebarOpen = true" class="lg:hidden p-2 -ml-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition duration-150 ease-in-out">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 dark:text-white">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                        </svg>
+                    </button>
+
+                    <!-- Desktop Toggle Button -->
+                    <button @click="toggleSidebarDesktop()" class="hidden lg:flex p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-700 transition-colors duration-200" title="Toggle Sidebar">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 transform transition-transform duration-300" :class="{'rotate-180': !sidebarDesktopOpen}">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                        </svg>
+                    </button>
+                </div>
 
                 <!-- Breadcrumbs (Removed) -->
                 <div></div>

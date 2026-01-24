@@ -1,4 +1,4 @@
-<x-buku-saku-layout>
+<x-buku-saku-layout title="Buku Saku">
     <div class="mb-4">
         <h2 class="text-lg font-bold text-gray-800">Selamat Datang, {{ Auth::user()->name }}</h2>
     </div>

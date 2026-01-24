@@ -1,4 +1,4 @@
-<x-dashboard-layout>
+<x-dashboard-layout title="Integrasi Sistem">
     <div x-data="{ 
         deleteMode: false,
         showDeleteModal: false,

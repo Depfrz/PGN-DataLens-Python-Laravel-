@@ -1,4 +1,6 @@
-<x-app-layout :full-width="true">
+@props(['title' => 'Buku Saku'])
+
+<x-app-layout :full-width="true" :title="$title">
     <div class="py-6 overflow-x-hidden">
         <div class="w-full px-4 sm:px-6 lg:px-12">
             <div class="flex flex-col md:flex-row gap-0 md:gap-8 w-full" x-data="{ sidebarOpen: false }">

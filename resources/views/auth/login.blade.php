@@ -5,7 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>Login - {{ config('app.name', 'PGN One Portal') }}</title>
+    <title>PGN OnePortal - Login</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="{{ asset('images/pgn-logo.svg') }}">
+    <link rel="alternate icon" href="{{ asset('images/pgn-logo.png') }}">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,7 +27,7 @@
         <div class="bg-white dark:bg-gray-800 rounded-[15px] shadow-2xl p-6 md:p-10 w-full max-w-[480px] mx-4 relative z-10 flex flex-col items-start transition-all duration-300">
              
              <!-- Logo -->
-             <div>
+             <div class="mb-8">
                  <img src="{{ asset('images/pgn-logo.png') }}" alt="PGN Logo" class="w-[150px] h-auto mb-6 select-none object-contain">
              </div>
 

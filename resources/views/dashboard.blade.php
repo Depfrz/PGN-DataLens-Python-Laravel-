@@ -1,4 +1,4 @@
-<x-dashboard-layout>
+<x-dashboard-layout title="Dashboard">
     <div class="min-h-screen p-4 lg:p-8">
         <!-- Header Section -->
         <div class="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-6">

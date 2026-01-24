@@ -1,4 +1,4 @@
-<x-dashboard-layout>
+<x-dashboard-layout title="Riwayat">
     <div class="bg-white dark:bg-gray-800 rounded-[10px] p-8 min-h-[800px] transition-colors duration-300">
         <h1 class="text-[32px] font-bold text-black dark:text-white mb-6">History Aktivitas</h1>
         
