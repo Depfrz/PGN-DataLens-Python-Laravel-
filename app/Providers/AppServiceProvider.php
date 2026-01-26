@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -11,7 +12,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Fix public path for Shared Hosting
+        if (file_exists(base_path('../public_html'))) {
+            $this->app->usePublicPath(base_path('../public_html'));
+        }
     }
 
     /**
@@ -19,6 +23,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        if (config('app.env') === 'production' || config('app.url') !== 'http://localhost') {
+            URL::forceScheme('https');
+        }
     }
 }
