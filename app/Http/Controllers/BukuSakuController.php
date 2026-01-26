@@ -23,31 +23,67 @@ class BukuSakuController extends Controller
         $resultsNotFound = false;
 
         if ($hasSearch) {
-            // Execute Python script for NLP search
-            $scriptPath = base_path('python_engine/search_engine.py');
-            $pythonPath = env('PYTHON_PATH', 'python'); // Default to 'python' (or python3)
+            // 1. Prepare Data for NLP Engine
+            // Fetch all approved documents to feed into the search engine
+            // We fetch specific columns to minimize memory usage
+            $allDocs = BukuSakuDocument::approved()
+                ->select('id', 'title', 'description', 'tags')
+                ->get()
+                ->toArray();
 
-            // Prepare query for command line (escape quotes)
-            $escapedQuery = escapeshellarg($query);
+            // Create a temporary JSON file to pass data to Python
+            // Using a unique filename to avoid race conditions
+            $tempFileName = 'search_data_' . time() . '_' . uniqid() . '.json';
+            $tempFilePath = storage_path('app/' . $tempFileName);
             
-            // On shared hosting, shell_exec might be disabled or python path issue.
-            // Fallback to simple SQL search if Python execution fails.
+            // Ensure directory exists
+            if (!file_exists(dirname($tempFilePath))) {
+                mkdir(dirname($tempFilePath), 0755, true);
+            }
+            
+            file_put_contents($tempFilePath, json_encode($allDocs));
+
+            // 2. Execute Python Script
+            $scriptPath = base_path('python_engine/search_engine.py');
+            $pythonPath = env('PYTHON_PATH', 'python'); // Default to 'python'
+
+            $escapedQuery = escapeshellarg($query);
+            $escapedFilePath = escapeshellarg($tempFilePath);
+            
             $output = null;
             try {
                 if (function_exists('shell_exec')) {
-                     $command = "\"$pythonPath\" \"$scriptPath\" $escapedQuery";
+                     // Pass: script.py [json_file_path] [query]
+                     $command = "\"$pythonPath\" \"$scriptPath\" $escapedFilePath $escapedQuery";
                      $output = shell_exec($command);
                 }
             } catch (\Exception $e) {
                 // Ignore error, fallback to SQL
             }
             
-            $results = [];
-            if ($output) {
-                $results = json_decode($output, true);
+            // Cleanup temp file
+            if (file_exists($tempFilePath)) {
+                unlink($tempFilePath);
             }
             
-            if (is_array($results) && !empty($results)) {
+            $results = [];
+            $pythonSuccess = false;
+            
+            if ($output) {
+                $decoded = json_decode($output, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                    $results = $decoded;
+                    $pythonSuccess = true;
+                }
+            }
+            
+            // Logic: Use Python results if available. 
+            // If Python failed (invalid JSON) OR Python returned 0 results, 
+            // we try the Smart SQL Fallback to be safe and ensure user sees something.
+            
+            $documents = collect();
+            
+            if ($pythonSuccess && !empty($results)) {
                 $ids = array_column($results, 'id');
                 if (!empty($ids)) {
                     $documents = BukuSakuDocument::approved()
@@ -57,17 +93,34 @@ class BukuSakuController extends Controller
                         ->sortBy(function($model) use ($ids) {
                             return array_search($model->id, $ids);
                         });
-                } else {
-                     $documents = collect();
                 }
-            } else {
-                // Fallback: Simple SQL Search (LIKE)
+            }
+            
+            // If documents is empty (either Python failed, or Python found nothing), try Smart SQL
+            if ($documents->isEmpty()) {
+                // Smart SQL Fallback: Split keywords
+                $keywords = explode(' ', $query);
+                // Filter empty keywords
+                $keywords = array_filter($keywords, function($k) { return strlen($k) > 2; }); // Ignore very short words
+                
+                if (empty($keywords)) {
+                    $keywords = [$query];
+                }
+                
                 $documents = BukuSakuDocument::approved()
                     ->with('user')
-                    ->where(function($q) use ($query) {
+                    ->where(function($q) use ($keywords, $query) {
+                        // 1. Exact phrase match (High priority if we could rank, but for SQL just include it)
                         $q->where('title', 'like', "%{$query}%")
                           ->orWhere('description', 'like', "%{$query}%")
                           ->orWhere('tags', 'like', "%{$query}%");
+                          
+                        // 2. Keyword match (Any word)
+                        foreach ($keywords as $word) {
+                            $q->orWhere('title', 'like', "%{$word}%")
+                              ->orWhere('description', 'like', "%{$word}%")
+                              ->orWhere('tags', 'like', "%{$word}%");
+                        }
                     })
                     ->orderBy('created_at', 'desc')
                     ->get();
