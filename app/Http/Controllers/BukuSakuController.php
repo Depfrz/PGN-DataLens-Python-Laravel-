@@ -238,6 +238,10 @@ class BukuSakuController extends Controller
             Auth::user()->name
         ));
 
+        if ($request->wantsJson()) {
+            return response()->json(['message' => 'Dokumen berhasil diunggah.', 'redirect' => route('buku-saku.index')]);
+        }
+
         return redirect()->route('buku-saku.index')->with('success', 'Dokumen berhasil diunggah.');
     }
 

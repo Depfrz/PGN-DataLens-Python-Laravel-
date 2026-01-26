@@ -187,27 +187,139 @@
                 }, 3000);
             }
 
-            // Upload Progress UI
+            // AJAX Upload Implementation
             const uploadForm = document.getElementById('uploadForm');
+
             if (uploadForm) {
-                uploadForm.addEventListener('submit', function() {
-                    const btn = this.querySelector('button[type="submit"]');
+                const submitBtn = uploadForm.querySelector('button[type="submit"]');
+                let xhr = null; // Store request object to allow cancellation
+
+                // Create Cancel Button (Hidden by default)
+                const cancelBtn = document.createElement('button');
+                cancelBtn.type = 'button';
+                cancelBtn.className = 'hidden bg-red-100 hover:bg-red-200 text-red-700 font-bold py-2 px-6 rounded-lg shadow transition-colors text-sm ml-2';
+                cancelBtn.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline-block -mt-1 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    Batal Upload
+                `;
+                submitBtn.parentNode.insertBefore(cancelBtn, submitBtn.nextSibling);
+
+                // Create Progress Bar (Hidden by default)
+                const progressContainer = document.createElement('div');
+                progressContainer.className = 'hidden w-full bg-gray-200 rounded-full h-2.5 mb-4 mt-2';
+                progressContainer.innerHTML = `<div id="uploadProgressBar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>`;
+                const progressText = document.createElement('p');
+                progressText.id = 'uploadProgressText';
+                progressText.className = 'hidden text-xs text-center text-gray-500 mt-1';
+                progressText.textContent = '0%';
+                
+                // Insert progress bar before buttons
+                const buttonContainer = submitBtn.parentNode;
+                buttonContainer.parentNode.insertBefore(progressContainer, buttonContainer);
+                buttonContainer.parentNode.insertBefore(progressText, buttonContainer);
+
+                // Handle Cancel
+                cancelBtn.addEventListener('click', function() {
+                    if (xhr) {
+                        xhr.abort();
+                        xhr = null;
+                        
+                        // Reset UI
+                        submitBtn.disabled = false;
+                        submitBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+                        submitBtn.innerHTML = 'Upload Dokumen';
+                        
+                        cancelBtn.classList.add('hidden');
+                        progressContainer.classList.add('hidden');
+                        progressText.classList.add('hidden');
+                        
+                        showToast('Upload dibatalkan oleh pengguna.', 'error');
+                    }
+                });
+
+                uploadForm.addEventListener('submit', function(e) {
+                    e.preventDefault(); // Stop default form submit
+
+                    // Reset Error Messages
+                    document.querySelectorAll('.text-red-500').forEach(el => el.remove());
                     
-                    // Disable button
-                    btn.disabled = true;
-                    btn.classList.add('opacity-75', 'cursor-not-allowed');
-                    
-                    // Add spinner and change text
-                    btn.innerHTML = `
+                    const formData = new FormData(this);
+                    xhr = new XMLHttpRequest();
+
+                    // UI Updates: Start
+                    submitBtn.disabled = true;
+                    submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
+                    submitBtn.innerHTML = `
                         <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
                         Sedang Mengupload...
                     `;
-                    
-                    // Show Toast
-                    showToast('Sedang memproses upload, mohon tunggu...', 'info');
+                    cancelBtn.classList.remove('hidden');
+                    progressContainer.classList.remove('hidden');
+                    progressText.classList.remove('hidden');
+                    showToast('Sedang memproses upload...', 'info');
+
+                    // Progress Event
+                    xhr.upload.addEventListener('progress', function(e) {
+                        if (e.lengthComputable) {
+                            const percent = Math.round((e.loaded / e.total) * 100);
+                            document.getElementById('uploadProgressBar').style.width = percent + '%';
+                            document.getElementById('uploadProgressText').textContent = percent + '% Uploaded';
+                        }
+                    });
+
+                    xhr.onreadystatechange = function() {
+                        if (xhr.readyState === 4) {
+                            // UI Updates: End
+                            cancelBtn.classList.add('hidden');
+                            
+                            if (xhr.status === 200) {
+                                // Success
+                                showToast('Dokumen berhasil diupload!', 'success');
+                                submitBtn.innerHTML = 'Selesai!';
+                                setTimeout(() => {
+                                    window.location.href = "{{ route('buku-saku.index') }}"; // Redirect manual
+                                }, 1000);
+                            } else if (xhr.status === 422) {
+                                // Validation Error
+                                submitBtn.disabled = false;
+                                submitBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+                                submitBtn.innerHTML = 'Upload Dokumen';
+                                progressContainer.classList.add('hidden');
+                                progressText.classList.add('hidden');
+                                
+                                const errors = JSON.parse(xhr.responseText).errors;
+                                showToast('Gagal upload. Periksa kembali inputan Anda.', 'error');
+                                
+                                // Display errors under fields
+                                Object.keys(errors).forEach(field => {
+                                    const input = document.querySelector(`[name="${field}"]`) || document.querySelector(`[name="${field}[]"]`);
+                                    if (input) {
+                                        const errorMsg = document.createElement('p');
+                                        errorMsg.className = 'text-red-500 text-xs mt-1';
+                                        errorMsg.textContent = errors[field][0];
+                                        input.parentNode.appendChild(errorMsg);
+                                    }
+                                });
+                            } else {
+                                // Server Error / Abort handled manually above
+                                if (xhr.status !== 0) { // 0 is aborted
+                                    submitBtn.disabled = false;
+                                    submitBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+                                    submitBtn.innerHTML = 'Upload Dokumen';
+                                    showToast('Terjadi kesalahan server (' + xhr.status + ').', 'error');
+                                }
+                            }
+                        }
+                    };
+
+                    xhr.open('POST', this.action, true);
+                    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest'); // Mark as AJAX
+                    xhr.send(formData);
                 });
             }
 
