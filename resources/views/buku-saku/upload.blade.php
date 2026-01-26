@@ -98,7 +98,7 @@
                     <label class="relative flex items-center p-3 rounded-lg border border-gray-200 hover:bg-blue-50 hover:border-blue-200 cursor-pointer transition-all tag-item group bg-white">
                         <input type="checkbox" name="tags[]" value="{{ $tag->name }}" class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300 mr-3">
                         <span class="text-base text-gray-700 font-medium flex-1 tag-name truncate">{{ $tag->name }}</span>
-                        <button type="button" class="text-gray-400 hover:text-red-500 delete-tag-btn opacity-0 group-hover:opacity-100 transition-opacity p-1 ml-2 z-10" data-id="{{ $tag->id }}" title="Hapus Tag">
+                        <button type="button" class="text-gray-400 hover:text-red-500 delete-tag-btn p-1 ml-2 z-10" data-id="{{ $tag->id }}" title="Hapus Tag">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
@@ -123,8 +123,67 @@
         </div>
     </form>
 
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteTagModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden transition-opacity">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-sm mx-4 transform transition-all scale-100">
+            <div class="p-6 text-center">
+                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                    <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                </div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Hapus Kategori?</h3>
+                <p class="text-sm text-gray-500 mb-6">Apakah Anda yakin ingin menghapus kategori ini secara permanen?</p>
+                <div class="flex justify-center gap-3">
+                    <button type="button" id="cancelDeleteBtn" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition-colors">
+                        Batal
+                    </button>
+                    <button type="button" id="confirmDeleteBtn" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium shadow-sm transition-colors">
+                        Hapus
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toastNotification" class="fixed top-5 right-5 z-[9999] transform transition-all duration-300 translate-x-full opacity-0 pointer-events-none">
+        <div class="flex items-center gap-3 rounded-2xl bg-white border border-gray-100 shadow-2xl px-4 py-3">
+             <div id="toastIcon" class="flex h-9 w-9 items-center justify-center rounded-xl">
+                 <!-- Icon injected via JS -->
+             </div>
+             <p id="toastMessage" class="text-sm font-medium text-gray-900"></p>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Toast Logic
+            function showToast(message, type = 'success') {
+                const toast = document.getElementById('toastNotification');
+                const iconContainer = document.getElementById('toastIcon');
+                const msgElement = document.getElementById('toastMessage');
+
+                // Reset classes
+                toast.classList.remove('translate-x-full', 'opacity-0', 'pointer-events-none');
+                
+                // Set content based on type
+                if (type === 'success') {
+                    iconContainer.className = 'flex h-9 w-9 items-center justify-center rounded-xl bg-green-100 text-green-700';
+                    iconContainer.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5"><path fill-rule="evenodd" d="M16.704 4.294a.75.75 0 01.002 1.06l-8.25 8.25a.75.75 0 01-1.06 0l-3.75-3.75a.75.75 0 011.06-1.06l3.22 3.22 7.72-7.72a.75.75 0 011.058 0z" clip-rule="evenodd" /></svg>`;
+                } else {
+                    iconContainer.className = 'flex h-9 w-9 items-center justify-center rounded-xl bg-red-100 text-red-700';
+                    iconContainer.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-5 w-5"><path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" /></svg>`;
+                }
+
+                msgElement.textContent = message;
+
+                // Hide after 3 seconds
+                setTimeout(() => {
+                    toast.classList.add('translate-x-full', 'opacity-0', 'pointer-events-none');
+                }, 3000);
+            }
+
             // Tag Management
             const tagsContainer = document.getElementById('tagsContainer');
             const addTagBtn = document.getElementById('addTagBtn');
@@ -170,7 +229,7 @@
                             <input type="checkbox" name="tags[]" value="${data.name}" class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300 mr-3" checked>
                             <span class="text-sm text-gray-700 font-medium flex-1 tag-name truncate">${data.name}</span>
                             
-                            <button type="button" class="text-gray-400 hover:text-red-500 delete-tag-btn opacity-0 group-hover:opacity-100 transition-opacity p-1 ml-2 z-10" data-id="${data.id}" title="Hapus Tag">
+                            <button type="button" class="text-gray-400 hover:text-red-500 delete-tag-btn p-1 ml-2 z-10" data-id="${data.id}" title="Hapus Tag">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                 </svg>
@@ -180,40 +239,100 @@
                         tagsContainer.insertBefore(label, tagsContainer.firstChild);
                         newTagInput.value = '';
                         attachDeleteEvent(label.querySelector('.delete-tag-btn'));
+                        showToast('Kategori berhasil ditambahkan');
                     } else {
-                        alert('Gagal menambah tag. Mungkin sudah ada.');
+                        showToast('Gagal menambah tag. Mungkin sudah ada.', 'error');
                     }
                 })
                 .catch(err => {
                     console.error(err);
-                    alert('Terjadi kesalahan saat menambah tag.');
+                    showToast('Terjadi kesalahan saat menambah tag.', 'error');
                 });
             });
 
-            // Delete Tag
+            // Delete Tag Modal Logic
+            const deleteModal = document.getElementById('deleteTagModal');
+            const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+            const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+            let tagToDeleteId = null;
+            let tagToDeleteElement = null;
+
+            function showDeleteModal(id, element) {
+                tagToDeleteId = id;
+                tagToDeleteElement = element;
+                deleteModal.classList.remove('hidden');
+                // Simple animation
+                setTimeout(() => {
+                    deleteModal.firstElementChild.classList.remove('scale-95', 'opacity-0');
+                    deleteModal.firstElementChild.classList.add('scale-100', 'opacity-100');
+                }, 10);
+            }
+
+            function hideDeleteModal() {
+                deleteModal.classList.add('hidden');
+                tagToDeleteId = null;
+                tagToDeleteElement = null;
+            }
+
+            cancelDeleteBtn.addEventListener('click', hideDeleteModal);
+
+            // Close on click outside
+            deleteModal.addEventListener('click', function(e) {
+                if (e.target === deleteModal) hideDeleteModal();
+            });
+
+            confirmDeleteBtn.addEventListener('click', function() {
+                if (!tagToDeleteId || !tagToDeleteElement) return;
+
+                const id = tagToDeleteId;
+                const element = tagToDeleteElement;
+                const btn = confirmDeleteBtn;
+                
+                // Loading state
+                const originalText = btn.textContent;
+                btn.textContent = 'Menghapus...';
+                btn.disabled = true;
+
+                const url = "{{ route('buku-saku.tags.destroy', ':id') }}".replace(':id', id);
+
+                fetch(url, {
+                        method: 'DELETE',
+                        headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(async response => {
+                    if (response.ok) {
+                        element.closest('.tag-item').remove();
+                        hideDeleteModal();
+                        showToast('Kategori berhasil dihapus');
+                    } else {
+                        let msg = 'Gagal menghapus tag.';
+                        try {
+                            const data = await response.json();
+                            msg = data.message || msg;
+                        } catch (e) {
+                            msg += ` (Status: ${response.status})`;
+                        }
+                        showToast(msg, 'error');
+                    }
+                })
+                .catch(err => {
+                        console.error(err);
+                        showToast('Terjadi kesalahan sistem.', 'error');
+                })
+                .finally(() => {
+                    btn.textContent = originalText;
+                    btn.disabled = false;
+                });
+            });
+
             function attachDeleteEvent(btn) {
-                btn.addEventListener('click', function() {
-                    if (!confirm('Hapus kategori ini secara permanen?')) return;
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation(); // Prevent triggering checkbox
                     const id = this.getAttribute('data-id');
-                    
-                    fetch(`/buku-saku/tags/${id}`, {
-                         method: 'DELETE',
-                         headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            'Accept': 'application/json'
-                        }
-                    })
-                    .then(response => {
-                        if (response.ok) {
-                            this.closest('.tag-item').remove();
-                        } else {
-                            alert('Gagal menghapus tag.');
-                        }
-                    })
-                    .catch(err => {
-                         console.error(err);
-                         alert('Terjadi kesalahan.');
-                    });
+                    showDeleteModal(id, this);
                 });
             }
 

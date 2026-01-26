@@ -519,114 +519,121 @@ class ListPengawasanController extends Controller
 
     public function updateKeterangan(Request $request, int $id)
     {
-        /** @var \App\Models\User $user */
-        $user = Auth::user();
-        if (!$this->canWriteForModule($user)) {
-            return response()->json(['message' => 'Unauthorized action.'], 403);
-        }
-        if (!$this->canAccessPengawas($user, $id)) {
-            return response()->json(['message' => 'Unauthorized action.'], 403);
-        }
+        try {
+            /** @var \App\Models\User $user */
+            $user = Auth::user();
+            if (!$this->canWriteForModule($user)) {
+                return response()->json(['message' => 'Unauthorized action.'], 403);
+            }
+            if (!$this->canAccessPengawas($user, $id)) {
+                return response()->json(['message' => 'Unauthorized action.'], 403);
+            }
 
-        $data = $request->validate([
-            'keterangan' => ['array'],
-            'keterangan.*' => ['string', 'max:255'],
-        ]);
+            $data = $request->validate([
+                'keterangan' => ['array'],
+                'keterangan.*' => ['nullable', 'string', 'max:255'],
+            ]);
 
-        $labels = collect($data['keterangan'] ?? [])
-            ->map(fn($label) => trim((string) $label))
-            ->filter()
-            ->unique()
-            ->values();
+            $labels = collect($data['keterangan'] ?? [])
+                ->map(fn($label) => trim((string) $label))
+                ->filter()
+                ->unique()
+                ->values();
 
-        // Fetch existing entries to preserve files
-        $existing = DB::table('pengawas_keterangan')
-            ->join('keterangan_options', 'keterangan_options.id', '=', 'pengawas_keterangan.keterangan_option_id')
-            ->where('pengawas_id', $id)
-            ->select('pengawas_keterangan.*', 'keterangan_options.name')
-            ->get();
+            // Fetch existing entries to preserve files
+            $existing = DB::table('pengawas_keterangan')
+                ->join('keterangan_options', 'keterangan_options.id', '=', 'pengawas_keterangan.keterangan_option_id')
+                ->where('pengawas_id', $id)
+                ->select('pengawas_keterangan.*', 'keterangan_options.name')
+                ->get();
 
-        $existingLabels = $existing->pluck('name')->all();
-        $newLabels = $labels->all();
+            $existingLabels = $existing->pluck('name')->all();
+            $newLabels = $labels->all();
 
-        // Delete removed labels
-        $toDeleteLabels = array_diff($existingLabels, $newLabels);
-        if (!empty($toDeleteLabels)) {
-            $toDeleteIds = $existing->whereIn('name', $toDeleteLabels)->pluck('id');
-            // Delete associated files
-            $rowsToDelete = $existing->whereIn('id', $toDeleteIds);
-            foreach ($rowsToDelete as $row) {
-                if ($row->bukti_path) {
-                    Storage::disk('public')->delete($row->bukti_path);
+            // Delete removed labels
+            $toDeleteLabels = array_diff($existingLabels, $newLabels);
+            if (!empty($toDeleteLabels)) {
+                $toDeleteIds = $existing->whereIn('name', $toDeleteLabels)->pluck('id');
+                // Delete associated files
+                $rowsToDelete = $existing->whereIn('id', $toDeleteIds);
+                foreach ($rowsToDelete as $row) {
+                    if ($row->bukti_path) {
+                        Storage::disk('public')->delete($row->bukti_path);
+                    }
                 }
-            }
-            DB::table('pengawas_keterangan')->whereIn('id', $toDeleteIds)->delete();
-        }
-
-        // Add new labels
-        foreach ($newLabels as $label) {
-            // Check if already exists
-            if (in_array($label, $existingLabels)) {
-                // Already exists, do nothing (preserve file)
-                continue;
+                DB::table('pengawas_keterangan')->whereIn('id', $toDeleteIds)->delete();
             }
 
-            $opt = DB::table('keterangan_options')->where('name', $label)->first();
-            if (!$opt) {
-                $optId = DB::table('keterangan_options')->insertGetId([
-                    'name' => $label,
+            // Add new labels
+            foreach ($newLabels as $label) {
+                // Check if already exists
+                if (in_array($label, $existingLabels)) {
+                    // Already exists, do nothing (preserve file)
+                    continue;
+                }
+
+                $opt = DB::table('keterangan_options')->where('name', $label)->first();
+                if (!$opt) {
+                    $optId = DB::table('keterangan_options')->insertGetId([
+                        'name' => $label,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                } else {
+                    $optId = $opt->id;
+                }
+
+                // Insert new (no file initially)
+                DB::table('pengawas_keterangan')->insert([
+                    'pengawas_id' => $id,
+                    'keterangan_option_id' => $optId,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
-            } else {
-                $optId = $opt->id;
             }
 
-            // Insert new (no file initially)
-            DB::table('pengawas_keterangan')->insert([
-                'pengawas_id' => $id,
-                'keterangan_option_id' => $optId,
-                'created_at' => now(),
-                'updated_at' => now(),
+            // Re-fetch final list for response
+            $finalList = DB::table('pengawas_keterangan')
+                ->join('keterangan_options', 'keterangan_options.id', '=', 'pengawas_keterangan.keterangan_option_id')
+                ->where('pengawas_keterangan.pengawas_id', $id)
+                ->select(
+                    'keterangan_options.name as label',
+                    'pengawas_keterangan.bukti_path',
+                    'pengawas_keterangan.bukti_original_name',
+                    'pengawas_keterangan.bukti_mime',
+                    'pengawas_keterangan.bukti_size',
+                    'pengawas_keterangan.bukti_uploaded_at'
+                )
+                ->get()
+                ->map(function ($k) {
+                    return [
+                        'label' => $k->label,
+                        'bukti' => $k->bukti_path ? [
+                            'path' => $k->bukti_path,
+                            'name' => $k->bukti_original_name,
+                            'mime' => $k->bukti_mime,
+                            'size' => $k->bukti_size,
+                            'uploaded_at' => $k->bukti_uploaded_at ? \Carbon\Carbon::parse($k->bukti_uploaded_at)->format('d-m-Y H:i') : null,
+                            'url' => asset('storage/' . $k->bukti_path),
+                        ] : null
+                    ];
+                })
+                ->values()
+                ->toArray();
+
+            $projectName = $this->getPengawasName($id) ?? 'Proyek';
+            $this->notifyListPengawasan($user, $id, 'update', "Memperbarui keterangan proyek: {$projectName}");
+
+            return response()->json([
+                'message' => 'Keterangan berhasil diperbarui',
+                'keterangan' => $finalList,
             ]);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error updating keterangan: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Error: ' . $e->getMessage(),
+            ], 500);
         }
-
-        // Re-fetch final list for response
-        $finalList = DB::table('pengawas_keterangan')
-            ->join('keterangan_options', 'keterangan_options.id', '=', 'pengawas_keterangan.keterangan_option_id')
-            ->where('pengawas_keterangan.pengawas_id', $id)
-            ->select(
-                'keterangan_options.name as label',
-                'pengawas_keterangan.bukti_path',
-                'pengawas_keterangan.bukti_original_name',
-                'pengawas_keterangan.bukti_mime',
-                'pengawas_keterangan.bukti_size',
-                'pengawas_keterangan.bukti_uploaded_at'
-            )
-            ->get()
-            ->map(function ($k) {
-                return [
-                    'label' => $k->label,
-                    'bukti' => $k->bukti_path ? [
-                        'path' => $k->bukti_path,
-                        'name' => $k->bukti_original_name,
-                        'mime' => $k->bukti_mime,
-                        'size' => $k->bukti_size,
-                        'uploaded_at' => $k->bukti_uploaded_at ? \Carbon\Carbon::parse($k->bukti_uploaded_at)->format('d-m-Y H:i') : null,
-                        'url' => asset('storage/' . $k->bukti_path),
-                    ] : null
-                ];
-            })
-            ->values()
-            ->toArray();
-
-        $projectName = $this->getPengawasName($id) ?? 'Proyek';
-        $this->notifyListPengawasan($user, $id, 'update', "Memperbarui keterangan proyek: {$projectName}");
-
-        return response()->json([
-            'message' => 'Keterangan berhasil diperbarui',
-            'keterangan' => $finalList,
-        ]);
     }
 
     public function destroy(int $id)

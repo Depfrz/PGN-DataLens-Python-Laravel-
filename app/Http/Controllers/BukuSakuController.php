@@ -18,54 +18,69 @@ class BukuSakuController extends Controller
         $query = $request->input('q');
         $hasSearch = !empty($query);
         $documents = collect();
+        $otherDocuments = collect();
 
         $resultsNotFound = false;
 
         if ($hasSearch) {
-            // Fetch all approved documents for NLP processing
-            $allDocs = BukuSakuDocument::approved()->with('user')->get()->map(function ($doc) {
-                return [
-                    'id' => $doc->id,
-                    'title' => $doc->title,
-                    'description' => $doc->description,
-                    'tags' => $doc->tags,
-                    'valid_until' => $doc->valid_until,
-                ];
-            });
+            // Execute Python script for NLP search
+            $scriptPath = base_path('python_engine/search_engine.py');
+            $pythonPath = env('PYTHON_PATH', 'python'); // Default to 'python' (or python3)
 
-            // Prepare Python Execution
-            $pythonPath = base_path('python_engine/search_engine.py');
-            // Escape arguments to prevent command injection
-            // On Windows, json_encode might produce double quotes which need proper escaping for shell
-            // We'll write the JSON to a temporary file to be safe and avoid length limits
-            
-            $tempFile = tempnam(sys_get_temp_dir(), 'buku_saku_search_');
-            file_put_contents($tempFile, json_encode($allDocs));
-            
+            // Prepare query for command line (escape quotes)
             $escapedQuery = escapeshellarg($query);
             
-            // Assuming 'python' is in PATH. Use full path if necessary.
-            $command = "python \"{$pythonPath}\" \"{$tempFile}\" {$escapedQuery}";
+            // On shared hosting, shell_exec might be disabled or python path issue.
+            // Fallback to simple SQL search if Python execution fails.
+            $output = null;
+            try {
+                if (function_exists('shell_exec')) {
+                     $command = "\"$pythonPath\" \"$scriptPath\" $escapedQuery";
+                     $output = shell_exec($command);
+                }
+            } catch (\Exception $e) {
+                // Ignore error, fallback to SQL
+            }
             
-            $output = shell_exec($command);
-            
-            // Clean up temp file
-            unlink($tempFile);
-            
-            $results = json_decode($output, true);
+            $results = [];
+            if ($output) {
+                $results = json_decode($output, true);
+            }
             
             if (is_array($results) && !empty($results)) {
                 $ids = array_column($results, 'id');
                 if (!empty($ids)) {
-                    $documents = BukuSakuDocument::with('user')
+                    $documents = BukuSakuDocument::approved()
+                        ->with('user')
                         ->whereIn('id', $ids)
                         ->get()
                         ->sortBy(function($model) use ($ids) {
                             return array_search($model->id, $ids);
                         });
+                } else {
+                     $documents = collect();
                 }
+            } else {
+                // Fallback: Simple SQL Search (LIKE)
+                $documents = BukuSakuDocument::approved()
+                    ->with('user')
+                    ->where(function($q) use ($query) {
+                        $q->where('title', 'like', "%{$query}%")
+                          ->orWhere('description', 'like', "%{$query}%")
+                          ->orWhere('tags', 'like', "%{$query}%");
+                    })
+                    ->orderBy('created_at', 'desc')
+                    ->get();
             }
-            // If search yields no results, $documents remains empty collection
+
+            // Get Other Documents (Not in Search Results)
+            $foundIds = $documents->pluck('id')->toArray();
+            $otherDocuments = BukuSakuDocument::approved()
+                ->with('user')
+                ->whereNotIn('id', $foundIds)
+                ->orderBy('created_at', 'desc')
+                ->get();
+
         } else {
             // Default view: Show latest approved documents
             $documents = BukuSakuDocument::approved()
@@ -74,7 +89,7 @@ class BukuSakuController extends Controller
                 ->get();
         }
 
-        return view('buku-saku.index', compact('documents', 'hasSearch', 'query', 'resultsNotFound'));
+        return view('buku-saku.index', compact('documents', 'otherDocuments', 'hasSearch', 'query', 'resultsNotFound'));
     }
 
     public function upload()
@@ -353,7 +368,7 @@ class BukuSakuController extends Controller
         return redirect()->back()->with('success', 'Tag berhasil ditambahkan.');
     }
 
-    public function destroyTag($id)
+    public function destroyTag(Request $request, $id)
     {
         // Only Admin or Supervisor should probably delete tags, but let's allow any user for now based on request "bisa tambah dan hapus tag sendiri"
         // Or maybe restrict to creator? But tags are global. 
@@ -362,6 +377,10 @@ class BukuSakuController extends Controller
         
         $tag = BukuSakuTag::findOrFail($id);
         $tag->delete();
+
+        if ($request->wantsJson()) {
+            return response()->json(['message' => 'Tag berhasil dihapus']);
+        }
 
         return redirect()->back()->with('success', 'Tag berhasil dihapus.');
     }
