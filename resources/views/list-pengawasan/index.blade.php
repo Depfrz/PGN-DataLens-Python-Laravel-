@@ -1,4 +1,4 @@
-<x-dashboard-layout title="List Pengawasan">
+<x-dashboard-layout title="List Pengawasan" :can-write="$canWrite" :lp-permissions="$lpPermissions">
     <div x-data="{
         canWrite: {{ Js::from($canWrite ?? false) }},
         lpPerms: {{ Js::from($lpPermissions ?? []) }},
@@ -842,7 +842,7 @@
                     <option value="deadline_asc">Deadline Terdekat</option>
                     <option value="deadline_desc">Deadline Terjauh</option>
                 </select>
-                <button x-show="canWrite && lpPerms.tambah_proyek" @click="openAdd()" class="w-full sm:w-auto bg-blue-600 text-white font-medium text-sm py-2.5 px-6 rounded-lg hover:bg-blue-700 transition-all shadow-md hover:shadow-lg inline-flex items-center justify-center">
+                <button x-show="false" @click="openAdd()" class="w-full sm:w-auto bg-blue-600 text-white font-medium text-sm py-2.5 px-6 rounded-lg hover:bg-blue-700 transition-all shadow-md hover:shadow-lg inline-flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
                     </svg>
@@ -861,7 +861,7 @@
                             </svg>
                         </div>
                         <div class="text-base font-semibold text-gray-900 dark:text-gray-100">Belum ada proyek.</div>
-                        <div class="mt-1 text-sm text-gray-600 dark:text-gray-400">Klik Tambah Proyek untuk memulai.</div>
+                        <div class="mt-1 text-sm text-gray-600 dark:text-gray-400">Klik nama proyek untuk melihat detail.</div>
                     </div>
                 </div>
             </template>
@@ -878,7 +878,7 @@
                                             <input x-model="editPengawas.nama" type="text" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm font-semibold text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100" />
                                         </template>
                                         <template x-if="editingId !== item.id">
-                                            <div class="text-gray-900 font-semibold text-base dark:text-white truncate" x-text="item.nama"></div>
+                                            <a :href="'/list-pengawasan/' + item.id" class="text-gray-900 font-semibold text-base dark:text-white truncate hover:underline" x-text="item.nama"></a>
                                         </template>
                                         <div class="mt-1 text-xs text-gray-500 dark:text-gray-400" x-text="item.tanggal"></div>
                                         <div class="mt-3">
@@ -902,7 +902,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="flex items-center gap-1 flex-shrink-0" x-show="canWrite && lpPerms.nama_proyek">
+                                    <div class="flex items-center gap-1 flex-shrink-0" x-show="false">
                                         <template x-if="editingId !== item.id">
                                             <div class="flex items-center gap-1">
                                                 <button @click="startEdit(item)" class="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors dark:text-gray-400 dark:hover:text-blue-300 dark:hover:bg-blue-900/20" title="Edit Nama Proyek">
@@ -956,7 +956,7 @@
                                             <template x-if="editingDeadlineId !== item.id">
                                                 <div class="flex items-center justify-between gap-2">
                                                     <span class="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate" x-text="item.deadline_display || '-'"></span>
-                                                    <button x-show="canWrite && lpPerms.deadline" type="button" @click="startEditDeadline(item)" class="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors dark:text-gray-400 dark:hover:text-blue-300 dark:hover:bg-blue-900/20" title="Edit Deadline">
+                                                    <button x-show="false" type="button" @click="startEditDeadline(item)" class="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors dark:text-gray-400 dark:hover:text-blue-300 dark:hover:bg-blue-900/20" title="Edit Deadline">
                                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
                                                             <path d="M21.731 2.269a2.625 2.625 0 00-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 000-3.712zM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 00-1.32 2.214l-.8 2.685a.75.75 0 00.933.933l2.685-.8a5.25 5.25 0 002.214-1.32L19.513 8.2z" />
                                                         </svg>
@@ -969,25 +969,16 @@
                                     <div class="rounded-xl border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900">
                                         <div class="text-[11px] font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">Status</div>
                                         <div class="mt-2">
-                                            <button
-                                                type="button"
-                                                class="inline-flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-xs font-bold shadow-sm transition-colors whitespace-nowrap"
-                                                :class="[statusMeta(item.status).cls, !canWrite ? 'opacity-70 cursor-default' : '']"
-                                                @click="openStatusMenu($event, item)"
-                                                :disabled="!canWrite"
-                                            >
+                                            <div class="inline-flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-xs font-bold shadow-sm transition-colors whitespace-nowrap" :class="statusMeta(item.status).cls">
                                                 <span class="truncate" x-text="statusMeta(item.status).label"></span>
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-90 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                                                    <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.24 4.5a.75.75 0 01-1.08 0l-4.24-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
-                                                </svg>
-                                            </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="mt-4">
                                     <div class="text-[11px] font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">Keterangan</div>
-                                    <button type="button" @click="openKeteranganMenu($event, item)" class="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 p-3 text-left transition-colors hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:hover:bg-gray-800" :disabled="!canWrite" :class="!canWrite ? 'opacity-70 cursor-default' : ''">
+                                    <div class="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 p-3 text-left transition-colors dark:border-gray-700 dark:bg-gray-900">
                                         <template x-if="item.keterangan.length === 0">
                                             <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Tambah keterangan</span>
                                         </template>
@@ -1001,7 +992,7 @@
                                                 </template>
                                             </div>
                                         </template>
-                                    </button>
+                                    </div>
                                 </div>
 
                                 <div class="mt-4">
@@ -1065,11 +1056,11 @@
                                                 <input x-model="editPengawas.nama" type="text" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm font-semibold text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100" />
                                             </template>
                                             <template x-if="editingId !== item.id">
-                                                <div class="text-gray-900 font-semibold text-base dark:text-white truncate" x-text="item.nama"></div>
+                                                <a :href="'/list-pengawasan/' + item.id" class="text-gray-900 font-semibold text-base dark:text-white truncate hover:underline" x-text="item.nama"></a>
                                             </template>
                                         </div>
 
-                                        <div class="flex items-center gap-1 flex-shrink-0" x-show="canWrite && lpPerms.nama_proyek">
+                                        <div class="flex items-center gap-1 flex-shrink-0" x-show="false">
                                             <template x-if="editingId !== item.id">
                                                 <div class="flex items-center gap-1">
                                                     <button @click="startEdit(item)" class="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors dark:text-gray-400 dark:hover:text-blue-300 dark:hover:bg-blue-900/20" title="Edit Nama Proyek">
@@ -1144,7 +1135,7 @@
                                     <template x-if="editingDeadlineId !== item.id">
                                         <div class="flex items-center justify-between gap-2">
                                             <span class="text-gray-700 text-sm dark:text-gray-300 truncate" x-text="item.deadline_display || '-'"></span>
-                                            <button x-show="canWrite && lpPerms.deadline" type="button" @click="startEditDeadline(item)" class="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors dark:text-gray-400 dark:hover:text-blue-300 dark:hover:bg-blue-900/20" title="Edit Deadline">
+                                            <button x-show="false" type="button" @click="startEditDeadline(item)" class="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors dark:text-gray-400 dark:hover:text-blue-300 dark:hover:bg-blue-900/20" title="Edit Deadline">
                                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
                                                     <path d="M21.731 2.269a2.625 2.625 0 00-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 000-3.712zM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 00-1.32 2.214l-.8 2.685a.75.75 0 00.933.933l2.685-.8a5.25 5.25 0 002.214-1.32L19.513 8.2z" />
                                                 </svg>
@@ -1154,41 +1145,18 @@
                                 </td>
 
                                 <td class="p-4 border-y border-gray-200 dark:border-gray-700 group-hover:border-blue-300 dark:group-hover:border-blue-700 transition-colors">
-                                    <button
-                                        type="button"
-                                        class="inline-flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-xs font-bold shadow-sm transition-colors whitespace-nowrap"
-                                        :class="[statusMeta(item.status).cls, !canWrite ? 'opacity-70 cursor-default' : '']"
-                                        @click="openStatusMenu($event, item)"
-                                        :disabled="!canWrite"
-                                    >
+                                    <div class="inline-flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-xs font-bold shadow-sm transition-colors whitespace-nowrap" :class="statusMeta(item.status).cls">
                                         <span class="truncate" x-text="statusMeta(item.status).label"></span>
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 opacity-90 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.24 4.5a.75.75 0 01-1.08 0l-4.24-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
-                                        </svg>
-                                    </button>
+                                    </div>
                                 </td>
 
                                 <td class="p-4 rounded-r-lg border-y border-r border-gray-200 dark:border-gray-700 group-hover:border-blue-300 dark:group-hover:border-blue-700 transition-colors">
-                                    <button
-                                        type="button"
-                                        class="w-full rounded-2xl border border-blue-100 bg-blue-50 px-4 py-2.5 text-left text-sm text-blue-700 flex items-start justify-between gap-3 hover:border-blue-300 hover:bg-blue-100 transition-colors dark:border-blue-900/40 dark:bg-blue-900/20 dark:text-blue-200"
-                                        @click="openKeteranganMenu($event, item)"
-                                        :disabled="!canWrite"
-                                        :class="!canWrite ? 'opacity-70 cursor-default' : ''"
-                                    >
+                                    <div class="w-full rounded-2xl border border-blue-100 bg-blue-50 px-4 py-2.5 text-left text-sm text-blue-700 flex items-start justify-between gap-3 dark:border-blue-900/40 dark:bg-blue-900/20 dark:text-blue-200">
                                         <div class="flex-1 min-w-0">
                                             <span class="block text-[11px] font-semibold uppercase tracking-wide text-blue-500/80 mb-0.5">Keterangan</span>
-                                            <span class="block text-xs sm:text-sm font-medium whitespace-normal leading-snug"
-                                                  x-text="item.keterangan.length ? item.keterangan.map(k => k.label).join(', ') : 'Pilih keterangan…'"></span>
+                                            <span class="block text-xs sm:text-sm font-medium whitespace-normal leading-snug" x-text="item.keterangan.length ? item.keterangan.map(k => k.label).join(', ') : '-'"></span>
                                         </div>
-                                        <div class="flex items-center gap-2 flex-shrink-0 mt-1">
-                                            <div class="h-7 w-7 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 shadow-sm dark:bg-blue-900/40 dark:text-blue-200">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                                                    <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.24 4.5a.75.75 0 01-1.08 0l-4.24-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
-                                                </svg>
-                                            </div>
-                                        </div>
-                                    </button>
+                                    </div>
                                 </td>
                                     </tr>
                                 </template>

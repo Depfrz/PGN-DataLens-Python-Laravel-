@@ -55,6 +55,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/history', [HistoryController::class, 'index'])->name('history');
 
     Route::get('/list-pengawasan', [ListPengawasanController::class, 'index'])->name('list-pengawasan.index');
+    Route::get('/list-pengawasan/{id}', [ListPengawasanController::class, 'show'])
+        ->whereNumber('id')
+        ->name('list-pengawasan.show');
     Route::post('/list-pengawasan', [ListPengawasanController::class, 'store'])
         ->name('list-pengawasan.store');
     Route::patch('/list-pengawasan/{id}/keterangan', [ListPengawasanController::class, 'updateKeterangan'])

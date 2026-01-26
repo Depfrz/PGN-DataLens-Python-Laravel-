@@ -195,6 +195,83 @@ class ListPengawasanController extends Controller
         return DB::table('pengawas')->where('id', $pengawasId)->value('name');
     }
 
+    public function show(int $id)
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        if (!$this->canAccessPengawas($user, $id)) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $p = DB::table('pengawas')->where('id', $id)->first();
+        if (!$p) {
+            abort(404);
+        }
+
+        $assignedUsersMap = $this->getAssignedUsersMap([$id]);
+
+        $keterangan = DB::table('pengawas_keterangan')
+            ->join('keterangan_options', 'keterangan_options.id', '=', 'pengawas_keterangan.keterangan_option_id')
+            ->where('pengawas_keterangan.pengawas_id', $p->id)
+            ->select(
+                'keterangan_options.name as label',
+                'pengawas_keterangan.bukti_path',
+                'pengawas_keterangan.bukti_original_name',
+                'pengawas_keterangan.bukti_mime',
+                'pengawas_keterangan.bukti_size',
+                'pengawas_keterangan.bukti_uploaded_at'
+            )
+            ->get()
+            ->map(function ($k) {
+                return [
+                    'label' => $k->label,
+                    'bukti' => $k->bukti_path ? [
+                        'path' => $k->bukti_path,
+                        'name' => $k->bukti_original_name,
+                        'mime' => $k->bukti_mime,
+                        'size' => $k->bukti_size,
+                        'uploaded_at' => $k->bukti_uploaded_at ? \Carbon\Carbon::parse($k->bukti_uploaded_at)->format('d-m-Y H:i') : null,
+                        'url' => asset('storage/' . $k->bukti_path),
+                    ] : null
+                ];
+            })
+            ->values()
+            ->toArray();
+
+        $createdAt = $p->created_at ? Carbon::parse($p->created_at) : null;
+        $deadline = $p->deadline ? Carbon::parse($p->deadline) : null;
+
+        $item = [
+            'id' => $p->id,
+            'nama' => $p->name,
+            'divisi' => $p->divisi ?? '-',
+            'created_at' => $createdAt ? $createdAt->toISOString() : null,
+            'tanggal' => $createdAt ? $createdAt->format('d-m-Y H:i') : '-',
+            'deadline' => $deadline ? $deadline->format('Y-m-d') : null,
+            'deadline_display' => $deadline ? $deadline->format('d-m-Y') : '-',
+            'status' => $this->normalizeStatus($p->status),
+            'keterangan' => $keterangan,
+            'pengawas_users' => $assignedUsersMap[$p->id] ?? [],
+            'bukti' => [
+                'path' => $p->bukti_path,
+                'name' => $p->bukti_original_name,
+                'mime' => $p->bukti_mime,
+                'size' => $p->bukti_size,
+                'uploaded_at' => $p->bukti_uploaded_at ? \Carbon\Carbon::parse($p->bukti_uploaded_at)->format('d-m-Y H:i') : null,
+                'url' => $p->bukti_path ? asset('storage/' . $p->bukti_path) : null,
+            ],
+        ];
+
+        $options = DB::table('keterangan_options')->orderBy('name')->pluck('name')->toArray();
+        $users = User::orderBy('name')->get(['id', 'name', 'email'])->toArray();
+
+        $canWrite = $this->canWriteForModule($user);
+        $lpPermissions = $this->getListPengawasanPermissions($user);
+
+        return view('list-pengawasan.show', compact('item', 'options', 'users', 'canWrite', 'lpPermissions'));
+    }
+
     public function index(Request $request)
     {
         /** @var \App\Models\User $user */
@@ -315,6 +392,9 @@ class ListPengawasanController extends Controller
         if (!$this->canWriteForModule($user)) {
             return response()->json(['message' => 'Unauthorized action.'], 403);
         }
+        if (!$this->getListPengawasanPermissions($user)['tambah_proyek']) {
+            return response()->json(['message' => 'Unauthorized action.'], 403);
+        }
 
         $data = $request->validate([
             'nama' => ['required', 'string', 'max:255'],
@@ -396,6 +476,9 @@ class ListPengawasanController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
         if (!$this->canWriteForModule($user)) {
+            return response()->json(['message' => 'Unauthorized action.'], 403);
+        }
+        if (!$this->getListPengawasanPermissions($user)['nama_proyek']) {
             return response()->json(['message' => 'Unauthorized action.'], 403);
         }
         if (!$this->canAccessPengawas($user, $id)) {
@@ -525,6 +608,9 @@ class ListPengawasanController extends Controller
             if (!$this->canWriteForModule($user)) {
                 return response()->json(['message' => 'Unauthorized action.'], 403);
             }
+            if (!$this->getListPengawasanPermissions($user)['keterangan']) {
+                return response()->json(['message' => 'Unauthorized action.'], 403);
+            }
             if (!$this->canAccessPengawas($user, $id)) {
                 return response()->json(['message' => 'Unauthorized action.'], 403);
             }
@@ -540,7 +626,20 @@ class ListPengawasanController extends Controller
                 ->unique()
                 ->values();
 
-            // Fetch existing entries to preserve files
+            $permission = $this->getListPengawasanPermissions($user);
+
+            if (!$permission['edit_keterangan'] && $labels->isNotEmpty()) {
+                $existingOptionNames = DB::table('keterangan_options')
+                    ->whereIn('name', $labels->all())
+                    ->pluck('name')
+                    ->all();
+
+                $unknown = $labels->reject(fn($l) => in_array($l, $existingOptionNames, true));
+                if ($unknown->isNotEmpty()) {
+                    return response()->json(['message' => 'Unauthorized action.'], 403);
+                }
+            }
+
             $existing = DB::table('pengawas_keterangan')
                 ->join('keterangan_options', 'keterangan_options.id', '=', 'pengawas_keterangan.keterangan_option_id')
                 ->where('pengawas_id', $id)
@@ -643,6 +742,9 @@ class ListPengawasanController extends Controller
         if (!$this->canWriteForModule($user)) {
             return response()->json(['message' => 'Unauthorized action.'], 403);
         }
+        if (!$this->getListPengawasanPermissions($user)['nama_proyek']) {
+            return response()->json(['message' => 'Unauthorized action.'], 403);
+        }
         if (!$this->canAccessPengawas($user, $id)) {
             return response()->json(['message' => 'Unauthorized action.'], 403);
         }
@@ -662,6 +764,9 @@ class ListPengawasanController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
         if (!$this->canWriteForModule($user)) {
+            return response()->json(['message' => 'Unauthorized action.'], 403);
+        }
+        if (!$this->getListPengawasanPermissions($user)['status']) {
             return response()->json(['message' => 'Unauthorized action.'], 403);
         }
         if (!$this->canAccessPengawas($user, $id)) {
@@ -692,6 +797,9 @@ class ListPengawasanController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
         if (!$this->canWriteForModule($user)) {
+            return response()->json(['message' => 'Unauthorized action.'], 403);
+        }
+        if (!$this->getListPengawasanPermissions($user)['deadline']) {
             return response()->json(['message' => 'Unauthorized action.'], 403);
         }
         if (!$this->canAccessPengawas($user, $id)) {
@@ -726,6 +834,9 @@ class ListPengawasanController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
         if (!$this->canWriteForModule($user)) {
+            return response()->json(['message' => 'Unauthorized action.'], 403);
+        }
+        if (!$this->getListPengawasanPermissions($user)['bukti']) {
             return response()->json(['message' => 'Unauthorized action.'], 403);
         }
         if (!$this->canAccessPengawas($user, $id)) {
@@ -780,6 +891,9 @@ class ListPengawasanController extends Controller
         if (!$this->canWriteForModule($user)) {
             return response()->json(['message' => 'Unauthorized action.'], 403);
         }
+        if (!$this->getListPengawasanPermissions($user)['bukti']) {
+            return response()->json(['message' => 'Unauthorized action.'], 403);
+        }
         if (!$this->canAccessPengawas($user, $id)) {
             return response()->json(['message' => 'Unauthorized action.'], 403);
         }
@@ -815,6 +929,9 @@ class ListPengawasanController extends Controller
         if (!$this->canWriteForModule($user)) {
             return response()->json(['message' => 'Unauthorized action.'], 403);
         }
+        if (!$this->getListPengawasanPermissions($user)['edit_keterangan']) {
+            return response()->json(['message' => 'Unauthorized action.'], 403);
+        }
 
         $data = $request->validate([
             'old_name' => ['required', 'string', 'max:255'],
@@ -845,6 +962,9 @@ class ListPengawasanController extends Controller
         if (!$this->canWriteForModule($user)) {
             return response()->json(['message' => 'Unauthorized action.'], 403);
         }
+        if (!$this->getListPengawasanPermissions($user)['edit_keterangan']) {
+            return response()->json(['message' => 'Unauthorized action.'], 403);
+        }
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -866,6 +986,9 @@ class ListPengawasanController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
         if (!$this->canWriteForModule($user)) {
+            return response()->json(['message' => 'Unauthorized action.'], 403);
+        }
+        if (!$this->getListPengawasanPermissions($user)['bukti']) {
             return response()->json(['message' => 'Unauthorized action.'], 403);
         }
         if (!$this->canAccessPengawas($user, $id)) {
@@ -930,6 +1053,9 @@ class ListPengawasanController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
         if (!$this->canWriteForModule($user)) {
+            return response()->json(['message' => 'Unauthorized action.'], 403);
+        }
+        if (!$this->getListPengawasanPermissions($user)['bukti']) {
             return response()->json(['message' => 'Unauthorized action.'], 403);
         }
         if (!$this->canAccessPengawas($user, $id)) {

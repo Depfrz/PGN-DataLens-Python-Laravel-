@@ -139,6 +139,63 @@
                     <span class="text-sm font-bold text-black dark:text-white leading-tight group-hover:text-black dark:group-hover:text-white transition-colors">Integrasi<br>Sistem</span>
                 </a>
                 @endcan
+
+                @php
+                    $isListPengawasanRoute = request()->routeIs('list-pengawasan.*');
+                    $isListPengawasanDetail = request()->routeIs('list-pengawasan.show');
+                @endphp
+
+                @if($isListPengawasanRoute)
+                    <div class="px-2">
+                        <div 
+                            x-data="{ 
+                                activeAction: null, 
+                                canUseActions: {{ $isListPengawasanDetail ? 'true' : 'false' }} 
+                            }"
+                            class="mt-2 rounded-2xl bg-white/20 dark:bg-gray-700/60 p-3"
+                        >
+                            <div class="text-xs font-bold text-black/80 dark:text-white/80 uppercase tracking-wider mb-3 flex items-center justify-between">
+                                <span>Aksi Proyek</span>
+                                <span x-show="!canUseActions" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-900/10 text-gray-800 dark:bg-gray-100/10 dark:text-gray-100">
+                                    Pilih proyek
+                                </span>
+                            </div>
+                            <div class="space-y-2">
+                                @if(($canWrite ?? false) && ($lpPermissions['tambah_proyek'] ?? false))
+                                    <button 
+                                        type="button"
+                                        :disabled="!canUseActions"
+                                        @click="if (!canUseActions) return; activeAction = 'tambah_proyek'; window.dispatchEvent(new CustomEvent('list-pengawasan:action', { detail: { action: 'tambah_proyek' } }))"
+                                        class="w-full px-4 py-2.5 rounded-xl font-bold text-sm text-left transition-colors border border-transparent"
+                                        :class="(activeAction === 'tambah_proyek' ? 'bg-white text-blue-700 shadow-sm ring-2 ring-white/80' : 'bg-white text-black hover:bg-white/90 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800') + (!canUseActions ? ' opacity-60 cursor-not-allowed' : ' cursor-pointer')"
+                                    >
+                                        Tambah Proyek
+                                    </button>
+                                @endif
+                                @if(($canWrite ?? false) && ($lpPermissions['edit_keterangan'] ?? false))
+                                    <button 
+                                        type="button"
+                                        :disabled="!canUseActions"
+                                        @click="if (!canUseActions) return; activeAction = 'tambah_keterangan'; window.dispatchEvent(new CustomEvent('list-pengawasan:action', { detail: { action: 'tambah_keterangan' } }))"
+                                        class="w-full px-4 py-2.5 rounded-xl font-bold text-sm text-left transition-colors border border-transparent"
+                                        :class="(activeAction === 'tambah_keterangan' ? 'bg-white text-blue-700 shadow-sm ring-2 ring-white/80' : 'bg-white/90 text-black hover:bg-white dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800') + (!canUseActions ? ' opacity-60 cursor-not-allowed' : ' cursor-pointer')"
+                                    >
+                                        Tambah Keterangan
+                                    </button>
+                                    <button 
+                                        type="button"
+                                        :disabled="!canUseActions"
+                                        @click="if (!canUseActions) return; activeAction = 'edit_keterangan'; window.dispatchEvent(new CustomEvent('list-pengawasan:action', { detail: { action: 'edit_keterangan' } }))"
+                                        class="w-full px-4 py-2.5 rounded-xl font-bold text-sm text-left transition-colors border border-transparent"
+                                        :class="(activeAction === 'edit_keterangan' ? 'bg-white text-blue-700 shadow-sm ring-2 ring-white/80' : 'bg-white/90 text-black hover:bg-white dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800') + (!canUseActions ? ' opacity-60 cursor-not-allowed' : ' cursor-pointer')"
+                                    >
+                                        Edit Keterangan
+                                    </button>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                @endif
             </nav>
         </aside>
 
