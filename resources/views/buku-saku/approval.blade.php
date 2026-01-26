@@ -1,6 +1,6 @@
 <x-buku-saku-layout>
     {{-- Flash Message --}}
-    @if (session('success'))
+    @if (session('success') && !str_contains(session('success'), 'berhasil dihapus'))
     <div class="mb-4 bg-green-50 border-l-4 border-green-500 p-4 rounded-r shadow-sm" role="alert">
         <div class="flex">
             <div class="flex-shrink-0">
