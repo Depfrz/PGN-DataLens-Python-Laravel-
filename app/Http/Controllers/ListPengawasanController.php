@@ -118,6 +118,7 @@ class ListPengawasanController extends Controller
         }
 
         $module = Module::where('slug', 'list-pengawasan')->first();
+        
         $default = [
             'tambah_proyek' => false,
             'nama_proyek' => false,
@@ -137,26 +138,24 @@ class ListPengawasanController extends Controller
             ->where('module_id', $module->id)
             ->first();
 
-        if (!$access || !$access->can_read) {
+        if ($access && $access->can_write) {
+            return [
+                'tambah_proyek' => true,
+                'nama_proyek' => true,
+                'pengawas' => true,
+                'deadline' => true,
+                'status' => true,
+                'keterangan' => true,
+                'edit_keterangan' => true,
+                'bukti' => true,
+            ];
+        }
+
+        if (!$access || !is_array($access->extra_permissions['list_pengawasan'] ?? null)) {
             return $default;
         }
 
-        $base = [
-            'tambah_proyek' => true,
-            'nama_proyek' => true,
-            'pengawas' => true,
-            'deadline' => true,
-            'status' => true,
-            'keterangan' => true,
-            'edit_keterangan' => true,
-            'bukti' => true,
-        ];
-
-        if (!is_array($access->extra_permissions['list_pengawasan'] ?? null)) {
-            return $base;
-        }
-
-        return array_merge($base, $access->extra_permissions['list_pengawasan']);
+        return array_merge($default, $access->extra_permissions['list_pengawasan']);
     }
 
     private function getListPengawasanNotificationRecipients(int $pengawasId, int $actorId)
