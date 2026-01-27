@@ -8,6 +8,7 @@ use App\Services\AuditService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
 use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
@@ -28,6 +29,24 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
 
         $request->session()->regenerate();
+
+        // Single Session Enforcement (Database + Manual Check)
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        if ($user) {
+             // 1. Database Driver Cleanup (General)
+             \Illuminate\Support\Facades\DB::table('sessions')
+                 ->where('user_id', $user->id)
+                 ->where('id', '!=', $request->session()->getId())
+                 ->delete();
+
+             // 2. Specific Admin/Supervisor/User/SuperUser Session Tracking
+             if ($user->hasRole(['Admin', 'Supervisor', 'User', 'SuperUser'])) {
+                 $user->forceFill([
+                     'last_session_id' => Session::getId(),
+                 ])->save();
+             }
+        }
 
         AuditService::log(Auth::user(), 'login', 'Auth', 'User logged in');
 

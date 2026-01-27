@@ -8,6 +8,7 @@ use App\Http\Controllers\ListPengawasanController;
 use App\Http\Controllers\BukuSakuController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HistoryController;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 
@@ -26,10 +27,10 @@ Route::get('/fix-hosting', function() {
 });
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
-    ->middleware(['auth', 'verified'])
+    ->middleware(['auth', 'verified', 'admin.single.session'])
     ->name('dashboard');
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', 'admin.single.session'])->group(function () {
     // Integrasi Sistem Routes
     Route::get('/integrasi-sistem', [IntegrasiSistemController::class, 'index'])
         ->name('integrasi-sistem.index');
@@ -55,7 +56,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('integrasi-sistem.destroy');
 
     // Management User Routes
-    Route::middleware(['role:Admin'])->prefix('management-user')->name('management-user.')->group(function () {
+    Route::middleware(['role:Admin', 'admin.single.session'])->prefix('management-user')->name('management-user.')->group(function () {
         Route::get('/', [ManagementUserController::class, 'index'])->name('index');
         Route::post('/', [ManagementUserController::class, 'store'])->name('store');
         Route::put('/{user}', [ManagementUserController::class, 'update'])->name('update');
