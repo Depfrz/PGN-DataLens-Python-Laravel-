@@ -1,4 +1,4 @@
-<x-dashboard-layout title="Daftar Kegiatan" :can-write="$canWrite">
+<x-dashboard-layout title="Daftar Kegiatan" :can-write="$canWrite" :lp-permissions="$lpPermissions">
     <div x-data="{
         canWrite: {{ Js::from($canWrite ?? false) }},
         projectId: {{ Js::from($project->id) }},

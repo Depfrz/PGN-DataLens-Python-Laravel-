@@ -1134,8 +1134,9 @@ class ListPengawasanController extends Controller
             ->paginate(10);
 
         $canWrite = $this->canWriteForModule($user);
+        $lpPermissions = $this->getListPengawasanPermissions($user);
 
-        return view('list-pengawasan.kegiatan-index', compact('project', 'activities', 'canWrite'));
+        return view('list-pengawasan.kegiatan-index', compact('project', 'activities', 'canWrite', 'lpPermissions'));
     }
 
     public function storeKegiatan(Request $request, int $id)
