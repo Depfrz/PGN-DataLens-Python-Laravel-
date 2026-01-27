@@ -13,6 +13,17 @@
                 if (action === 'edit_keterangan') {
                     if (!this.canWrite || !this.lpPerms.edit_keterangan) return;
                     this.activePanel = 'edit_keterangan';
+                    return;
+                }
+                if (action === 'tambah_pengawas') {
+                    if (!this.canWrite || !this.lpPerms.pengawas) return;
+                    this.openAddPengawas();
+                    return;
+                }
+                if (action === 'kelola_pengawas') {
+                    if (!this.canWrite || !this.lpPerms.pengawas) return;
+                    const first = (this.project.pengawas_users || [])[0] || null;
+                    if (first) this.openManagePengawasUser(first);
                 }
             });
         },
@@ -574,13 +585,34 @@
                             <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Nama Kegiatan</div>
                             <input x-model="editProject.nama" :disabled="!canWrite || !lpPerms.nama_proyek" type="text" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none disabled:opacity-60 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100" />
                         </div>
-                         <div class="col-span-1 sm:col-span-2">
+                        <div class="col-span-1 sm:col-span-2">
                             <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Deskripsi</div>
                             <textarea x-model="editProject.deskripsi" :disabled="!canWrite || !lpPerms.nama_proyek" rows="3" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none disabled:opacity-60 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"></textarea>
                         </div>
                         <div>
                             <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Tanggal Mulai</div>
                             <div class="px-4 py-2.5 rounded-lg bg-gray-50 border border-gray-200 text-sm font-semibold text-gray-800 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100" x-text="project.tanggal || '-'"></div>
+                        </div>
+                        <div class="col-span-1 sm:col-span-2">
+                            <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Pengawas</div>
+                            <div class="rounded-lg bg-gray-50 border border-gray-200 px-4 py-2.5 dark:bg-gray-900 dark:border-gray-700">
+                                <template x-if="!project.pengawas_users || project.pengawas_users.length === 0">
+                                    <div class="text-sm text-gray-500 dark:text-gray-400">-</div>
+                                </template>
+                                <template x-for="u in (project.pengawas_users || [])" :key="`pengawas-kegiatan-${project.id}-${u.id}`">
+                                    <div class="flex items-center justify-between gap-3 py-1">
+                                        <div class="min-w-0">
+                                            <div class="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate" x-text="u.name"></div>
+                                            <template x-if="canWrite && lpPerms.pengawas">
+                                                <button type="button" class="text-xs text-blue-600 hover:underline dark:text-blue-400 truncate" @click="openManagePengawasUser(u)" x-text="u.email"></button>
+                                            </template>
+                                            <template x-if="!canWrite || !lpPerms.pengawas">
+                                                <div class="text-xs text-gray-500 dark:text-gray-400 truncate" x-text="u.email"></div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -638,31 +670,6 @@
                     <template x-if="!project.bukti || !project.bukti.url">
                         <div class="text-sm text-gray-500 dark:text-gray-400">Belum ada bukti.</div>
                     </template>
-                </div>
-
-                <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">Pengawas</div>
-                        <button type="button" x-show="canWrite && lpPerms.pengawas" @click="openAddPengawas()" class="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors">Tambah Pengawas</button>
-                    </div>
-                    <div class="rounded-lg bg-gray-50 border border-gray-200 px-4 py-2.5 dark:bg-gray-900 dark:border-gray-700">
-                        <template x-if="!project.pengawas_users || project.pengawas_users.length === 0">
-                            <div class="text-sm text-gray-500 dark:text-gray-400">-</div>
-                        </template>
-                        <template x-for="u in (project.pengawas_users || [])" :key="`pengawas-kegiatan-${project.id}-${u.id}`">
-                            <div class="flex items-center justify-between gap-3 py-1">
-                                <div class="min-w-0">
-                                    <div class="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate" x-text="u.name"></div>
-                                    <template x-if="canWrite && lpPerms.pengawas">
-                                        <button type="button" class="text-xs text-blue-600 hover:underline dark:text-blue-400 truncate" @click="openManagePengawasUser(u)" x-text="u.email"></button>
-                                    </template>
-                                    <template x-if="!canWrite || !lpPerms.pengawas">
-                                        <div class="text-xs text-gray-500 dark:text-gray-400 truncate" x-text="u.email"></div>
-                                    </template>
-                                </div>
-                            </div>
-                        </template>
-                    </div>
                 </div>
 
                 <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5">
@@ -859,8 +866,8 @@
             </div>
         </div>
 
-        <div x-show="addPengawasModal" class="fixed inset-0 z-[80] flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity" style="display: none;">
-            <div class="bg-white rounded-xl p-5 sm:p-6 w-[92vw] max-w-[720px] shadow-2xl transform transition-all dark:bg-gray-800 max-h-[85vh] overflow-y-auto">
+        <div x-show="addPengawasModal" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity" style="display: none;">
+            <div class="bg-white rounded-xl p-6 w-[92vw] max-w-[520px] shadow-2xl transform transition-all dark:bg-gray-800 max-h-[80vh] overflow-y-auto">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-xl font-bold text-gray-800 dark:text-white">Tambah Pengawas</h2>
                     <button @click="closeAddPengawas()" class="text-gray-400 hover:text-gray-600 transition-colors dark:hover:text-gray-200">

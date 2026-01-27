@@ -367,7 +367,6 @@ class ListPengawasanController extends Controller
                 'pengawas.bukti_size',
                 'pengawas.bukti_uploaded_at'
             )
-            ->where('pengawas.status', 'Done')
             ->orderBy('pengawas.created_at', 'desc');
 
         if (!$user->hasRole(['Admin', 'Supervisor'])) {

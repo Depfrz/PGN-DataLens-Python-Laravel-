@@ -52,6 +52,16 @@
     </script>
 </head>
 <body class="font-sans antialiased bg-[#d9d9d9] dark:bg-gray-900 transition-colors duration-300">
+    <script>
+        window.addEventListener('list-pengawasan:selected', function (e) {
+            try {
+                var sidebar = window.listPengawasanSidebar;
+                if (!sidebar) return;
+                var detail = e && e.detail ? e.detail : {};
+                sidebar.hasSelectedProject = !!detail.hasSelection;
+            } catch (err) {}
+        });
+    </script>
     <div x-data="{ 
         sidebarOpen: false, 
         sidebarDesktopOpen: (function() {
@@ -156,8 +166,10 @@
                                 canUseProjectActions: {{ $isListPengawasanDetail ? 'true' : 'false' }},
                                 canUseKeteranganActions: {{ ($isListPengawasanDetail || $isListPengawasanKegiatanDetail) ? 'true' : 'false' }},
                                 canAddProjectFromSidebar: {{ $isListPengawasanIndex ? 'true' : 'false' }},
-                                canAddActivityFromSidebar: {{ $isListPengawasanKegiatanIndex ? 'true' : 'false' }}
+                                canAddActivityFromSidebar: {{ $isListPengawasanKegiatanIndex ? 'true' : 'false' }},
+                                hasSelectedProject: false
                             }"
+                            x-init="window.listPengawasanSidebar = $data"
                             class="mt-2 rounded-2xl bg-white/20 dark:bg-gray-700/60 p-3"
                         >
                             <div class="text-xs font-bold text-black/80 dark:text-white/80 uppercase tracking-wider mb-3 flex items-center justify-between">
@@ -187,6 +199,17 @@
                                     >
                                         <span x-text="canAddActivityFromSidebar ? 'Tambah Kegiatan' : 'Tambah Proyek'"></span>
                                     </button>
+                                    @if($isListPengawasanIndex)
+                                    <button 
+                                        type="button"
+                                        :disabled="!hasSelectedProject"
+                                        @click="if (!hasSelectedProject) return; activeAction = 'edit_proyek'; window.dispatchEvent(new CustomEvent('list-pengawasan:action', { detail: { action: 'edit_proyek' } }))"
+                                        class="w-full px-4 py-2.5 rounded-xl font-bold text-sm text-left transition-colors border border-transparent"
+                                        :class="(activeAction === 'edit_proyek' ? 'bg-white text-blue-700 shadow-sm ring-2 ring-white/80' : 'bg-white text-black hover:bg-white/90 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800') + (!hasSelectedProject ? ' opacity-60 cursor-not-allowed' : ' cursor-pointer')"
+                                    >
+                                        Edit Proyek
+                                    </button>
+                                    @endif
                                 @endif
                                 @if(($canWrite ?? false) && ($lpPermissions['keterangan'] ?? false))
                                     <button 
@@ -209,6 +232,25 @@
                                     >
                                         Edit Keterangan
                                     </button>
+                                @endif
+                                @if($isListPengawasanKegiatanDetail)
+                                    <div class="mt-4 pt-3 border-t border-white/30 dark:border-gray-600/50">
+                                        <div class="text-xs font-bold text-black/80 dark:text-white/80 uppercase tracking-wider mb-2">Aksi Pengawas</div>
+                                        <button 
+                                            type="button"
+                                            @click="activeAction = 'tambah_pengawas'; window.dispatchEvent(new CustomEvent('list-pengawasan:action', { detail: { action: 'tambah_pengawas' } }))"
+                                            class="w-full px-4 py-2.5 rounded-xl font-bold text-sm text-left transition-colors border border-transparent bg-white text-black hover:bg-white/90 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800"
+                                        >
+                                            Tambah Pengawas
+                                        </button>
+                                        <button 
+                                            type="button"
+                                            @click="activeAction = 'kelola_pengawas'; window.dispatchEvent(new CustomEvent('list-pengawasan:action', { detail: { action: 'kelola_pengawas' } }))"
+                                            class="w-full mt-2 px-4 py-2.5 rounded-xl font-bold text-sm text-left transition-colors border border-transparent bg-white text-black hover:bg-white/90 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800"
+                                        >
+                                            Edit Pengawas
+                                        </button>
+                                    </div>
                                 @endif
                             </div>
                         </div>

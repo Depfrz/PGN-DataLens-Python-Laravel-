@@ -7,6 +7,11 @@
                 const action = e?.detail?.action || '';
                 if (action === 'tambah_proyek') {
                     this.openAdd();
+                    return;
+                }
+                if (action === 'edit_proyek') {
+                    this.openManageProject();
+                    return;
                 }
             });
 
@@ -80,16 +85,20 @@
         statusMenu: { open: false, x: 0, y: 0, item: null },
         keteranganMenu: { open: false, x: 0, y: 0, item: null },
         newPengawas: { nama: '', deskripsi: '', tanggal: '', deadline: '', pengawas_users: [] },
+        manageProjectModal: false,
+        manageProjectName: '',
         selectedBuktiItem: null,
         items: {{ Js::from($items) }},
         options: {{ Js::from($options) }},
         users: {{ Js::from($users ?? []) }},
-        init() {
-            window.addEventListener('list-pengawasan:action', (e) => {
-                if (e.detail.action === 'tambah_proyek') {
-                    this.openAdd();
-                }
-            });
+        broadcastSelected(item) {
+            try {
+                window.dispatchEvent(new CustomEvent('list-pengawasan:selected', { detail: { hasSelection: !!item } }));
+            } catch (e) {}
+        },
+        selectProject(item) {
+            this.selectedPengawas = item;
+            this.broadcastSelected(item);
         },
         openAdd() {
             if (!this.canWrite || !this.lpPerms.tambah_proyek) return;
@@ -106,6 +115,45 @@
             this.toast.show = true;
             if (this.toast.timeoutId) clearTimeout(this.toast.timeoutId);
             this.toast.timeoutId = setTimeout(() => { this.toast.show = false; }, 2200);
+        },
+        openManageProject() {
+            if (!this.selectedPengawas || !this.canWrite || !this.lpPerms.nama_proyek) return;
+            this.manageProjectName = this.selectedPengawas.nama || '';
+            this.manageProjectModal = true;
+        },
+        closeManageProject() {
+            this.manageProjectModal = false;
+            this.manageProjectName = '';
+        },
+        async saveManageProject() {
+            if (!this.selectedPengawas || !this.canWrite || !this.lpPerms.nama_proyek) return;
+            const payload = { nama: (this.manageProjectName || '').trim() };
+            if (!payload.nama) {
+                this.showToast('Nama proyek wajib diisi');
+                return;
+            }
+            try {
+                const response = await fetch(`/list-pengawasan/${this.selectedPengawas.id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
+                    },
+                    body: JSON.stringify(payload)
+                });
+                if (response.ok) {
+                    this.items = this.items.map(i => i.id === this.selectedPengawas.id ? { ...i, nama: payload.nama } : i);
+                    this.selectedPengawas.nama = payload.nama;
+                    this.closeManageProject();
+                    this.showToast('Nama proyek berhasil diperbarui');
+                } else {
+                    const d = await response.json().catch(() => ({}));
+                    this.showToast(d.message || 'Gagal memperbarui data');
+                }
+            } catch (e) {
+                console.error(e);
+                this.showToast('Terjadi kesalahan sistem');
+            }
         },
         async savePengawas() {
             if (!this.canWrite || !this.lpPerms.tambah_proyek) return;
@@ -187,8 +235,10 @@
         closeStatusMenu() {
                     this.statusMenu = { open: false, x: 0, y: 0, item: null };
                 },
-                openKeteranganMenu(e, item) {
+        openKeteranganMenu(e, item) {
                     if (!this.canWrite) return;
+            this.selectedPengawas = item;
+            this.broadcastSelected(item);
                     this.closeStatusMenu();
                     
                     const rect = e.currentTarget.getBoundingClientRect();
@@ -259,6 +309,7 @@
         openEditKeterangan(item) {
             if (!this.canWrite || !this.lpPerms.keterangan) return;
             this.selectedPengawas = JSON.parse(JSON.stringify(item));
+            this.broadcastSelected(item);
             this.selectedKeterangan = (item.keterangan || []).map(k => k.label);
             this.newLabel = '';
             this.editKeteranganModal = true;
@@ -578,6 +629,7 @@
         openDelete(item) {
             if (!this.canWrite || !this.lpPerms.nama_proyek) return;
             this.selectedPengawas = item;
+            this.broadcastSelected(item);
             this.deleteModal = true;
         },
         async deletePengawas() {
@@ -828,7 +880,7 @@
                 <div>
                     <div class="space-y-3 sm:hidden">
                         <template x-for="item in filteredItems" :key="'mobile-' + item.id">
-                            <div class="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                            <div class="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800 cursor-pointer" @click="selectProject(item)">
                                 <div class="p-4">
                                 <div class="flex items-start justify-between gap-3">
                                     <div class="min-w-0 flex-1">
@@ -1009,7 +1061,7 @@
                             </thead>
                             <tbody>
                                 <template x-for="item in filteredItems" :key="item.id">
-                                    <tr class="bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 group">
+                                    <tr class="bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 group cursor-pointer" @click="selectProject(item)">
                                 <td class="p-4 rounded-l-lg border-y border-l border-gray-200 dark:border-gray-700 group-hover:border-blue-300 dark:group-hover:border-blue-700 transition-colors">
                                     <div class="flex items-start justify-between gap-3">
                                         <div class="min-w-0 flex-1">
@@ -1479,6 +1531,35 @@
                     <div class="flex justify-end space-x-3 mt-6">
                         <button @click="deleteModal = false" class="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition-colors dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Batal</button>
                         <button @click="deletePengawas()" class="px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium shadow-md hover:shadow-lg transition-all">Ya, Hapus</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div x-show="manageProjectModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity" style="display: none;">
+            <div class="bg-white rounded-xl p-5 sm:p-6 w-[92vw] max-w-[480px] shadow-2xl transform transition-all dark:bg-gray-800">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-800 dark:text-white">Kelola Proyek</h2>
+                        <p class="text-sm text-gray-500 mt-1 dark:text-gray-400" x-text="selectedPengawas ? selectedPengawas.nama : '-'"></p>
+                    </div>
+                    <button @click="closeManageProject()" class="text-gray-400 hover:text-gray-600 transition-colors dark:hover:text-gray-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1 dark:text-gray-200">Nama Proyek</label>
+                        <input x-model="manageProjectName" type="text" class="w-full bg-gray-50 border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 dark:placeholder:text-gray-500">
+                    </div>
+                    <div class="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
+                        <button @click="closeManageProject(); openDelete(selectedPengawas)" class="px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition-colors">Hapus Proyek</button>
+                        <div class="flex items-center space-x-3">
+                            <button @click="closeManageProject()" class="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition-colors dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Batal</button>
+                            <button @click="saveManageProject()" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow-md hover:shadow-lg transition-all">Simpan</button>
+                        </div>
                     </div>
                 </div>
             </div>
