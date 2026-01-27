@@ -155,7 +155,8 @@
                     $isListPengawasanDetail = request()->routeIs('list-pengawasan.show');
                     $isListPengawasanIndex = request()->routeIs('list-pengawasan.index');
                     $isListPengawasanKegiatanDetail = request()->routeIs('list-pengawasan.kegiatan.show');
-                    $isListPengawasanKegiatanIndex = request()->routeIs('list-pengawasan.kegiatan.index') || request()->is('list-pengawasan/*/kegiatan');
+                    // Improved detection: Check for 'kegiatan' in the path to catch all variants
+                    $isListPengawasanKegiatanIndex = request()->routeIs('list-pengawasan.kegiatan.index') || request()->is('list-pengawasan/*/kegiatan') || str_contains(request()->path(), '/kegiatan');
                 @endphp
 
                 @if($isListPengawasanRoute)
@@ -179,8 +180,7 @@
                                 </span>
                             </div>
                             <div class="space-y-2">
-                                <!-- DEBUG: Route={{ request()->path() }} isKegiatanIndex={{ $isListPengawasanKegiatanIndex ? 'YES' : 'NO' }} CanWrite={{ ($canWrite ?? false) ? 'YES' : 'NO' }} TambahProyek={{ ($lpPermissions['tambah_proyek'] ?? false) ? 'YES' : 'NO' }} -->
-                                @if(($canWrite ?? false) && (($lpPermissions['tambah_proyek'] ?? false) || $isListPengawasanKegiatanIndex))
+                                @if($isListPengawasanIndex || $isListPengawasanKegiatanIndex || (($canWrite ?? false) && ($lpPermissions['tambah_proyek'] ?? false)))
                                     <button 
                                         type="button"
                                         :disabled="!canUseProjectActions && !canAddProjectFromSidebar && !canAddActivityFromSidebar"
