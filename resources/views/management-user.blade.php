@@ -177,6 +177,7 @@
                     if (index !== -1) {
                         this.users[index].hak_akses = [...this.selectedAccess];
                         this.users[index].dashboard_access = [...this.dashboardAccess];
+                        this.users[index].list_pengawasan_permissions = { ...this.listPengawasanPermissions };
                     }
                     this.editAccessModal = false;
                     this.showSuccess('Hak akses berhasil diperbarui');

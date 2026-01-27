@@ -9,6 +9,7 @@ use App\Services\AuditService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rules;
 use Spatie\Permission\Models\Role;
 
@@ -121,6 +122,8 @@ class ManagementUserController extends Controller
 
     public function updateAccess(Request $request, User $user)
     {
+        Log::info('updateAccess Payload for user ' . $user->id, $request->all());
+
         $request->validate([
             'hak_akses' => ['array'],
             'hak_akses.*' => ['exists:modules,name'],
@@ -171,6 +174,12 @@ class ManagementUserController extends Controller
 
     private function syncAccess(User $user, array $moduleNames, array $dashboardModuleNames = [], array $listPengawasanPermissions = [])
     {
+        Log::info('syncAccess processing', [
+            'user_id' => $user->id,
+            'modules' => $moduleNames,
+            'permissions' => $listPengawasanPermissions
+        ]);
+
         $modules = Module::whereIn('name', $moduleNames)->get();
         
         $user->moduleAccesses()->delete();
@@ -193,7 +202,19 @@ class ManagementUserController extends Controller
 
             $extraPermissions = null;
 
-            if ($module->name === 'List Pengawasan') {
+            // Robust matching for List Pengawasan module
+            $isListPengawasan = $module->slug === 'list-pengawasan' 
+                || $module->name === 'List Pengawasan' 
+                || \Illuminate\Support\Str::slug($module->name) === 'list-pengawasan';
+
+            if ($isListPengawasan) {
+                Log::info('Saving List Pengawasan permissions', ['permissions' => $listPengawasanPermissions]);
+                
+                // Ensure all values are booleans
+                $sanitizedPermissions = collect($listPengawasanPermissions)
+                    ->map(fn($val) => filter_var($val, FILTER_VALIDATE_BOOLEAN))
+                    ->toArray();
+
                 $extraPermissions = [
                     'list_pengawasan' => array_merge([
                         'tambah_proyek' => false,
@@ -204,7 +225,7 @@ class ManagementUserController extends Controller
                         'keterangan' => false,
                         'edit_keterangan' => false,
                         'bukti' => false,
-                    ], $listPengawasanPermissions),
+                    ], $sanitizedPermissions),
                 ];
             }
 
