@@ -11,6 +11,14 @@
         toast: { show: false, message: '', timeoutId: null },
         newKegiatan: { nama_kegiatan: '', tanggal_mulai: '', deadline: '', status: 'Belum Dimulai', deskripsi: '' },
         items: {{ Js::from($activities->items()) }},
+
+        init() {
+            window.addEventListener('list-pengawasan:action', (e) => {
+                if (e.detail.action === 'tambah_kegiatan') {
+                    this.openAdd();
+                }
+            });
+        },
         
         showToast(message) {
             this.toast.message = message;

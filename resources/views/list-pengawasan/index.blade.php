@@ -36,6 +36,13 @@
         items: {{ Js::from($items) }},
         options: {{ Js::from($options) }},
         users: {{ Js::from($users ?? []) }},
+        init() {
+            window.addEventListener('list-pengawasan:action', (e) => {
+                if (e.detail.action === 'tambah_proyek') {
+                    this.openAdd();
+                }
+            });
+        },
         openAdd() {
             if (!this.canWrite || !this.lpPerms.tambah_proyek) return;
             this.newPengawas = { nama: '', deskripsi: '', tanggal: '', status: 'On Progress', deadline: '', keterangan: [], new_keterangan: '', pengawas_users: [] };

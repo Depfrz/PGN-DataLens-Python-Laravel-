@@ -141,10 +141,11 @@
                 @endcan
 
                 @php
-                    $isListPengawasanRoute = request()->routeIs('list-pengawasan.*');
+                    $isListPengawasanRoute = request()->routeIs('list-pengawasan.*') || request()->is('list-pengawasan*');
                     $isListPengawasanDetail = request()->routeIs('list-pengawasan.show');
                     $isListPengawasanIndex = request()->routeIs('list-pengawasan.index');
                     $isListPengawasanKegiatanDetail = request()->routeIs('list-pengawasan.kegiatan.show');
+                    $isListPengawasanKegiatanIndex = request()->routeIs('list-pengawasan.kegiatan.index') || request()->is('list-pengawasan/*/kegiatan');
                 @endphp
 
                 @if($isListPengawasanRoute)
@@ -154,26 +155,37 @@
                                 activeAction: null, 
                                 canUseProjectActions: {{ $isListPengawasanDetail ? 'true' : 'false' }},
                                 canUseKeteranganActions: {{ ($isListPengawasanDetail || $isListPengawasanKegiatanDetail) ? 'true' : 'false' }},
-                                canAddProjectFromSidebar: {{ $isListPengawasanIndex ? 'true' : 'false' }}
+                                canAddProjectFromSidebar: {{ $isListPengawasanIndex ? 'true' : 'false' }},
+                                canAddActivityFromSidebar: {{ $isListPengawasanKegiatanIndex ? 'true' : 'false' }}
                             }"
                             class="mt-2 rounded-2xl bg-white/20 dark:bg-gray-700/60 p-3"
                         >
                             <div class="text-xs font-bold text-black/80 dark:text-white/80 uppercase tracking-wider mb-3 flex items-center justify-between">
                                 <span>Aksi Proyek</span>
-                                <span x-show="!canUseProjectActions && !canUseKeteranganActions && !canAddProjectFromSidebar" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-900/10 text-gray-800 dark:bg-gray-100/10 dark:text-gray-100">
+                                <span x-show="!canUseProjectActions && !canUseKeteranganActions && !canAddProjectFromSidebar && !canAddActivityFromSidebar" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-900/10 text-gray-800 dark:bg-gray-100/10 dark:text-gray-100">
                                     Pilih proyek
                                 </span>
                             </div>
                             <div class="space-y-2">
-                                @if(($canWrite ?? false) && ($lpPermissions['tambah_proyek'] ?? false))
+                                <!-- DEBUG: Route={{ request()->path() }} isKegiatanIndex={{ $isListPengawasanKegiatanIndex ? 'YES' : 'NO' }} CanWrite={{ ($canWrite ?? false) ? 'YES' : 'NO' }} TambahProyek={{ ($lpPermissions['tambah_proyek'] ?? false) ? 'YES' : 'NO' }} -->
+                                @if(($canWrite ?? false) && (($lpPermissions['tambah_proyek'] ?? false) || $isListPengawasanKegiatanIndex))
                                     <button 
                                         type="button"
-                                        :disabled="!canUseProjectActions && !canAddProjectFromSidebar"
-                                        @click="if (!canUseProjectActions && !canAddProjectFromSidebar) return; activeAction = 'tambah_proyek'; window.dispatchEvent(new CustomEvent('list-pengawasan:action', { detail: { action: 'tambah_proyek' } }))"
+                                        :disabled="!canUseProjectActions && !canAddProjectFromSidebar && !canAddActivityFromSidebar"
+                                        @click="
+                                            if (canAddActivityFromSidebar) {
+                                                activeAction = 'tambah_kegiatan';
+                                                window.dispatchEvent(new CustomEvent('list-pengawasan:action', { detail: { action: 'tambah_kegiatan' } }));
+                                                return;
+                                            }
+                                            if (!canUseProjectActions && !canAddProjectFromSidebar) return; 
+                                            activeAction = 'tambah_proyek'; 
+                                            window.dispatchEvent(new CustomEvent('list-pengawasan:action', { detail: { action: 'tambah_proyek' } }))
+                                        "
                                         class="w-full px-4 py-2.5 rounded-xl font-bold text-sm text-left transition-colors border border-transparent"
-                                        :class="(activeAction === 'tambah_proyek' ? 'bg-white text-blue-700 shadow-sm ring-2 ring-white/80' : 'bg-white text-black hover:bg-white/90 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800') + (!canUseProjectActions && !canAddProjectFromSidebar ? ' opacity-60 cursor-not-allowed' : ' cursor-pointer')"
+                                        :class="((activeAction === 'tambah_proyek' || activeAction === 'tambah_kegiatan') ? 'bg-white text-blue-700 shadow-sm ring-2 ring-white/80' : 'bg-white text-black hover:bg-white/90 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800') + (!canUseProjectActions && !canAddProjectFromSidebar && !canAddActivityFromSidebar ? ' opacity-60 cursor-not-allowed' : ' cursor-pointer')"
                                     >
-                                        Tambah Proyek
+                                        <span x-text="canAddActivityFromSidebar ? 'Tambah Kegiatan' : 'Tambah Proyek'"></span>
                                     </button>
                                 @endif
                                 @if(($canWrite ?? false) && ($lpPermissions['keterangan'] ?? false))
