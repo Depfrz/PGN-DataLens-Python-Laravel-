@@ -1371,6 +1371,7 @@ class ListPengawasanController extends Controller
         return view('list-pengawasan.show-kegiatan', compact('item', 'options', 'users', 'canWrite', 'lpPermissions'));
     }
 
+
     public function updateKegiatan(Request $request, int $activity)
     {
         /** @var \App\Models\User $user */

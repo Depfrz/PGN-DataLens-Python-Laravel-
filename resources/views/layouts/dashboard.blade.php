@@ -52,16 +52,6 @@
     </script>
 </head>
 <body class="font-sans antialiased bg-[#d9d9d9] dark:bg-gray-900 transition-colors duration-300">
-    <script>
-        window.addEventListener('list-pengawasan:selected', function (e) {
-            try {
-                var sidebar = window.listPengawasanSidebar;
-                if (!sidebar) return;
-                var detail = e && e.detail ? e.detail : {};
-                sidebar.hasSelectedProject = !!detail.hasSelection;
-            } catch (err) {}
-        });
-    </script>
     <div x-data="{ 
         sidebarOpen: false, 
         sidebarDesktopOpen: (function() {
@@ -186,7 +176,7 @@
                                 canAddActivityFromSidebar: {{ $isListPengawasanKegiatanIndex ? 'true' : 'false' }},
                                 hasSelectedProject: false
                             }"
-                            x-init="window.listPengawasanSidebar = $data"
+                            @list-pengawasan:selected.window="hasSelectedProject = $event.detail.hasSelection"
                             class="mt-2 rounded-2xl bg-white/20 dark:bg-gray-700/60 p-3"
                         >
                             <div class="text-xs font-bold text-black/80 dark:text-white/80 uppercase tracking-wider mb-3 flex items-center justify-between">

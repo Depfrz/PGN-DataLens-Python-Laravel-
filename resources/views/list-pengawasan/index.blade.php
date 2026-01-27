@@ -880,7 +880,11 @@
                 <div>
                     <div class="space-y-3 sm:hidden">
                         <template x-for="item in filteredItems" :key="'mobile-' + item.id">
-                            <div class="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800 cursor-pointer" @click="selectProject(item)">
+                            <div 
+                                class="rounded-2xl border shadow-sm cursor-pointer transition-all duration-200"
+                                :class="selectedPengawas && selectedPengawas.id === item.id ? 'bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800 ring-1 ring-blue-300 dark:ring-blue-700' : 'bg-white border-gray-200 dark:bg-gray-800 dark:border-gray-700'"
+                                @click="selectProject(item)"
+                            >
                                 <div class="p-4">
                                 <div class="flex items-start justify-between gap-3">
                                     <div class="min-w-0 flex-1">
@@ -1061,7 +1065,11 @@
                             </thead>
                             <tbody>
                                 <template x-for="item in filteredItems" :key="item.id">
-                                    <tr class="bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 group cursor-pointer" @click="selectProject(item)">
+                                    <tr 
+                                        class="rounded-lg shadow-sm hover:shadow-md transition-all duration-200 group cursor-pointer" 
+                                        :class="selectedPengawas && selectedPengawas.id === item.id ? 'bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800 ring-1 ring-blue-300 dark:ring-blue-700' : 'bg-white dark:bg-gray-800'"
+                                        @click="selectProject(item)"
+                                    >
                                 <td class="p-4 rounded-l-lg border-y border-l border-gray-200 dark:border-gray-700 group-hover:border-blue-300 dark:group-hover:border-blue-700 transition-colors">
                                     <div class="flex items-start justify-between gap-3">
                                         <div class="min-w-0 flex-1">

@@ -91,6 +91,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->whereNumber('activity')
         ->name('list-pengawasan.kegiatan.destroy');
 
+    // Pengawas Users management for a project
+    Route::post('/list-pengawasan/{id}/pengawas-users', [ListPengawasanController::class, 'addPengawasUsers'])
+        ->whereNumber('id');
+    Route::patch('/list-pengawasan/{id}/pengawas-users', [ListPengawasanController::class, 'replacePengawasUser'])
+        ->whereNumber('id');
+    Route::delete('/list-pengawasan/{id}/pengawas-users', [ListPengawasanController::class, 'removePengawasUser'])
+        ->whereNumber('id');
+
     // Kegiatan Helper Routes (for show-kegiatan.blade.php)
     Route::patch('/list-pengawasan/kegiatan/{activity}/status', [ListPengawasanController::class, 'updateStatusKegiatan'])
         ->whereNumber('activity');
