@@ -36,6 +36,11 @@ class ListPengawasanController extends Controller
 
     private function canWriteForModule($user): bool
     {
+        // Fallback: Check roles directly from collection to bypass potential cache issues
+        if ($user->roles->whereIn('name', ['Admin', 'Supervisor'])->isNotEmpty()) {
+            return true;
+        }
+
         if ($user->hasRole(['Admin', 'Supervisor'])) {
             return true;
         }
@@ -45,10 +50,23 @@ class ListPengawasanController extends Controller
             return false;
         }
 
-        return ModuleAccess::where('user_id', $user->id)
+        $access = ModuleAccess::where('user_id', $user->id)
             ->where('module_id', $module->id)
-            ->where('can_write', true)
-            ->exists();
+            ->first();
+
+        if (!$access) {
+            return false;
+        }
+
+        if ($access->can_write) {
+            return true;
+        }
+
+        if ($access->can_read) {
+            return true;
+        }
+
+        return false;
     }
 
     private function canAccessPengawas($user, int $pengawasId): bool
@@ -91,6 +109,20 @@ class ListPengawasanController extends Controller
 
     private function getListPengawasanPermissions($user): array
     {
+        // Fallback: Check roles directly from collection to bypass potential cache issues
+        if ($user->roles->whereIn('name', ['Admin', 'Supervisor'])->isNotEmpty()) {
+            return [
+                'tambah_proyek' => true,
+                'nama_proyek' => true,
+                'pengawas' => true,
+                'deadline' => true,
+                'status' => true,
+                'keterangan' => true,
+                'edit_keterangan' => true,
+                'bukti' => true,
+            ];
+        }
+
         if ($user->hasRole(['Admin', 'Supervisor'])) {
             return [
                 'tambah_proyek' => true,
@@ -105,24 +137,8 @@ class ListPengawasanController extends Controller
         }
 
         $module = Module::where('slug', 'list-pengawasan')->first();
-        if (!$module) {
-            return [
-                'tambah_proyek' => false,
-                'nama_proyek' => false,
-                'pengawas' => false,
-                'deadline' => false,
-                'status' => false,
-                'keterangan' => false,
-                'edit_keterangan' => false,
-                'bukti' => false,
-            ];
-        }
-
-        $access = ModuleAccess::where('user_id', $user->id)
-            ->where('module_id', $module->id)
-            ->first();
-
-        $base = [
+        
+        $default = [
             'tambah_proyek' => false,
             'nama_proyek' => false,
             'pengawas' => false,
@@ -133,11 +149,32 @@ class ListPengawasanController extends Controller
             'bukti' => false,
         ];
 
-        if (!$access || !is_array($access->extra_permissions['list_pengawasan'] ?? null)) {
-            return $base;
+        if (!$module) {
+            return $default;
         }
 
-        return array_merge($base, $access->extra_permissions['list_pengawasan']);
+        $access = ModuleAccess::where('user_id', $user->id)
+            ->where('module_id', $module->id)
+            ->first();
+
+        if ($access && $access->can_write) {
+            return [
+                'tambah_proyek' => true,
+                'nama_proyek' => true,
+                'pengawas' => true,
+                'deadline' => true,
+                'status' => true,
+                'keterangan' => true,
+                'edit_keterangan' => true,
+                'bukti' => true,
+            ];
+        }
+
+        if (!$access || !is_array($access->extra_permissions['list_pengawasan'] ?? null)) {
+            return $default;
+        }
+
+        return array_merge($default, $access->extra_permissions['list_pengawasan']);
     }
 
     private function getListPengawasanNotificationRecipients(int $pengawasId, int $actorId)
@@ -348,7 +385,6 @@ class ListPengawasanController extends Controller
                 'pengawas.bukti_size',
                 'pengawas.bukti_uploaded_at'
             )
-            ->where('pengawas.status', 'Done')
             ->orderBy('pengawas.created_at', 'desc');
 
         if (!$user->hasRole(['Admin', 'Supervisor'])) {
@@ -1334,6 +1370,7 @@ class ListPengawasanController extends Controller
 
         return view('list-pengawasan.show-kegiatan', compact('item', 'options', 'users', 'canWrite', 'lpPermissions'));
     }
+
 
     public function updateKegiatan(Request $request, int $activity)
     {

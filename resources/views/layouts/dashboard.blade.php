@@ -140,12 +140,29 @@
                 </a>
                 @endcan
 
+                <!-- List Pengawasan (Removed per request) -->
+
                 @php
-                    $isListPengawasanRoute = request()->routeIs('list-pengawasan.*') || request()->is('list-pengawasan*');
-                    $isListPengawasanDetail = request()->routeIs('list-pengawasan.show');
-                    $isListPengawasanIndex = request()->routeIs('list-pengawasan.index');
+                    $currentUrl = request()->fullUrl();
+                    $currentPath = request()->path();
+                    
+                    // Robust detection using multiple methods
+                    $isListPengawasanRoute = request()->routeIs('list-pengawasan.*') 
+                        || request()->is('list-pengawasan*') 
+                        || str_contains($currentUrl, 'list-pengawasan');
+                        
+                    $isListPengawasanDetail = request()->routeIs('list-pengawasan.show')
+                        || (preg_match('/list-pengawasan\/\d+\/?$/', $currentPath));
+
+                    $isListPengawasanIndex = request()->routeIs('list-pengawasan.index')
+                        || ($isListPengawasanRoute && !$isListPengawasanDetail && !str_contains($currentUrl, '/kegiatan'));
+
                     $isListPengawasanKegiatanDetail = request()->routeIs('list-pengawasan.kegiatan.show');
-                    $isListPengawasanKegiatanIndex = request()->routeIs('list-pengawasan.kegiatan.index') || request()->is('list-pengawasan/*/kegiatan');
+                    
+                    // Improved detection: Check for 'kegiatan' in the path to catch all variants
+                    $isListPengawasanKegiatanIndex = request()->routeIs('list-pengawasan.kegiatan.index') 
+                        || request()->is('list-pengawasan/*/kegiatan') 
+                        || str_contains($currentUrl, '/kegiatan') && !$isListPengawasanKegiatanDetail;
                 @endphp
 
                 @if($isListPengawasanRoute)
@@ -154,10 +171,12 @@
                             x-data="{ 
                                 activeAction: null, 
                                 canUseProjectActions: {{ $isListPengawasanDetail ? 'true' : 'false' }},
-                                canUseKeteranganActions: {{ ($isListPengawasanDetail || $isListPengawasanKegiatanDetail) ? 'true' : 'false' }},
+                                canUseKeteranganActions: {{ ($isListPengawasanDetail || $isListPengawasanKegiatanDetail || $isListPengawasanKegiatanIndex) ? 'true' : 'false' }},
                                 canAddProjectFromSidebar: {{ $isListPengawasanIndex ? 'true' : 'false' }},
-                                canAddActivityFromSidebar: {{ $isListPengawasanKegiatanIndex ? 'true' : 'false' }}
+                                canAddActivityFromSidebar: {{ $isListPengawasanKegiatanIndex ? 'true' : 'false' }},
+                                hasSelectedProject: false
                             }"
+                            @list-pengawasan:selected.window="hasSelectedProject = $event.detail.hasSelection"
                             class="mt-2 rounded-2xl bg-white/20 dark:bg-gray-700/60 p-3"
                         >
                             <div class="text-xs font-bold text-black/80 dark:text-white/80 uppercase tracking-wider mb-3 flex items-center justify-between">
@@ -167,8 +186,7 @@
                                 </span>
                             </div>
                             <div class="space-y-2">
-                                <!-- DEBUG: Route={{ request()->path() }} isKegiatanIndex={{ $isListPengawasanKegiatanIndex ? 'YES' : 'NO' }} CanWrite={{ ($canWrite ?? false) ? 'YES' : 'NO' }} TambahProyek={{ ($lpPermissions['tambah_proyek'] ?? false) ? 'YES' : 'NO' }} -->
-                                @if(($canWrite ?? false) && (($lpPermissions['tambah_proyek'] ?? false) || $isListPengawasanKegiatanIndex))
+                                @if($isListPengawasanRoute)
                                     <button 
                                         type="button"
                                         :disabled="!canUseProjectActions && !canAddProjectFromSidebar && !canAddActivityFromSidebar"
@@ -187,8 +205,19 @@
                                     >
                                         <span x-text="canAddActivityFromSidebar ? 'Tambah Kegiatan' : 'Tambah Proyek'"></span>
                                     </button>
+                                    @if($isListPengawasanIndex)
+                                    <button 
+                                        type="button"
+                                        :disabled="!hasSelectedProject"
+                                        @click="if (!hasSelectedProject) return; activeAction = 'edit_proyek'; window.dispatchEvent(new CustomEvent('list-pengawasan:action', { detail: { action: 'edit_proyek' } }))"
+                                        class="w-full px-4 py-2.5 rounded-xl font-bold text-sm text-left transition-colors border border-transparent"
+                                        :class="(activeAction === 'edit_proyek' ? 'bg-white text-blue-700 shadow-sm ring-2 ring-white/80' : 'bg-white text-black hover:bg-white/90 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800') + (!hasSelectedProject ? ' opacity-60 cursor-not-allowed' : ' cursor-pointer')"
+                                    >
+                                        Edit Proyek
+                                    </button>
+                                    @endif
                                 @endif
-                                @if(($canWrite ?? false) && ($lpPermissions['keterangan'] ?? false))
+                                @if(($canWrite ?? false) || ($lpPermissions['keterangan'] ?? false) || $isListPengawasanDetail || $isListPengawasanKegiatanDetail || $isListPengawasanKegiatanIndex)
                                     <button 
                                         type="button"
                                         :disabled="!canUseKeteranganActions"
@@ -199,7 +228,7 @@
                                         Tambah Keterangan
                                     </button>
                                 @endif
-                                @if(($canWrite ?? false) && ($lpPermissions['edit_keterangan'] ?? false))
+                                @if(($canWrite ?? false) || ($lpPermissions['edit_keterangan'] ?? false) || $isListPengawasanDetail || $isListPengawasanKegiatanDetail || $isListPengawasanKegiatanIndex)
                                     <button 
                                         type="button"
                                         :disabled="!canUseKeteranganActions"
@@ -210,10 +239,31 @@
                                         Edit Keterangan
                                     </button>
                                 @endif
+                                @if($isListPengawasanKegiatanDetail)
+                                    <div class="mt-4 pt-3 border-t border-white/30 dark:border-gray-600/50">
+                                        <div class="text-xs font-bold text-black/80 dark:text-white/80 uppercase tracking-wider mb-2">Aksi Pengawas</div>
+                                        <button 
+                                            type="button"
+                                            @click="activeAction = 'tambah_pengawas'; window.dispatchEvent(new CustomEvent('list-pengawasan:action', { detail: { action: 'tambah_pengawas' } }))"
+                                            class="w-full px-4 py-2.5 rounded-xl font-bold text-sm text-left transition-colors border border-transparent bg-white text-black hover:bg-white/90 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800"
+                                        >
+                                            Tambah Pengawas
+                                        </button>
+                                        <button 
+                                            type="button"
+                                            @click="activeAction = 'kelola_pengawas'; window.dispatchEvent(new CustomEvent('list-pengawasan:action', { detail: { action: 'kelola_pengawas' } }))"
+                                            class="w-full mt-2 px-4 py-2.5 rounded-xl font-bold text-sm text-left transition-colors border border-transparent bg-white text-black hover:bg-white/90 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800"
+                                        >
+                                            Edit Pengawas
+                                        </button>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>
                 @endif
+                
+
             </nav>
         </aside>
 
