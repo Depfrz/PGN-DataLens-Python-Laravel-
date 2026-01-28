@@ -26,7 +26,7 @@
         },
 
         openKeterangan() {
-            if (!this.canWrite) return;
+            if (!this.lpPerms.keterangan_checklist) return;
             // Redirect to project detail to manage keterangan
             window.location.href = `/list-pengawasan/${this.projectId}`;
         },
@@ -39,13 +39,13 @@
         },
 
         openAdd() {
-            if (!this.canWrite) return;
+            if (!this.lpPerms.tambah_kegiatan) return;
             this.newKegiatan = { nama_kegiatan: '', tanggal_mulai: '', deadline: '', status: 'Belum Dimulai', deskripsi: '' };
             this.addModal = true;
         },
 
         async saveKegiatan() {
-            if (!this.canWrite) return;
+            if (!this.lpPerms.tambah_kegiatan) return;
             try {
                 const response = await fetch(`/list-pengawasan/${this.projectId}/kegiatan`, {
                     method: 'POST',
@@ -73,13 +73,13 @@
         },
 
         openDelete(item) {
-            if (!this.canWrite) return;
+            if (!this.lpPerms.hapus_kegiatan) return;
             this.selectedItem = item;
             this.deleteModal = true;
         },
 
         async deleteKegiatan() {
-            if (!this.canWrite || !this.selectedItem) return;
+            if (!this.lpPerms.hapus_kegiatan || !this.selectedItem) return;
             try {
                 const response = await fetch(`/list-pengawasan/kegiatan/${this.selectedItem.id}`, {
                     method: 'DELETE',
@@ -147,7 +147,7 @@
             <div class="flex flex-col sm:flex-row gap-3">
                 <!-- Search & Filter would go here if implemented fully -->
                 
-                <button x-show="canWrite && lpPerms.tambah_kegiatan" :disabled="!canWrite || !lpPerms.tambah_kegiatan" @click="openAdd()" class="w-full sm:w-auto bg-blue-600 text-white font-medium text-sm py-2.5 px-6 rounded-lg hover:bg-blue-700 transition-all shadow-md hover:shadow-lg inline-flex items-center justify-center">
+                <button x-show="lpPerms.tambah_kegiatan" :disabled="!lpPerms.tambah_kegiatan" @click="openAdd()" class="w-full sm:w-auto bg-blue-600 text-white font-medium text-sm py-2.5 px-6 rounded-lg hover:bg-blue-700 transition-all shadow-md hover:shadow-lg inline-flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
                     </svg>
@@ -190,7 +190,7 @@
                             </td>
                             <td class="px-6 py-4 text-right">
                                 <div class="flex justify-end gap-2">
-                                    <button x-show="canWrite && lpPerms.hapus_kegiatan" :disabled="!canWrite || !lpPerms.hapus_kegiatan" @click="openDelete({{ Js::from($item) }})" class="font-medium text-red-600 dark:text-red-500 hover:underline">Hapus</button>
+                                    <button x-show="lpPerms.hapus_kegiatan" :disabled="!lpPerms.hapus_kegiatan" @click="openDelete({{ Js::from($item) }})" class="font-medium text-red-600 dark:text-red-500 hover:underline">Hapus</button>
                                 </div>
                             </td>
                         </tr>

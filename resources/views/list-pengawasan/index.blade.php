@@ -107,7 +107,7 @@
             this.broadcastSelected(item);
         },
         openAdd() {
-            if (!this.canWrite || !this.lpPerms.tambah_proyek) return;
+            if (!this.lpPerms.tambah_proyek) return;
             this.newPengawas = { nama: '', deskripsi: '', tanggal: '', deadline: '', pengawas_users: [] };
             this.addModal = true;
             document.body.style.overflow = 'hidden';
@@ -123,7 +123,7 @@
             this.toast.timeoutId = setTimeout(() => { this.toast.show = false; }, 2200);
         },
         openManageProject() {
-            if (!this.selectedPengawas || !this.canWrite || !this.lpPerms.nama_proyek) return;
+            if (!this.selectedPengawas || !this.lpPerms.nama_proyek) return;
             this.manageProjectName = this.selectedPengawas.nama || '';
             this.manageProjectModal = true;
         },
@@ -132,7 +132,7 @@
             this.manageProjectName = '';
         },
         async saveManageProject() {
-            if (!this.selectedPengawas || !this.canWrite || !this.lpPerms.nama_proyek) return;
+            if (!this.selectedPengawas || !this.lpPerms.nama_proyek) return;
             const payload = { nama: (this.manageProjectName || '').trim() };
             if (!payload.nama) {
                 this.showToast('Nama proyek wajib diisi');
@@ -162,7 +162,7 @@
             }
         },
         async savePengawas() {
-            if (!this.canWrite || !this.lpPerms.tambah_proyek) return;
+            if (!this.lpPerms.tambah_proyek) return;
             try {
                 const response = await fetch('/list-pengawasan', {
                     method: 'POST',
@@ -221,7 +221,7 @@
             return deadline < today;
         },
         openStatusMenu(e, item) {
-            if (!this.canWrite || !this.lpPerms.status) return;
+            if (!this.lpPerms.status) return;
             const rect = e.currentTarget.getBoundingClientRect();
             const menuWidth = 176;
             const menuHeight = 156;
@@ -242,7 +242,6 @@
                     this.statusMenu = { open: false, x: 0, y: 0, item: null };
                 },
         openKeteranganMenu(e, item) {
-                    if (!this.canWrite) return;
             this.selectedPengawas = item;
             this.broadcastSelected(item);
                     this.closeStatusMenu();
@@ -271,7 +270,7 @@
                     document.body.style.overflow = '';
                 },
         startEdit(item) {
-            if (!this.canWrite || !this.lpPerms.nama_proyek) return;
+            if (!this.lpPerms.nama_proyek) return;
             this.editingId = item.id;
             this.editPengawas = { nama: item.nama };
         },
@@ -279,8 +278,8 @@
             this.editingId = null;
             this.editPengawas = { nama: '' };
         },
-        async saveEdit(item) {
-            if (!this.canWrite || !this.lpPerms.nama_proyek) return;
+        saveEdit(item) {
+            if (!this.lpPerms.nama_proyek) return;
             const payload = {
                 nama: this.editPengawas.nama?.trim() || ''
             };
@@ -313,7 +312,7 @@
             }
         },
         openEditKeterangan(item) {
-            if (!this.canWrite || !this.lpPerms.keterangan) return;
+            if (!this.lpPerms.keterangan_checklist) return;
             this.selectedPengawas = JSON.parse(JSON.stringify(item));
             this.broadcastSelected(item);
             this.selectedKeterangan = (item.keterangan || []).map(k => k.label);
@@ -337,14 +336,14 @@
             }));
         },
         openRenameOption(name) {
-            if (!this.canWrite || !this.lpPerms.edit_keterangan) return;
+            if (!this.lpPerms.edit_keterangan) return;
             if (!name) return;
             this.renameOptionOldName = name;
             this.renameOptionNewName = name;
             this.renameOptionModal = true;
         },
         async confirmRenameOption() {
-            if (!this.canWrite || !this.lpPerms.edit_keterangan) return;
+            if (!this.lpPerms.edit_keterangan) return;
             const oldName = this.renameOptionOldName;
             const newName = this.renameOptionNewName?.trim() || '';
             if (!oldName) return;
@@ -404,13 +403,13 @@
             }
         },
         openDeleteOption(name) {
-            if (!this.canWrite || !this.lpPerms.edit_keterangan) return;
+            if (!this.lpPerms.edit_keterangan) return;
             if (!name) return;
             this.deleteOptionName = name;
             this.deleteOptionModal = true;
         },
         async confirmDeleteOption() {
-            if (!this.canWrite || !this.lpPerms.edit_keterangan) return;
+            if (!this.lpPerms.edit_keterangan) return;
             const name = this.deleteOptionName;
             if (!name) return;
             try {
@@ -468,7 +467,7 @@
             }
         },
         addNewKeteranganToEdit() {
-            if (!this.canWrite || !this.lpPerms.edit_keterangan) return;
+            if (!this.lpPerms.edit_keterangan) return;
             const label = this.newLabel?.trim();
             if (!label) return;
             if (!this.options.includes(label)) this.options.push(label);
@@ -485,7 +484,7 @@
             return found ? found.bukti : null;
         },
         async uploadKeteranganBukti(item, label, file) {
-            if (!this.canWrite || !this.lpPerms.bukti) return;
+            if (!this.lpPerms.bukti) return;
             const formData = new FormData();
             formData.append('label', label);
             formData.append('bukti', file);
@@ -512,7 +511,7 @@
             }
         },
         deleteKeteranganBukti(item, label) {
-            if (!this.canWrite || !this.lpPerms.bukti) return;
+            if (!this.lpPerms.bukti) return;
             this.selectedKeteranganBukti = { item, label };
             this.deleteKeteranganBuktiModal = true;
         },
@@ -550,7 +549,7 @@
             e.target.value = '';
         },
         async toggleKeteranganFromTable(item, label) {
-            if (!this.canWrite || !this.lpPerms.keterangan_checklist) return;
+            if (!this.lpPerms.keterangan_checklist) return;
             const currentLabels = (item.keterangan || []).map(k => k.label);
             const exists = currentLabels.includes(label);
             const nextLabels = exists ? currentLabels.filter(l => l !== label) : [...currentLabels, label];
@@ -588,7 +587,7 @@
             }
         },
         async saveKeterangan() {
-            if (!this.canWrite) return;
+            if (!this.lpPerms.keterangan_checklist) return;
             const cleaned = (this.selectedKeterangan || [])
                 .map(label => (typeof label === 'string' ? label.trim() : ''))
                 .filter(Boolean);
@@ -624,22 +623,22 @@
             }
         },
         openSaveKeteranganConfirm() {
-            if (!this.canWrite) return;
+            if (!this.lpPerms.keterangan_checklist) return;
             this.saveKeteranganConfirmModal = true;
         },
         async confirmSaveKeterangan() {
-            if (!this.canWrite || !this.lpPerms.keterangan_checklist) return;
+            if (!this.lpPerms.keterangan_checklist) return;
             this.saveKeteranganConfirmModal = false;
             await this.saveKeterangan();
         },
         openDelete(item) {
-            if (!this.canWrite || !this.lpPerms.nama_proyek) return;
+            if (!this.lpPerms.nama_proyek) return;
             this.selectedPengawas = item;
             this.broadcastSelected(item);
             this.deleteModal = true;
         },
         async deletePengawas() {
-            if (!this.canWrite || !this.lpPerms.nama_proyek) return;
+            if (!this.lpPerms.nama_proyek) return;
             try {
                 const response = await fetch(`/list-pengawasan/${this.selectedPengawas.id}`, {
                     method: 'DELETE',
@@ -675,7 +674,7 @@
             return !!mime && mime.startsWith('image/');
         },
         triggerUpload(item) {
-            if (!this.canWrite || !this.lpPerms.bukti) return;
+            if (!this.lpPerms.bukti) return;
             const el = document.getElementById(`bukti-input-${item.id}`);
             if (el) el.click();
         },
@@ -715,7 +714,7 @@
             return data;
         },
         async uploadBukti(item, file) {
-            if (!this.canWrite || !this.lpPerms.bukti) return;
+            if (!this.lpPerms.bukti) return;
             try {
                 const formData = new FormData();
                 formData.append('bukti', file);
@@ -740,19 +739,19 @@
             }
         },
         onBuktiChange(item, e) {
-            if (!this.canWrite || !this.lpPerms.bukti) return;
+            if (!this.lpPerms.bukti) return;
             const file = e?.target?.files?.[0];
             if (!file) return;
             this.uploadBukti(item, file);
             e.target.value = '';
         },
         openDeleteBukti(item) {
-            if (!this.canWrite || !this.lpPerms.bukti) return;
+            if (!this.lpPerms.bukti) return;
             this.selectedBuktiItem = item;
             this.deleteBuktiModal = true;
         },
         async confirmDeleteBukti() {
-            if (!this.canWrite || !this.lpPerms.bukti) return;
+            if (!this.lpPerms.bukti) return;
             const item = this.selectedBuktiItem;
             if (!item) return;
             try {
@@ -778,7 +777,7 @@
             }
         },
         startEditDeadline(item) {
-            if (!this.canWrite || !this.lpPerms.deadline) return;
+            if (!this.lpPerms.deadline) return;
             this.editingDeadlineId = item.id;
             this.editDeadline = item.deadline || '';
         },
@@ -787,7 +786,7 @@
             this.editDeadline = '';
         },
         async saveDeadline(item) {
-            if (!this.canWrite) return;
+            if (!this.lpPerms.deadline) return;
             try {
                 const response = await fetch(`/list-pengawasan/${item.id}/deadline`, {
                     method: 'PATCH',
@@ -858,7 +857,7 @@
                     <option value="deadline_asc">Deadline Terdekat</option>
                     <option value="deadline_desc">Deadline Terjauh</option>
                 </select>
-                <button x-show="canWrite && lpPerms.tambah_proyek" :disabled="!canWrite || !lpPerms.tambah_proyek" @click="openAdd()" class="w-full sm:w-auto bg-blue-600 text-white font-medium text-sm py-2.5 px-6 rounded-lg hover:bg-blue-700 transition-all shadow-md hover:shadow-lg inline-flex items-center justify-center">
+                <button x-show="lpPerms.tambah_proyek" :disabled="!lpPerms.tambah_proyek" @click="openAdd()" class="w-full sm:w-auto bg-blue-600 text-white font-medium text-sm py-2.5 px-6 rounded-lg hover:bg-blue-700 transition-all shadow-md hover:shadow-lg inline-flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
                     </svg>
@@ -917,15 +916,15 @@
                                         </div>
                                     </div>
 
-                                    <div class="flex items-center gap-1 flex-shrink-0" x-show="canWrite && lpPerms.nama_proyek">
+                                    <div class="flex items-center gap-1 flex-shrink-0" x-show="lpPerms.nama_proyek">
                                         <template x-if="editingId !== item.id">
                                             <div class="flex items-center gap-1">
-                                                <button @click="startEdit(item)" :disabled="!canWrite || !lpPerms.nama_proyek" class="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors dark:text-gray-400 dark:hover:text-blue-300 dark:hover:bg-blue-900/20" title="Edit Nama Proyek">
+                                                <button @click="startEdit(item)" :disabled="!lpPerms.nama_proyek" class="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors dark:text-gray-400 dark:hover:text-blue-300 dark:hover:bg-blue-900/20" title="Edit Nama Proyek">
                                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
                                                         <path d="M21.731 2.269a2.625 2.625 0 00-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 000-3.712zM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 00-1.32 2.214l-.8 2.685a.75.75 0 00.933.933l2.685-.8a5.25 5.25 0 002.214-1.32L19.513 8.2z" />
                                                     </svg>
                                                 </button>
-                                                <button @click="openDelete(item)" :disabled="!canWrite || !lpPerms.nama_proyek" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors dark:hover:bg-red-900/20" title="Hapus Proyek">
+                                                <button @click="openDelete(item)" :disabled="!lpPerms.nama_proyek" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors dark:hover:bg-red-900/20" title="Hapus Proyek">
                                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
                                                     </svg>
@@ -971,7 +970,7 @@
                                             <template x-if="editingDeadlineId !== item.id">
                                                 <div class="flex items-center justify-between gap-2">
                                                     <span class="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate" x-text="item.deadline_display || '-'"></span>
-                                                    <button x-show="canWrite && lpPerms.deadline" :disabled="!canWrite || !lpPerms.deadline" type="button" @click="startEditDeadline(item)" class="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors dark:text-gray-400 dark:hover:text-blue-300 dark:hover:bg-blue-900/20" title="Edit Deadline">
+                                                    <button x-show="lpPerms.deadline" :disabled="!lpPerms.deadline" type="button" @click="startEditDeadline(item)" class="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors dark:text-gray-400 dark:hover:text-blue-300 dark:hover:bg-blue-900/20" title="Edit Deadline">
                                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
                                                     <path d="M21.731 2.269a2.625 2.625 0 00-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 000-3.712zM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 00-1.32 2.214l-.8 2.685a.75.75 0 00.933.933l2.685-.8a5.25 5.25 0 002.214-1.32L19.513 8.2z" />
                                                 </svg>
@@ -1155,7 +1154,7 @@
                                     <template x-if="editingDeadlineId !== item.id">
                                         <div class="flex items-center justify-between gap-2">
                                             <span class="text-gray-700 text-sm dark:text-gray-300 truncate" x-text="item.deadline_display || '-'"></span>
-                                            <button x-show="canWrite && lpPerms.deadline" :disabled="!canWrite || !lpPerms.deadline" type="button" @click="startEditDeadline(item)" class="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors dark:text-gray-400 dark:hover:text-blue-300 dark:hover:bg-blue-900/20" title="Edit Deadline">
+                                            <button x-show="lpPerms.deadline" :disabled="!lpPerms.deadline" type="button" @click="startEditDeadline(item)" class="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors dark:text-gray-400 dark:hover:text-blue-300 dark:hover:bg-blue-900/20" title="Edit Deadline">
                                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
                                                     <path d="M21.731 2.269a2.625 2.625 0 00-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 000-3.712zM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 00-1.32 2.214l-.8 2.685a.75.75 0 00.933.933l2.685-.8a5.25 5.25 0 002.214-1.32L19.513 8.2z" />
                                                 </svg>
@@ -1252,7 +1251,7 @@
                                     type="button"
                                     class="flex-1 text-left text-xs sm:text-sm"
                                     @click="toggleKeteranganFromTable(keteranganMenu.item, opt)"
-                                    :disabled="!canWrite"
+                                    :disabled="!lpPerms.keterangan_checklist"
                                 >
                                     <div
                                         class="flex items-center gap-3 rounded-lg border border-transparent px-1 py-0.5"
@@ -1304,7 +1303,7 @@
                             </div>
                         </template>
                     </div>
-                    <div class="border-t border-gray-100 dark:border-gray-700 px-3 py-2 flex justify-end" x-show="canWrite && lpPerms.keterangan">
+                    <div class="border-t border-gray-100 dark:border-gray-700 px-3 py-2 flex justify-end" x-show="lpPerms.keterangan_checklist">
                         <button
                             type="button"
                             class="text-[11px] font-medium text-blue-600 hover:text-blue-700 hover:underline dark:text-blue-300 dark:hover:text-blue-200"
@@ -1423,13 +1422,13 @@
                                     <span class="text-sm font-medium text-gray-700 dark:text-gray-200 truncate" x-text="opt"></span>
                                 </label>
                                 <div class="flex items-center gap-1 flex-shrink-0">
-                                    <button type="button" @click.stop="openRenameOption(opt)" class="h-8 w-8 sm:h-9 sm:w-9 inline-flex items-center justify-center rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700" :disabled="!canWrite" :class="!canWrite ? 'opacity-60 cursor-not-allowed' : ''">
+                                    <button type="button" @click.stop="openRenameOption(opt)" class="h-8 w-8 sm:h-9 sm:w-9 inline-flex items-center justify-center rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700" :disabled="!lpPerms.edit_keterangan" :class="!lpPerms.edit_keterangan ? 'opacity-60 cursor-not-allowed' : ''">
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 sm:h-5 sm:w-5">
                                             <path d="M13.586 3.586a2 2 0 112.828 2.828l-8.25 8.25a1 1 0 01-.414.263l-3 1a1 1 0 01-1.263-1.263l1-3a1 1 0 01.263-.414l8.25-8.25z" />
                                             <path d="M12.293 5.293l2.414 2.414" />
                                         </svg>
                                     </button>
-                                    <button type="button" @click.stop="openDeleteOption(opt)" class="h-8 w-8 sm:h-9 sm:w-9 inline-flex items-center justify-center rounded-lg bg-white border border-gray-200 text-red-700 hover:bg-red-50 transition-colors dark:bg-gray-800 dark:border-gray-700 dark:text-red-300 dark:hover:bg-red-900/20" :disabled="!canWrite" :class="!canWrite ? 'opacity-60 cursor-not-allowed' : ''">
+                                    <button type="button" @click.stop="openDeleteOption(opt)" class="h-8 w-8 sm:h-9 sm:w-9 inline-flex items-center justify-center rounded-lg bg-white border border-gray-200 text-red-700 hover:bg-red-50 transition-colors dark:bg-gray-800 dark:border-gray-700 dark:text-red-300 dark:hover:bg-red-900/20" :disabled="!lpPerms.edit_keterangan" :class="!lpPerms.edit_keterangan ? 'opacity-60 cursor-not-allowed' : ''">
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 sm:h-5 sm:w-5">
                                             <path fill-rule="evenodd" d="M6 8a1 1 0 011 1v7a1 1 0 11-2 0V9a1 1 0 011-1zm4 1a1 1 0 10-2 0v7a1 1 0 102 0V9zm3-4a1 1 0 00-1-1H8a1 1 0 00-1 1v1H4a1 1 0 100 2h1v10a2 2 0 002 2h6a2 2 0 002-2V8h1a1 1 0 100-2h-3V5z" clip-rule="evenodd" />
                                         </svg>
@@ -1439,8 +1438,8 @@
                         </template>
                     </div>
                     <div class="flex items-center gap-2">
-                        <input x-model="newLabel" type="text" placeholder="Tambah keterangan baru" class="flex-1 bg-gray-50 border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 dark:placeholder:text-gray-500">
-                        <button @click="addNewKeteranganToEdit()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Tambah</button>
+                        <input x-model="newLabel" :disabled="!lpPerms.edit_keterangan" type="text" placeholder="Tambah keterangan baru" class="flex-1 bg-gray-50 border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none disabled:opacity-60 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 dark:placeholder:text-gray-500">
+                        <button @click="addNewKeteranganToEdit()" :disabled="!lpPerms.edit_keterangan" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-60">Tambah</button>
                     </div>
                     <div class="flex items-center justify-between mt-6">
                         <div class="flex items-center space-x-3">

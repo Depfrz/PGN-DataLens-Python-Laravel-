@@ -159,15 +159,15 @@ class ListPengawasanController extends Controller
             ->where('module_id', $module->id)
             ->first();
 
+        if ($access && isset($access->extra_permissions['list_pengawasan']) && is_array($access->extra_permissions['list_pengawasan'])) {
+            return array_merge($default, $access->extra_permissions['list_pengawasan']);
+        }
+
         if ($access && $access->can_write) {
             return $fullAccess;
         }
 
-        if (!$access || !is_array($access->extra_permissions['list_pengawasan'] ?? null)) {
-            return $default;
-        }
-
-        return array_merge($default, $access->extra_permissions['list_pengawasan']);
+        return $default;
     }
 
     private function getListPengawasanNotificationRecipients(int $pengawasId, int $actorId)
@@ -733,7 +733,7 @@ class ListPengawasanController extends Controller
             if (!$this->canWriteForModule($user)) {
                 return response()->json(['message' => 'Unauthorized action.'], 403);
             }
-            if (!$this->getListPengawasanPermissions($user)['keterangan']) {
+            if (!$this->getListPengawasanPermissions($user)['keterangan_checklist']) {
                 return response()->json(['message' => 'Unauthorized action.'], 403);
             }
             if (!$this->canAccessPengawas($user, $id)) {
@@ -1536,7 +1536,7 @@ class ListPengawasanController extends Controller
             return response()->json(['message' => 'Unauthorized action.'], 403);
         }
 
-        if (!$this->getListPengawasanPermissions($user)['keterangan']) {
+        if (!$this->getListPengawasanPermissions($user)['keterangan_checklist']) {
             return response()->json(['message' => 'Unauthorized action.'], 403);
         }
 
