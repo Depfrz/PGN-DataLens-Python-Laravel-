@@ -308,7 +308,6 @@
                 alert('Terjadi kesalahan sistem');
             }
         },
-<<<<<<< HEAD
         openEditKeterangan(item) {
             if (!this.lpPerms.keterangan_checklist) return;
             this.selectedPengawas = JSON.parse(JSON.stringify(item));
@@ -472,8 +471,6 @@
             if (!this.selectedKeterangan.includes(label)) this.selectedKeterangan.push(label);
             this.newLabel = '';
         },
-=======
->>>>>>> 5bbfafa4714313ecd188d93b32e14bc3791dd1b2
         hasKeterangan(item, label) {
             if (!item || !item.keterangan) return false;
             return item.keterangan.some(k => k.label === label);
@@ -586,7 +583,6 @@
                 this.showToast('Terjadi kesalahan sistem');
             }
         },
-<<<<<<< HEAD
         async saveKeterangan() {
             if (!this.lpPerms.keterangan_checklist) return;
             const cleaned = (this.selectedKeterangan || [])
@@ -632,8 +628,6 @@
             this.saveKeteranganConfirmModal = false;
             await this.saveKeterangan();
         },
-=======
->>>>>>> 5bbfafa4714313ecd188d93b32e14bc3791dd1b2
         openDelete(item) {
             if (!this.lpPerms.nama_proyek) return;
             this.selectedPengawas = item;
@@ -919,7 +913,6 @@
                                         </div>
                                     </div>
 
-<<<<<<< HEAD
                                     <div class="flex items-center gap-1 flex-shrink-0" x-show="lpPerms.nama_proyek">
                                         <template x-if="editingId !== item.id">
                                             <div class="flex items-center gap-1">
@@ -950,9 +943,6 @@
                                             </div>
                                         </template>
                                     </div>
-=======
-                                    <div class="flex items-center gap-1 flex-shrink-0"></div>
->>>>>>> 5bbfafa4714313ecd188d93b32e14bc3791dd1b2
                                 </div>
 
                                 <div class="mt-4 grid grid-cols-2 gap-3">
@@ -977,14 +967,11 @@
                                             <template x-if="editingDeadlineId !== item.id">
                                                 <div class="flex items-center justify-between gap-2">
                                                     <span class="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate" x-text="item.deadline_display || '-'"></span>
-<<<<<<< HEAD
                                                     <button x-show="lpPerms.deadline" :disabled="!lpPerms.deadline" type="button" @click="startEditDeadline(item)" class="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors dark:text-gray-400 dark:hover:text-blue-300 dark:hover:bg-blue-900/20" title="Edit Deadline">
                                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
                                                     <path d="M21.731 2.269a2.625 2.625 0 00-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 000-3.712zM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 00-1.32 2.214l-.8 2.685a.75.75 0 00.933.933l2.685-.8a5.25 5.25 0 002.214-1.32L19.513 8.2z" />
                                                 </svg>
                                             </button>
-=======
->>>>>>> 5bbfafa4714313ecd188d93b32e14bc3791dd1b2
                                                 </div>
                                             </template>
                                         </div>
@@ -1135,14 +1122,11 @@
                                     <template x-if="editingDeadlineId !== item.id">
                                         <div class="flex items-center justify-between gap-2">
                                             <span class="text-gray-700 text-sm dark:text-gray-300 truncate" x-text="item.deadline_display || '-'"></span>
-<<<<<<< HEAD
                                             <button x-show="lpPerms.deadline" :disabled="!lpPerms.deadline" type="button" @click="startEditDeadline(item)" class="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors dark:text-gray-400 dark:hover:text-blue-300 dark:hover:bg-blue-900/20" title="Edit Deadline">
                                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
                                                     <path d="M21.731 2.269a2.625 2.625 0 00-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 000-3.712zM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 00-1.32 2.214l-.8 2.685a.75.75 0 00.933.933l2.685-.8a5.25 5.25 0 002.214-1.32L19.513 8.2z" />
                                                 </svg>
                                             </button>
-=======
->>>>>>> 5bbfafa4714313ecd188d93b32e14bc3791dd1b2
                                         </div>
                                     </template>
                                 </td>
@@ -1235,11 +1219,7 @@
                                     type="button"
                                     class="flex-1 text-left text-xs sm:text-sm"
                                     @click="toggleKeteranganFromTable(keteranganMenu.item, opt)"
-<<<<<<< HEAD
                                     :disabled="!lpPerms.keterangan_checklist"
-=======
-                                    :disabled="!canWrite || !lpPerms.keterangan_checklist"
->>>>>>> 5bbfafa4714313ecd188d93b32e14bc3791dd1b2
                                 >
                                     <div
                                         class="flex items-center gap-3 rounded-lg border border-transparent px-1 py-0.5"
@@ -1291,11 +1271,7 @@
                             </div>
                         </template>
                     </div>
-<<<<<<< HEAD
                     <div class="border-t border-gray-100 dark:border-gray-700 px-3 py-2 flex justify-end" x-show="lpPerms.keterangan_checklist">
-=======
-                    <div class="border-t border-gray-100 dark:border-gray-700 px-3 py-2 flex justify-end" x-show="canWrite && (lpPerms.keterangan_checklist || lpPerms.tambah_keterangan || lpPerms.edit_keterangan)">
->>>>>>> 5bbfafa4714313ecd188d93b32e14bc3791dd1b2
                         <button
                             type="button"
                             class="text-[11px] font-medium text-blue-600 hover:text-blue-700 hover:underline dark:text-blue-300 dark:hover:text-blue-200"
@@ -1394,7 +1370,6 @@
             </div>
         </template>
 
-<<<<<<< HEAD
         <!-- Edit Keterangan Modal -->
         <div x-show="editKeteranganModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity" style="display: none;">
             <div class="bg-white rounded-xl p-5 sm:p-6 w-[92vw] max-w-[560px] shadow-2xl transform transition-all dark:bg-gray-800 max-h-[85vh] overflow-y-auto">
@@ -1514,8 +1489,6 @@
             </div>
         </div>
 
-=======
->>>>>>> 5bbfafa4714313ecd188d93b32e14bc3791dd1b2
         <!-- Delete Modal -->
         <div x-show="deleteModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity" style="display: none;">
             <div class="bg-white rounded-xl p-5 sm:p-6 w-[92vw] max-w-[480px] shadow-2xl transform transition-all dark:bg-gray-800">
