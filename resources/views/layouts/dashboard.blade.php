@@ -171,7 +171,7 @@
                             x-data="{ 
                                 activeAction: null, 
                                 canUseProjectActions: {{ $isListPengawasanDetail ? 'true' : 'false' }},
-                                canUseKeteranganActions: {{ ($isListPengawasanDetail || $isListPengawasanKegiatanDetail || $isListPengawasanKegiatanIndex) ? 'true' : 'false' }},
+                                canUseKeteranganActions: {{ ($isListPengawasanDetail || $isListPengawasanKegiatanDetail || $isListPengawasanKegiatanIndex || $isListPengawasanIndex) ? 'true' : 'false' }},
                                 canAddProjectFromSidebar: {{ $isListPengawasanIndex ? 'true' : 'false' }},
                                 canAddActivityFromSidebar: {{ $isListPengawasanKegiatanIndex ? 'true' : 'false' }},
                                 hasSelectedProject: false
@@ -217,13 +217,13 @@
                                     </button>
                                     @endif
                                 @endif
-                                @if(($canWrite ?? false) || ($lpPermissions['keterangan'] ?? false) || $isListPengawasanDetail || $isListPengawasanKegiatanDetail || $isListPengawasanKegiatanIndex)
+                                @if(($canWrite ?? false) || ($lpPermissions['tambah_keterangan'] ?? false) || ($lpPermissions['keterangan_checklist'] ?? false) || ($lpPermissions['edit_keterangan'] ?? false) || $isListPengawasanDetail || $isListPengawasanKegiatanDetail || $isListPengawasanKegiatanIndex || $isListPengawasanIndex)
                                     <button 
                                         type="button"
-                                        :disabled="!canUseKeteranganActions"
+                                        :disabled="!canUseKeteranganActions || (canAddProjectFromSidebar && !hasSelectedProject && !canAddActivityFromSidebar && !canUseProjectActions)"
                                         @click="if (!canUseKeteranganActions) return; activeAction = 'tambah_keterangan'; window.dispatchEvent(new CustomEvent('list-pengawasan:action', { detail: { action: 'tambah_keterangan' } }))"
                                         class="w-full px-4 py-2.5 rounded-xl font-bold text-sm text-left transition-colors border border-transparent"
-                                        :class="(activeAction === 'tambah_keterangan' ? 'bg-white text-blue-700 shadow-sm ring-2 ring-white/80' : 'bg-white/90 text-black hover:bg-white dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800') + (!canUseKeteranganActions ? ' opacity-60 cursor-not-allowed' : ' cursor-pointer')"
+                                        :class="(activeAction === 'tambah_keterangan' ? 'bg-white text-blue-700 shadow-sm ring-2 ring-white/80' : 'bg-white/90 text-black hover:bg-white dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800') + ((!canUseKeteranganActions || (canAddProjectFromSidebar && !hasSelectedProject && !canAddActivityFromSidebar && !canUseProjectActions)) ? ' opacity-60 cursor-not-allowed' : ' cursor-pointer')"
                                     >
                                         Tambah Keterangan
                                     </button>
@@ -231,10 +231,10 @@
                                 @if(($canWrite ?? false) || ($lpPermissions['edit_keterangan'] ?? false) || $isListPengawasanDetail || $isListPengawasanKegiatanDetail || $isListPengawasanKegiatanIndex)
                                     <button 
                                         type="button"
-                                        :disabled="!canUseKeteranganActions"
+                                        :disabled="!canUseKeteranganActions || (canAddProjectFromSidebar && !hasSelectedProject && !canAddActivityFromSidebar && !canUseProjectActions)"
                                         @click="if (!canUseKeteranganActions) return; activeAction = 'edit_keterangan'; window.dispatchEvent(new CustomEvent('list-pengawasan:action', { detail: { action: 'edit_keterangan' } }))"
                                         class="w-full px-4 py-2.5 rounded-xl font-bold text-sm text-left transition-colors border border-transparent"
-                                        :class="(activeAction === 'edit_keterangan' ? 'bg-white text-blue-700 shadow-sm ring-2 ring-white/80' : 'bg-white/90 text-black hover:bg-white dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800') + (!canUseKeteranganActions ? ' opacity-60 cursor-not-allowed' : ' cursor-pointer')"
+                                        :class="(activeAction === 'edit_keterangan' ? 'bg-white text-blue-700 shadow-sm ring-2 ring-white/80' : 'bg-white/90 text-black hover:bg-white dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-800') + ((!canUseKeteranganActions || (canAddProjectFromSidebar && !hasSelectedProject && !canAddActivityFromSidebar && !canUseProjectActions)) ? ' opacity-60 cursor-not-allowed' : ' cursor-pointer')"
                                     >
                                         Edit Keterangan
                                     </button>

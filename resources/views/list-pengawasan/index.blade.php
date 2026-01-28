@@ -13,6 +13,25 @@
                     this.openManageProject();
                     return;
                 }
+                if (action === 'tambah_keterangan') {
+                    if (!this.selectedPengawas) return;
+                    if (!this.canWrite) return;
+                    if (!this.lpPerms.keterangan_checklist && !this.lpPerms.tambah_keterangan && !this.lpPerms.edit_keterangan) return;
+                    this.openEditKeterangan(this.selectedPengawas);
+                    try {
+                        this.$nextTick(() => {
+                            const el = document.getElementById('lp-new-keterangan-input');
+                            if (el) el.focus();
+                        });
+                    } catch (err) {}
+                    return;
+                }
+                if (action === 'edit_keterangan') {
+                    if (!this.selectedPengawas) return;
+                    if (!this.canWrite || !this.lpPerms.edit_keterangan) return;
+                    this.openEditKeterangan(this.selectedPengawas);
+                    return;
+                }
             });
 
             window.addEventListener('storage', (e) => {
@@ -313,7 +332,8 @@
             }
         },
         openEditKeterangan(item) {
-            if (!this.canWrite || !this.lpPerms.keterangan) return;
+            if (!this.canWrite) return;
+            if (!this.lpPerms.keterangan_checklist && !this.lpPerms.tambah_keterangan && !this.lpPerms.edit_keterangan) return;
             this.selectedPengawas = JSON.parse(JSON.stringify(item));
             this.broadcastSelected(item);
             this.selectedKeterangan = (item.keterangan || []).map(k => k.label);
@@ -467,13 +487,41 @@
                 this.showToast('Terjadi kesalahan sistem');
             }
         },
-        addNewKeteranganToEdit() {
-            if (!this.canWrite || !this.lpPerms.edit_keterangan) return;
+        async addNewKeteranganToEdit() {
+            if (!this.canWrite) return;
+            if (!this.lpPerms.tambah_keterangan && !this.lpPerms.edit_keterangan) return;
             const label = this.newLabel?.trim();
             if (!label) return;
-            if (!this.options.includes(label)) this.options.push(label);
-            if (!this.selectedKeterangan.includes(label)) this.selectedKeterangan.push(label);
-            this.newLabel = '';
+            if (this.options.includes(label)) {
+                if (!this.selectedKeterangan.includes(label)) this.selectedKeterangan.push(label);
+                this.newLabel = '';
+                return;
+            }
+            try {
+                const response = await fetch('/list-pengawasan/keterangan', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
+                    },
+                    body: JSON.stringify({ name: label })
+                });
+                if (response.ok) {
+                    this.options.push(label);
+                    if (!this.selectedKeterangan.includes(label)) this.selectedKeterangan.push(label);
+                    this.newLabel = '';
+                    this.showToast('Keterangan berhasil ditambahkan');
+                } else {
+                    const d = await response.json().catch(() => ({}));
+                    this.showToast(d.message || 'Gagal menambah keterangan');
+                }
+            } catch (e) {
+                console.error(e);
+                this.showToast('Terjadi kesalahan sistem');
+            }
         },
         hasKeterangan(item, label) {
             if (!item || !item.keterangan) return false;
@@ -588,7 +636,7 @@
             }
         },
         async saveKeterangan() {
-            if (!this.canWrite) return;
+            if (!this.canWrite || !this.lpPerms.keterangan_checklist) return;
             const cleaned = (this.selectedKeterangan || [])
                 .map(label => (typeof label === 'string' ? label.trim() : ''))
                 .filter(Boolean);
@@ -624,7 +672,7 @@
             }
         },
         openSaveKeteranganConfirm() {
-            if (!this.canWrite) return;
+            if (!this.canWrite || !this.lpPerms.keterangan_checklist) return;
             this.saveKeteranganConfirmModal = true;
         },
         async confirmSaveKeterangan() {
@@ -1252,7 +1300,7 @@
                                     type="button"
                                     class="flex-1 text-left text-xs sm:text-sm"
                                     @click="toggleKeteranganFromTable(keteranganMenu.item, opt)"
-                                    :disabled="!canWrite"
+                                    :disabled="!canWrite || !lpPerms.keterangan_checklist"
                                 >
                                     <div
                                         class="flex items-center gap-3 rounded-lg border border-transparent px-1 py-0.5"
@@ -1304,7 +1352,7 @@
                             </div>
                         </template>
                     </div>
-                    <div class="border-t border-gray-100 dark:border-gray-700 px-3 py-2 flex justify-end" x-show="canWrite && lpPerms.keterangan">
+                    <div class="border-t border-gray-100 dark:border-gray-700 px-3 py-2 flex justify-end" x-show="canWrite && (lpPerms.keterangan_checklist || lpPerms.tambah_keterangan || lpPerms.edit_keterangan)">
                         <button
                             type="button"
                             class="text-[11px] font-medium text-blue-600 hover:text-blue-700 hover:underline dark:text-blue-300 dark:hover:text-blue-200"
@@ -1419,17 +1467,17 @@
                         <template x-for="opt in options" :key="opt">
                             <div class="flex items-center justify-between gap-2 p-3 border border-gray-200 rounded-lg shadow-sm hover:bg-blue-50 hover:border-blue-200 transition-colors dark:border-gray-700 dark:hover:bg-blue-900/20 dark:hover:border-blue-800">
                                 <label class="flex items-center gap-3 min-w-0 flex-1 cursor-pointer">
-                                    <input type="checkbox" :value="opt" x-model="selectedKeterangan" class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                    <input type="checkbox" :value="opt" x-model="selectedKeterangan" :disabled="!canWrite || !lpPerms.keterangan_checklist" class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-60">
                                     <span class="text-sm font-medium text-gray-700 dark:text-gray-200 truncate" x-text="opt"></span>
                                 </label>
                                 <div class="flex items-center gap-1 flex-shrink-0">
-                                    <button type="button" @click.stop="openRenameOption(opt)" class="h-8 w-8 sm:h-9 sm:w-9 inline-flex items-center justify-center rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700" :disabled="!canWrite" :class="!canWrite ? 'opacity-60 cursor-not-allowed' : ''">
+                                    <button type="button" @click.stop="openRenameOption(opt)" class="h-8 w-8 sm:h-9 sm:w-9 inline-flex items-center justify-center rounded-lg bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-700" :disabled="!canWrite || !lpPerms.edit_keterangan" :class="(!canWrite || !lpPerms.edit_keterangan) ? 'opacity-60 cursor-not-allowed' : ''">
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 sm:h-5 sm:w-5">
                                             <path d="M13.586 3.586a2 2 0 112.828 2.828l-8.25 8.25a1 1 0 01-.414.263l-3 1a1 1 0 01-1.263-1.263l1-3a1 1 0 01.263-.414l8.25-8.25z" />
                                             <path d="M12.293 5.293l2.414 2.414" />
                                         </svg>
                                     </button>
-                                    <button type="button" @click.stop="openDeleteOption(opt)" class="h-8 w-8 sm:h-9 sm:w-9 inline-flex items-center justify-center rounded-lg bg-white border border-gray-200 text-red-700 hover:bg-red-50 transition-colors dark:bg-gray-800 dark:border-gray-700 dark:text-red-300 dark:hover:bg-red-900/20" :disabled="!canWrite" :class="!canWrite ? 'opacity-60 cursor-not-allowed' : ''">
+                                    <button type="button" @click.stop="openDeleteOption(opt)" class="h-8 w-8 sm:h-9 sm:w-9 inline-flex items-center justify-center rounded-lg bg-white border border-gray-200 text-red-700 hover:bg-red-50 transition-colors dark:bg-gray-800 dark:border-gray-700 dark:text-red-300 dark:hover:bg-red-900/20" :disabled="!canWrite || !lpPerms.edit_keterangan" :class="(!canWrite || !lpPerms.edit_keterangan) ? 'opacity-60 cursor-not-allowed' : ''">
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4 sm:h-5 sm:w-5">
                                             <path fill-rule="evenodd" d="M6 8a1 1 0 011 1v7a1 1 0 11-2 0V9a1 1 0 011-1zm4 1a1 1 0 10-2 0v7a1 1 0 102 0V9zm3-4a1 1 0 00-1-1H8a1 1 0 00-1 1v1H4a1 1 0 100 2h1v10a2 2 0 002 2h6a2 2 0 002-2V8h1a1 1 0 100-2h-3V5z" clip-rule="evenodd" />
                                         </svg>
@@ -1439,13 +1487,13 @@
                         </template>
                     </div>
                     <div class="flex items-center gap-2">
-                        <input x-model="newLabel" type="text" placeholder="Tambah keterangan baru" class="flex-1 bg-gray-50 border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 dark:placeholder:text-gray-500">
-                        <button @click="addNewKeteranganToEdit()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Tambah</button>
+                        <input id="lp-new-keterangan-input" x-model="newLabel" type="text" placeholder="Tambah keterangan baru" :disabled="!canWrite || (!lpPerms.tambah_keterangan && !lpPerms.edit_keterangan)" class="flex-1 bg-gray-50 border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none disabled:opacity-60 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 dark:placeholder:text-gray-500">
+                        <button @click="addNewKeteranganToEdit()" :disabled="!canWrite || (!lpPerms.tambah_keterangan && !lpPerms.edit_keterangan)" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-60">Tambah</button>
                     </div>
                     <div class="flex items-center justify-between mt-6">
                         <div class="flex items-center space-x-3">
                             <button @click="editKeteranganModal = false" class="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition-colors dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Batal</button>
-                            <button @click="openSaveKeteranganConfirm()" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow-md hover:shadow-lg transition-all">Simpan</button>
+                            <button @click="openSaveKeteranganConfirm()" :disabled="!canWrite || !lpPerms.keterangan_checklist" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow-md hover:shadow-lg transition-all disabled:opacity-60">Simpan</button>
                         </div>
                     </div>
                 </div>
