@@ -6,17 +6,13 @@
             window.addEventListener('list-pengawasan:action', (e) => {
                 const action = e?.detail?.action || '';
                 if (action === 'tambah_keterangan') {
-<<<<<<< HEAD
-                    if (!this.lpPerms.keterangan_checklist) return;
-=======
                     if (!this.canWrite) return;
                     if (!this.lpPerms.keterangan_checklist && !this.lpPerms.tambah_keterangan && !this.lpPerms.edit_keterangan) return;
->>>>>>> 5bbfafa4714313ecd188d93b32e14bc3791dd1b2
                     this.activePanel = 'tambah_keterangan';
                     return;
                 }
                 if (action === 'edit_keterangan') {
-                    if (!this.lpPerms.edit_keterangan) return;
+                    if (!this.canWrite || !this.lpPerms.edit_keterangan) return;
                     this.activePanel = 'edit_keterangan';
                 }
             });
@@ -79,7 +75,7 @@
             return deadline < today;
         },
         async saveProject() {
-            if (!this.lpPerms.nama_proyek) return;
+            if (!this.canWrite || !this.lpPerms.nama_proyek) return;
             const payload = {
                 nama: this.editProject.nama?.trim() || '',
                 divisi: this.editProject.divisi?.trim() || null,
@@ -111,7 +107,7 @@
             }
         },
         async saveDeadline() {
-            if (!this.lpPerms.deadline) return;
+            if (!this.canWrite || !this.lpPerms.deadline) return;
             try {
                 const response = await fetch(`/list-pengawasan/${this.project.id}/deadline`, {
                     method: 'PATCH',
@@ -136,7 +132,7 @@
             }
         },
         async saveKeterangan() {
-            if (!this.lpPerms.keterangan_checklist) return;
+            if (!this.canWrite || !this.lpPerms.keterangan_checklist) return;
             try {
                 const response = await fetch(`/list-pengawasan/${this.project.id}/keterangan`, {
                     method: 'PATCH',
@@ -160,14 +156,9 @@
                 this.showToast('Terjadi kesalahan sistem');
             }
         },
-<<<<<<< HEAD
-        addNewKeteranganOption() {
-            if (!this.lpPerms.edit_keterangan) return;
-=======
         async addNewKeteranganOption() {
             if (!this.canWrite) return;
             if (!this.lpPerms.tambah_keterangan && !this.lpPerms.edit_keterangan) return;
->>>>>>> 5bbfafa4714313ecd188d93b32e14bc3791dd1b2
             const label = this.newOptionLabel?.trim();
             if (!label) return;
 
@@ -206,7 +197,7 @@
             }
         },
         openRenameOption(name) {
-            if (!this.lpPerms.edit_keterangan) return;
+            if (!this.canWrite || !this.lpPerms.edit_keterangan) return;
             if (!name) return;
             this.renameOptionOldName = name;
             this.renameOptionNewName = name;
@@ -223,7 +214,7 @@
             this.project.keterangan = (this.project.keterangan || []).filter(o => o.label !== name);
         },
         async confirmRenameOption() {
-            if (!this.lpPerms.edit_keterangan) return;
+            if (!this.canWrite || !this.lpPerms.edit_keterangan) return;
             const oldName = this.renameOptionOldName;
             const newName = this.renameOptionNewName?.trim() || '';
             if (!oldName || !newName) return;
@@ -263,13 +254,13 @@
             }
         },
         openDeleteOption(name) {
-            if (!this.lpPerms.edit_keterangan) return;
+            if (!this.canWrite || !this.lpPerms.edit_keterangan) return;
             if (!name) return;
             this.deleteOptionName = name;
             this.deleteOptionModal = true;
         },
         async confirmDeleteOption() {
-            if (!this.lpPerms.edit_keterangan) return;
+            if (!this.canWrite || !this.lpPerms.edit_keterangan) return;
             const name = this.deleteOptionName;
             if (!name) return;
             try {
@@ -301,7 +292,7 @@
             }
         },
         async uploadBukti(file) {
-            if (!this.lpPerms.bukti) return;
+            if (!this.canWrite || !this.lpPerms.bukti) return;
             try {
                 const formData = new FormData();
                 formData.append('bukti', file);
@@ -324,19 +315,19 @@
             }
         },
         onBuktiChange(e) {
-            if (!this.lpPerms.bukti) return;
+            if (!this.canWrite || !this.lpPerms.bukti) return;
             const file = e?.target?.files?.[0];
             if (!file) return;
             this.uploadBukti(file);
             e.target.value = '';
         },
         openDeleteBukti() {
-            if (!this.lpPerms.bukti) return;
+            if (!this.canWrite || !this.lpPerms.bukti) return;
             this.selectedBuktiItem = this.project;
             this.deleteBuktiModal = true;
         },
         async confirmDeleteBukti() {
-            if (!this.lpPerms.bukti) return;
+            if (!this.canWrite || !this.lpPerms.bukti) return;
             try {
                 const response = await fetch(`/list-pengawasan/${this.project.id}/bukti`, {
                     method: 'DELETE',
@@ -361,7 +352,7 @@
             return found ? found.bukti : null;
         },
         async uploadKeteranganBukti(label, file) {
-            if (!this.lpPerms.bukti) return;
+            if (!this.canWrite || !this.lpPerms.bukti) return;
             const formData = new FormData();
             formData.append('label', label);
             formData.append('bukti', file);
@@ -386,19 +377,19 @@
             }
         },
         onKeteranganBuktiChange(label, e) {
-            if (!this.lpPerms.bukti) return;
+            if (!this.canWrite || !this.lpPerms.bukti) return;
             const file = e?.target?.files?.[0];
             if (!file) return;
             this.uploadKeteranganBukti(label, file);
             e.target.value = '';
         },
         deleteKeteranganBukti(label) {
-            if (!this.lpPerms.bukti) return;
+            if (!this.canWrite || !this.lpPerms.bukti) return;
             this.selectedKeteranganBukti = { item: this.project, label };
             this.deleteKeteranganBuktiModal = true;
         },
         async confirmDeleteKeteranganBukti() {
-            if (!this.lpPerms.bukti) return;
+            if (!this.canWrite || !this.lpPerms.bukti) return;
             const { label } = this.selectedKeteranganBukti;
             if (!label) return;
             try {
@@ -443,16 +434,16 @@
                 <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5">
                     <div class="flex items-center justify-between mb-4">
                         <div class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">Informasi Kegiatan</div>
-                        <button type="button" x-show="lpPerms.nama_proyek" @click="saveProject()" class="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors">Simpan</button>
+                        <button type="button" x-show="canWrite && lpPerms.nama_proyek" @click="saveProject()" class="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors">Simpan</button>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Nama Kegiatan</div>
-                            <input x-model="editProject.nama" :disabled="!lpPerms.nama_proyek" type="text" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none disabled:opacity-60 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100" />
+                            <input x-model="editProject.nama" :disabled="!canWrite || !lpPerms.nama_proyek" type="text" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none disabled:opacity-60 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100" />
                         </div>
                         <div>
                             <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Divisi</div>
-                            <input x-model="editProject.divisi" :disabled="!lpPerms.nama_proyek" type="text" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none disabled:opacity-60 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100" />
+                            <input x-model="editProject.divisi" :disabled="!canWrite || !lpPerms.nama_proyek" type="text" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none disabled:opacity-60 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100" />
                         </div>
                         <div>
                             <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Tanggal Dibuat</div>
@@ -481,9 +472,9 @@
                     <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5">
                         <div class="flex items-center justify-between mb-4">
                             <div class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">Deadline</div>
-                            <button type="button" x-show="lpPerms.deadline" @click="saveDeadline()" class="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors">Simpan</button>
+                            <button type="button" x-show="canWrite && lpPerms.deadline" @click="saveDeadline()" class="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors">Simpan</button>
                         </div>
-                        <input type="date" x-model="project.deadline" :disabled="!lpPerms.deadline" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none disabled:opacity-60 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100" />
+                        <input type="date" x-model="project.deadline" :disabled="!canWrite || !lpPerms.deadline" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none disabled:opacity-60 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100" />
                         <div class="mt-2 text-xs text-gray-500 dark:text-gray-400">Tampilan: <span class="font-semibold" x-text="project.deadline_display || '-'"></span></div>
                     </div>
 
@@ -509,7 +500,7 @@
                 <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5">
                     <div class="flex items-center justify-between mb-4">
                         <div class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">Bukti Proyek</div>
-                        <div class="flex items-center gap-2" x-show="lpPerms.bukti">
+                        <div class="flex items-center gap-2" x-show="canWrite && lpPerms.bukti">
                             <label class="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors cursor-pointer">
                                 Upload
                                 <input type="file" class="hidden" accept=".pdf,.jpg,.jpeg,.png" @change="onBuktiChange($event)" />
@@ -536,7 +527,7 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <template x-for="opt in options" :key="`opt-${opt}`">
                             <label class="flex items-center p-3 border border-gray-200 rounded-lg shadow-sm cursor-pointer hover:bg-blue-50 hover:border-blue-200 transition-colors gap-3 dark:border-gray-700 dark:hover:bg-blue-900/20 dark:hover:border-blue-800">
-                                <input type="checkbox" :value="opt" x-model="selectedKeterangan" :disabled="!lpPerms.keterangan_checklist" class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-60">
+                                <input type="checkbox" :value="opt" x-model="selectedKeterangan" :disabled="!canWrite || !lpPerms.keterangan_checklist" class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-60">
                                 <span class="text-sm font-medium text-gray-700 dark:text-gray-200" x-text="opt"></span>
                             </label>
                         </template>
@@ -559,7 +550,7 @@
                                             <div class="mt-2 text-xs text-gray-500 dark:text-gray-400">Belum ada bukti.</div>
                                         </template>
                                     </div>
-                                    <div class="flex items-center gap-2" x-show="lpPerms.bukti">
+                                    <div class="flex items-center gap-2" x-show="canWrite && lpPerms.bukti">
                                         <label class="px-3 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors cursor-pointer text-sm">
                                             Upload
                                             <input type="file" class="hidden" accept=".pdf,.jpg,.jpeg,.png" @change="onKeteranganBuktiChange(k.label, $event)" />
@@ -587,32 +578,19 @@
                     <div class="text-sm text-gray-600 dark:text-gray-300">Tambah opsi keterangan baru lalu otomatis dimasukkan ke kegiatan ini.</div>
                     <div class="flex items-center justify-between">
                         <div class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Keterangan yang tersedia</div>
-<<<<<<< HEAD
-                        <button type="button" x-show="lpPerms.keterangan_checklist" @click="saveKeterangan()" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-colors">Simpan</button>
-=======
                         <button type="button" x-show="canWrite && lpPerms.keterangan_checklist" @click="saveKeterangan()" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-colors">Simpan</button>
->>>>>>> 5bbfafa4714313ecd188d93b32e14bc3791dd1b2
                     </div>
                     <div class="grid grid-cols-1 gap-2">
                         <template x-for="opt in options" :key="`opt-panel-${opt}`">
                             <label class="flex items-center p-2.5 border border-gray-200 rounded-lg shadow-sm cursor-pointer hover:bg-blue-50 hover:border-blue-200 transition-colors gap-3 dark:border-gray-700 dark:hover:bg-blue-900/20 dark:hover:border-blue-800">
-<<<<<<< HEAD
-                                <input type="checkbox" :value="opt" x-model="selectedKeterangan" :disabled="!lpPerms.keterangan_checklist" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-60">
-=======
                                 <input type="checkbox" :value="opt" x-model="selectedKeterangan" :disabled="!canWrite || !lpPerms.keterangan_checklist" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-60">
->>>>>>> 5bbfafa4714313ecd188d93b32e14bc3791dd1b2
                                 <span class="text-sm font-medium text-gray-700 dark:text-gray-200" x-text="opt"></span>
                             </label>
                         </template>
                     </div>
                     <div class="flex items-center gap-2">
-<<<<<<< HEAD
-                        <input x-model="newOptionLabel" :disabled="!lpPerms.edit_keterangan" type="text" placeholder="Nama keterangan baru" class="flex-1 bg-gray-50 border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none disabled:opacity-60 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 dark:placeholder:text-gray-500">
-                        <button type="button" @click="addNewKeteranganOption()" :disabled="!lpPerms.edit_keterangan" class="px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold disabled:opacity-60">Tambah</button>
-=======
                         <input x-model="newOptionLabel" :disabled="!canWrite || (!lpPerms.tambah_keterangan && !lpPerms.edit_keterangan)" type="text" placeholder="Nama keterangan baru" class="flex-1 bg-gray-50 border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none disabled:opacity-60 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 dark:placeholder:text-gray-500">
                         <button type="button" @click="addNewKeteranganOption()" :disabled="!canWrite || (!lpPerms.tambah_keterangan && !lpPerms.edit_keterangan)" class="px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold disabled:opacity-60">Tambah</button>
->>>>>>> 5bbfafa4714313ecd188d93b32e14bc3791dd1b2
                     </div>
                 </div>
             </div>

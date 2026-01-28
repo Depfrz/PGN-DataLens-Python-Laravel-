@@ -58,7 +58,15 @@ class ListPengawasanController extends Controller
             return false;
         }
 
-        return (bool) $access->can_write;
+        if ($access->can_write) {
+            return true;
+        }
+
+        if ($access->can_read) {
+            return true;
+        }
+
+        return false;
     }
 
     private function canAccessPengawas($user, int $pengawasId): bool
@@ -155,11 +163,11 @@ class ListPengawasanController extends Controller
             return $fullAccess;
         }
 
-        if ($access && isset($access->extra_permissions['list_pengawasan']) && is_array($access->extra_permissions['list_pengawasan'])) {
-            return array_merge($default, $access->extra_permissions['list_pengawasan']);
+        if (!$access || !is_array($access->extra_permissions['list_pengawasan'] ?? null)) {
+            return $default;
         }
 
-        return $default;
+        return array_merge($default, $access->extra_permissions['list_pengawasan']);
     }
 
     private function getListPengawasanNotificationRecipients(int $pengawasId, int $actorId)
@@ -372,7 +380,7 @@ class ListPengawasanController extends Controller
             )
             ->orderBy('pengawas.created_at', 'desc');
 
-        if (!$user->hasRole(['Admin', 'Supervisor']) && !$this->canWriteForModule($user)) {
+        if (!$user->hasRole(['Admin', 'Supervisor'])) {
             $pengawasQuery->join('pengawas_users', 'pengawas_users.pengawas_id', '=', 'pengawas.id')
                 ->where('pengawas_users.user_id', $user->id);
         }
@@ -460,7 +468,7 @@ class ListPengawasanController extends Controller
                     'url' => $p->bukti_path ? asset('storage/' . $p->bukti_path) : null,
                 ],
             ];
-        })->values()->toArray();
+        })->toArray();
 
         $options = DB::table('keterangan_options')->orderBy('name')->pluck('name')->toArray();
         $users = User::orderBy('name')->get(['id', 'name', 'email'])->toArray();

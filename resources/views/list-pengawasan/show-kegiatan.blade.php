@@ -6,27 +6,23 @@
             window.addEventListener('list-pengawasan:action', (e) => {
                 const action = e?.detail?.action || '';
                 if (action === 'tambah_keterangan') {
-<<<<<<< HEAD
-                    if (!this.lpPerms.keterangan_checklist) return;
-=======
                     if (!this.canWrite) return;
                     if (!this.lpPerms.keterangan_checklist && !this.lpPerms.tambah_keterangan && !this.lpPerms.edit_keterangan) return;
->>>>>>> 5bbfafa4714313ecd188d93b32e14bc3791dd1b2
                     this.activePanel = 'tambah_keterangan';
                     return;
                 }
                 if (action === 'edit_keterangan') {
-                    if (!this.lpPerms.edit_keterangan) return;
+                    if (!this.canWrite || !this.lpPerms.edit_keterangan) return;
                     this.activePanel = 'edit_keterangan';
                     return;
                 }
                 if (action === 'tambah_pengawas') {
-                    if (!this.lpPerms.tambah_pengawasan) return;
+                    if (!this.canWrite || !this.lpPerms.tambah_pengawasan) return;
                     this.openAddPengawas();
                     return;
                 }
                 if (action === 'kelola_pengawas') {
-                    if (!this.lpPerms.edit_pengawasan) return;
+                    if (!this.canWrite || !this.lpPerms.edit_pengawasan) return;
                     const first = (this.project.pengawas_users || [])[0] || null;
                     if (first) this.openManagePengawasUser(first);
                 }
@@ -116,7 +112,7 @@
             return deadline < today;
         },
         openManagePengawasUser(user) {
-            if (!this.lpPerms.edit_pengawasan) return;
+            if (!this.canWrite || !this.lpPerms.edit_pengawasan) return;
             this.selectedPengawasUserItem = this.project;
             this.selectedPengawasUserAccount = user;
             this.replacePengawasUserId = user?.id || '';
@@ -129,7 +125,7 @@
             this.replacePengawasUserId = '';
         },
         async replacePengawasUser() {
-            if (!this.lpPerms.edit_pengawasan) return;
+            if (!this.canWrite || !this.lpPerms.edit_pengawasan) return;
             const item = this.selectedPengawasUserItem;
             const account = this.selectedPengawasUserAccount;
             const newUserId = parseInt(this.replacePengawasUserId, 10);
@@ -159,7 +155,7 @@
             }
         },
         async removePengawasUser() {
-            if (!this.lpPerms.edit_pengawasan) return;
+            if (!this.canWrite || !this.lpPerms.edit_pengawasan) return;
             const item = this.selectedPengawasUserItem;
             const account = this.selectedPengawasUserAccount;
             if (!item || !account) return;
@@ -188,7 +184,7 @@
             }
         },
         openAddPengawas() {
-            if (!this.lpPerms.tambah_pengawasan) return;
+            if (!this.canWrite || !this.lpPerms.tambah_pengawasan) return;
             this.selectedPengawasUserIds = [];
             this.pengawasSearch = '';
             this.addPengawasModal = true;
@@ -202,7 +198,7 @@
             return (this.project.pengawas_users || []).some(u => u.id === userId);
         },
         async addPengawasUsers() {
-            if (!this.lpPerms.tambah_pengawasan) return;
+            if (!this.canWrite || !this.lpPerms.tambah_pengawasan) return;
             const userIds = (this.selectedPengawasUserIds || [])
                 .map(v => parseInt(v, 10))
                 .filter(Boolean)
@@ -234,7 +230,7 @@
             }
         },
         async saveProject() {
-            if (!this.lpPerms.tambah_kegiatan) return;
+            if (!this.canWrite || !this.lpPerms.tambah_kegiatan) return;
             const payload = {
                 nama_kegiatan: this.editProject.nama?.trim() || '',
                 deskripsi: this.editProject.deskripsi?.trim() || '',
@@ -266,7 +262,7 @@
             }
         },
         async setStatus(status) {
-            if (!this.lpPerms.status) return;
+            if (!this.canWrite || !this.lpPerms.status) return;
             const previous = this.project.status;
             this.project.status = status;
             try {
@@ -292,7 +288,7 @@
             }
         },
         async saveDeadline() {
-            if (!this.lpPerms.deadline) return;
+            if (!this.canWrite || !this.lpPerms.deadline) return;
             try {
                 const response = await fetch(`/list-pengawasan/kegiatan/${this.project.id}/deadline`, {
                     method: 'PATCH',
@@ -317,7 +313,7 @@
             }
         },
         async saveKeterangan() {
-            if (!this.lpPerms.keterangan_checklist) return;
+            if (!this.canWrite || !this.lpPerms.keterangan_checklist) return;
             try {
                 const cleaned = (this.selectedKeterangan || [])
                     .map(label => (typeof label === 'string' ? label.trim() : ''))
@@ -350,14 +346,9 @@
                 this.showToast('Terjadi kesalahan sistem');
             }
         },
-<<<<<<< HEAD
-        addNewKeteranganOption() {
-            if (!this.lpPerms.edit_keterangan) return;
-=======
         async addNewKeteranganOption() {
             if (!this.canWrite) return;
             if (!this.lpPerms.tambah_keterangan && !this.lpPerms.edit_keterangan) return;
->>>>>>> 5bbfafa4714313ecd188d93b32e14bc3791dd1b2
             const label = this.newOptionLabel?.trim();
             if (!label) return;
 
@@ -396,7 +387,7 @@
             }
         },
         openRenameOption(name) {
-            if (!this.lpPerms.edit_keterangan) return;
+            if (!this.canWrite || !this.lpPerms.edit_keterangan) return;
             if (!name) return;
             this.renameOptionOldName = name;
             this.renameOptionNewName = name;
@@ -413,7 +404,7 @@
             this.project.keterangan = (this.project.keterangan || []).filter(o => o.label !== name);
         },
         async confirmRenameOption() {
-            if (!this.lpPerms.edit_keterangan) return;
+            if (!this.canWrite || !this.lpPerms.edit_keterangan) return;
             const oldName = this.renameOptionOldName;
             const newName = this.renameOptionNewName?.trim() || '';
             if (!oldName || !newName) return;
@@ -453,13 +444,13 @@
             }
         },
         openDeleteOption(name) {
-            if (!this.lpPerms.edit_keterangan) return;
+            if (!this.canWrite || !this.lpPerms.edit_keterangan) return;
             if (!name) return;
             this.deleteOptionName = name;
             this.deleteOptionModal = true;
         },
         async confirmDeleteOption() {
-            if (!this.lpPerms.edit_keterangan) return;
+            if (!this.canWrite || !this.lpPerms.edit_keterangan) return;
             const name = this.deleteOptionName;
             if (!name) return;
             try {
@@ -491,7 +482,7 @@
             }
         },
         async uploadBukti(file) {
-            if (!this.lpPerms.bukti) return;
+            if (!this.canWrite || !this.lpPerms.bukti) return;
             try {
                 const formData = new FormData();
                 formData.append('bukti', file);
@@ -514,19 +505,19 @@
             }
         },
         onBuktiChange(e) {
-            if (!this.lpPerms.bukti) return;
+            if (!this.canWrite || !this.lpPerms.bukti) return;
             const file = e?.target?.files?.[0];
             if (!file) return;
             this.uploadBukti(file);
             e.target.value = '';
         },
         openDeleteBukti() {
-            if (!this.lpPerms.bukti) return;
+            if (!this.canWrite || !this.lpPerms.bukti) return;
             this.selectedBuktiItem = this.project;
             this.deleteBuktiModal = true;
         },
         async confirmDeleteBukti() {
-            if (!this.lpPerms.bukti) return;
+            if (!this.canWrite || !this.lpPerms.bukti) return;
             try {
                 const response = await fetch(`/list-pengawasan/kegiatan/${this.project.id}/bukti`, {
                     method: 'DELETE',
@@ -554,7 +545,7 @@
             return (this.project.keterangan || []).some(k => k.label === label);
         },
         async uploadKeteranganBukti(label, file) {
-            if (!this.lpPerms.bukti) return;
+            if (!this.canWrite || !this.lpPerms.bukti) return;
             const formData = new FormData();
             formData.append('label', label);
             formData.append('bukti', file);
@@ -579,7 +570,7 @@
             }
         },
         async onKeteranganBuktiChange(label, e) {
-            if (!this.lpPerms.bukti) return;
+            if (!this.canWrite || !this.lpPerms.bukti) return;
             const file = e?.target?.files?.[0];
             if (!file) return;
             if (!this.hasKeterangan(label)) {
@@ -589,12 +580,12 @@
             e.target.value = '';
         },
         deleteKeteranganBukti(label) {
-            if (!this.lpPerms.bukti) return;
+            if (!this.canWrite || !this.lpPerms.bukti) return;
             this.selectedKeteranganBukti = { item: this.project, label };
             this.deleteKeteranganBuktiModal = true;
         },
         async confirmDeleteKeteranganBukti() {
-            if (!this.lpPerms.bukti) return;
+            if (!this.canWrite || !this.lpPerms.bukti) return;
             const { label } = this.selectedKeteranganBukti;
             if (!label) return;
             try {
@@ -639,16 +630,16 @@
                 <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5">
                     <div class="flex items-center justify-between mb-4">
                         <div class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">Informasi Kegiatan</div>
-                        <button type="button" x-show="lpPerms.tambah_kegiatan" @click="saveProject()" class="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors">Simpan</button>
+                        <button type="button" x-show="canWrite && lpPerms.tambah_kegiatan" @click="saveProject()" class="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors">Simpan</button>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="col-span-1 sm:col-span-2">
                             <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Nama Kegiatan</div>
-                            <input x-model="editProject.nama" :disabled="!lpPerms.tambah_kegiatan" type="text" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none disabled:opacity-60 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100" />
+                            <input x-model="editProject.nama" :disabled="!canWrite || !lpPerms.tambah_kegiatan" type="text" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none disabled:opacity-60 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100" />
                         </div>
                         <div class="col-span-1 sm:col-span-2">
                             <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Deskripsi</div>
-                            <textarea x-model="editProject.deskripsi" :disabled="!lpPerms.tambah_kegiatan" rows="3" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none disabled:opacity-60 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"></textarea>
+                            <textarea x-model="editProject.deskripsi" :disabled="!canWrite || !lpPerms.tambah_kegiatan" rows="3" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none disabled:opacity-60 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"></textarea>
                         </div>
                         <div>
                             <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">Tanggal Mulai</div>
@@ -664,10 +655,10 @@
                                     <div class="flex items-center justify-between gap-3 py-1">
                                         <div class="min-w-0">
                                             <div class="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate" x-text="u.name"></div>
-                                            <template x-if="lpPerms.edit_pengawasan">
+                                            <template x-if="canWrite && lpPerms.pengawas">
                                                 <button type="button" class="text-xs text-blue-600 hover:underline dark:text-blue-400 truncate" @click="openManagePengawasUser(u)" x-text="u.email"></button>
                                             </template>
-                                            <template x-if="!lpPerms.edit_pengawasan">
+                                            <template x-if="!canWrite || !lpPerms.pengawas">
                                                 <div class="text-xs text-gray-500 dark:text-gray-400 truncate" x-text="u.email"></div>
                                             </template>
                                         </div>
@@ -682,19 +673,19 @@
                     <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5">
                         <div class="flex items-center justify-between mb-4">
                             <div class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">Deadline</div>
-                            <button type="button" x-show="lpPerms.deadline" @click="saveDeadline()" class="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors">Simpan</button>
+                            <button type="button" x-show="canWrite && lpPerms.deadline" @click="saveDeadline()" class="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors">Simpan</button>
                         </div>
-                        <input type="date" x-model="project.deadline" :disabled="!lpPerms.deadline" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none disabled:opacity-60 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100" />
+                        <input type="date" x-model="project.deadline" :disabled="!canWrite || !lpPerms.deadline" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none disabled:opacity-60 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100" />
                         <div class="mt-2 text-xs text-gray-500 dark:text-gray-400">Tampilan: <span class="font-semibold" x-text="project.deadline_display || '-'"></span></div>
                     </div>
 
                     <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5">
                         <div class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-4">Status Kegiatan</div>
                         <div class="flex flex-wrap gap-2">
-                             <button type="button" :disabled="!lpPerms.status" @click="setStatus('Belum Dimulai')" class="px-4 py-2 rounded-lg font-semibold transition-colors disabled:opacity-60" :class="project.status === 'Belum Dimulai' ? 'bg-gray-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600'">Belum Dimulai</button>
-                            <button type="button" :disabled="!lpPerms.status" @click="setStatus('Sedang Berjalan')" class="px-4 py-2 rounded-lg font-semibold transition-colors disabled:opacity-60" :class="project.status === 'Sedang Berjalan' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600'">Sedang Berjalan</button>
-                             <button type="button" :disabled="!lpPerms.status" @click="setStatus('Terlambat')" class="px-4 py-2 rounded-lg font-semibold transition-colors disabled:opacity-60" :class="project.status === 'Terlambat' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600'">Terlambat</button>
-                            <button type="button" :disabled="!lpPerms.status" @click="setStatus('Selesai')" class="px-4 py-2 rounded-lg font-semibold transition-colors disabled:opacity-60" :class="project.status === 'Selesai' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600'">Selesai</button>
+                             <button type="button" :disabled="!canWrite || !lpPerms.status" @click="setStatus('Belum Dimulai')" class="px-4 py-2 rounded-lg font-semibold transition-colors disabled:opacity-60" :class="project.status === 'Belum Dimulai' ? 'bg-gray-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600'">Belum Dimulai</button>
+                            <button type="button" :disabled="!canWrite || !lpPerms.status" @click="setStatus('Sedang Berjalan')" class="px-4 py-2 rounded-lg font-semibold transition-colors disabled:opacity-60" :class="project.status === 'Sedang Berjalan' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600'">Sedang Berjalan</button>
+                             <button type="button" :disabled="!canWrite || !lpPerms.status" @click="setStatus('Terlambat')" class="px-4 py-2 rounded-lg font-semibold transition-colors disabled:opacity-60" :class="project.status === 'Terlambat' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600'">Terlambat</button>
+                            <button type="button" :disabled="!canWrite || !lpPerms.status" @click="setStatus('Selesai')" class="px-4 py-2 rounded-lg font-semibold transition-colors disabled:opacity-60" :class="project.status === 'Selesai' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600'">Selesai</button>
                         </div>
                         <div class="mt-3">
                             <span class="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-semibold" :class="statusMeta(project.status).cls" x-text="statusMeta(project.status).label"></span>
@@ -713,7 +704,7 @@
                 <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5">
                     <div class="flex items-center justify-between mb-4">
                         <div class="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">Bukti Kegiatan</div>
-                        <div class="flex items-center gap-2" x-show="lpPerms.bukti">
+                        <div class="flex items-center gap-2" x-show="canWrite && lpPerms.bukti">
                             <label class="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors cursor-pointer">
                                 Upload
                                 <input type="file" class="hidden" accept=".pdf,.jpg,.jpeg,.png" @change="onBuktiChange($event)" />
@@ -741,10 +732,10 @@
                         <template x-for="opt in options" :key="`opt-${opt}`">
                             <div class="flex items-center justify-between gap-3 p-3 border border-gray-200 rounded-lg shadow-sm hover:bg-blue-50 hover:border-blue-200 transition-colors dark:border-gray-700 dark:hover:bg-blue-900/20 dark:hover:border-blue-800">
                                 <label class="flex items-center gap-3 min-w-0 flex-1 cursor-pointer">
-                                    <input type="checkbox" :value="opt" x-model="selectedKeterangan" @change="saveKeterangan()" :disabled="!lpPerms.keterangan_checklist" class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-60">
+                                    <input type="checkbox" :value="opt" x-model="selectedKeterangan" @change="saveKeterangan()" :disabled="!canWrite || !lpPerms.keterangan_checklist" class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-60">
                                     <span class="text-sm font-medium text-gray-700 dark:text-gray-200 truncate" x-text="opt"></span>
                                 </label>
-                                <div class="flex items-center gap-2 flex-shrink-0" x-show="lpPerms.keterangan_checklist && selectedKeterangan.includes(opt)">
+                                <div class="flex items-center gap-2 flex-shrink-0" x-show="canWrite && lpPerms.keterangan_checklist && selectedKeterangan.includes(opt)">
                                     <template x-if="!getKeteranganBukti(opt)">
                                         <label class="px-3 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors cursor-pointer text-sm">
                                             Upload
@@ -778,32 +769,19 @@
                     <div class="text-sm text-gray-600 dark:text-gray-300">Tambah opsi keterangan baru lalu otomatis dimasukkan ke kegiatan ini.</div>
                     <div class="flex items-center justify-between">
                         <div class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Keterangan yang tersedia</div>
-<<<<<<< HEAD
-                        <button type="button" x-show="lpPerms.keterangan_checklist" @click="saveKeterangan()" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-colors">Simpan</button>
-=======
                         <button type="button" x-show="canWrite && lpPerms.keterangan_checklist" @click="saveKeterangan()" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-colors">Simpan</button>
->>>>>>> 5bbfafa4714313ecd188d93b32e14bc3791dd1b2
                     </div>
                     <div class="grid grid-cols-1 gap-2">
                         <template x-for="opt in options" :key="`opt-panel-${opt}`">
                             <label class="flex items-center p-2.5 border border-gray-200 rounded-lg shadow-sm cursor-pointer hover:bg-blue-50 hover:border-blue-200 transition-colors gap-3 dark:border-gray-700 dark:hover:bg-blue-900/20 dark:hover:border-blue-800">
-<<<<<<< HEAD
-                                <input type="checkbox" :value="opt" x-model="selectedKeterangan" :disabled="!lpPerms.keterangan_checklist" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-60">
-=======
                                 <input type="checkbox" :value="opt" x-model="selectedKeterangan" :disabled="!canWrite || !lpPerms.keterangan_checklist" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-60">
->>>>>>> 5bbfafa4714313ecd188d93b32e14bc3791dd1b2
                                 <span class="text-sm font-medium text-gray-700 dark:text-gray-200" x-text="opt"></span>
                             </label>
                         </template>
                     </div>
                     <div class="flex items-center gap-2">
-<<<<<<< HEAD
-                        <input x-model="newOptionLabel" :disabled="!lpPerms.edit_keterangan" type="text" placeholder="Nama keterangan baru" class="flex-1 bg-gray-50 border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none disabled:opacity-60 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 dark:placeholder:text-gray-500">
-                        <button type="button" @click="addNewKeteranganOption()" :disabled="!lpPerms.edit_keterangan" class="px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold disabled:opacity-60">Tambah</button>
-=======
                         <input x-model="newOptionLabel" :disabled="!canWrite || (!lpPerms.tambah_keterangan && !lpPerms.edit_keterangan)" type="text" placeholder="Nama keterangan baru" class="flex-1 bg-gray-50 border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none disabled:opacity-60 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 dark:placeholder:text-gray-500">
                         <button type="button" @click="addNewKeteranganOption()" :disabled="!canWrite || (!lpPerms.tambah_keterangan && !lpPerms.edit_keterangan)" class="px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold disabled:opacity-60">Tambah</button>
->>>>>>> 5bbfafa4714313ecd188d93b32e14bc3791dd1b2
                     </div>
                 </div>
             </div>
