@@ -595,7 +595,7 @@ class ListPengawasanController extends Controller
         if (!$this->canWriteForModule($user)) {
             return response()->json(['message' => 'Unauthorized action.'], 403);
         }
-        if (!$this->getListPengawasanPermissions($user)['pengawas']) {
+        if (!$this->getListPengawasanPermissions($user)['edit_pengawasan']) {
             return response()->json(['message' => 'Unauthorized action.'], 403);
         }
         if (!$this->canAccessPengawas($user, $id)) {
@@ -652,7 +652,7 @@ class ListPengawasanController extends Controller
         if (!$this->canWriteForModule($user)) {
             return response()->json(['message' => 'Unauthorized action.'], 403);
         }
-        if (!$this->getListPengawasanPermissions($user)['pengawas']) {
+        if (!$this->getListPengawasanPermissions($user)['edit_pengawasan']) {
             return response()->json(['message' => 'Unauthorized action.'], 403);
         }
         if (!$this->canAccessPengawas($user, $id)) {
@@ -690,7 +690,7 @@ class ListPengawasanController extends Controller
         if (!$this->canWriteForModule($user)) {
             return response()->json(['message' => 'Unauthorized action.'], 403);
         }
-        if (!$this->getListPengawasanPermissions($user)['pengawas']) {
+        if (!$this->getListPengawasanPermissions($user)['tambah_pengawasan']) {
             return response()->json(['message' => 'Unauthorized action.'], 403);
         }
         if (!$this->canAccessPengawas($user, $id)) {
@@ -753,7 +753,7 @@ class ListPengawasanController extends Controller
 
             $permission = $this->getListPengawasanPermissions($user);
 
-            if (!$permission['edit_keterangan'] && $labels->isNotEmpty()) {
+            if (!$permission['tambah_keterangan'] && !$permission['edit_keterangan'] && $labels->isNotEmpty()) {
                 $existingOptionNames = DB::table('keterangan_options')
                     ->whereIn('name', $labels->all())
                     ->pluck('name')
@@ -1048,6 +1048,48 @@ class ListPengawasanController extends Controller
         return response()->json(['message' => 'Bukti berhasil dihapus']);
     }
 
+    public function storeOption(Request $request)
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        if (!$this->canWriteForModule($user)) {
+            return response()->json(['message' => 'Unauthorized action.'], 403);
+        }
+
+        $perms = $this->getListPengawasanPermissions($user);
+        if (!$perms['tambah_keterangan'] && !$perms['edit_keterangan']) {
+            return response()->json(['message' => 'Unauthorized action.'], 403);
+        }
+
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+        ]);
+
+        $name = trim($data['name']);
+        if ($name === '') {
+            return response()->json(['message' => 'Nama keterangan wajib diisi'], 422);
+        }
+
+        $exists = DB::table('keterangan_options')->where('name', $name)->exists();
+        if ($exists) {
+            return response()->json([
+                'message' => 'Keterangan sudah ada',
+                'name' => $name,
+            ]);
+        }
+
+        DB::table('keterangan_options')->insert([
+            'name' => $name,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return response()->json([
+            'message' => 'Keterangan berhasil ditambahkan',
+            'name' => $name,
+        ]);
+    }
+
     public function renameOption(Request $request)
     {
         /** @var \App\Models\User $user */
@@ -1083,6 +1125,11 @@ class ListPengawasanController extends Controller
 
     public function deleteOption(Request $request)
     {
+        return $this->destroyOption($request);
+    }
+
+    public function destroyOption(Request $request)
+    {
         /** @var \App\Models\User $user */
         $user = Auth::user();
         if (!$this->canWriteForModule($user)) {
@@ -1101,8 +1148,29 @@ class ListPengawasanController extends Controller
             return response()->json(['message' => 'Keterangan tidak ditemukan'], 404);
         }
 
-        DB::table('pengawas_keterangan')->where('keterangan_option_id', $opt->id)->delete();
-        DB::table('keterangan_options')->where('id', $opt->id)->delete();
+        DB::transaction(function () use ($opt) {
+            $projectRows = DB::table('pengawas_keterangan')
+                ->where('keterangan_option_id', $opt->id)
+                ->get(['bukti_path']);
+            foreach ($projectRows as $row) {
+                if (!empty($row->bukti_path)) {
+                    Storage::disk('public')->delete($row->bukti_path);
+                }
+            }
+            DB::table('pengawas_keterangan')->where('keterangan_option_id', $opt->id)->delete();
+
+            $activityRows = DB::table('pengawas_kegiatan_keterangan')
+                ->where('keterangan_option_id', $opt->id)
+                ->get(['bukti_path']);
+            foreach ($activityRows as $row) {
+                if (!empty($row->bukti_path)) {
+                    Storage::disk('public')->delete($row->bukti_path);
+                }
+            }
+            DB::table('pengawas_kegiatan_keterangan')->where('keterangan_option_id', $opt->id)->delete();
+
+            DB::table('keterangan_options')->where('id', $opt->id)->delete();
+        });
 
         return response()->json(['message' => 'Keterangan berhasil dihapus']);
     }
@@ -1552,7 +1620,7 @@ class ListPengawasanController extends Controller
             ->values();
 
         $permission = $this->getListPengawasanPermissions($user);
-        if (!$permission['edit_keterangan'] && $labels->isNotEmpty()) {
+        if (!$permission['tambah_keterangan'] && !$permission['edit_keterangan'] && $labels->isNotEmpty()) {
             $existingOptionNames = DB::table('keterangan_options')
                 ->whereIn('name', $labels->all())
                 ->pluck('name')

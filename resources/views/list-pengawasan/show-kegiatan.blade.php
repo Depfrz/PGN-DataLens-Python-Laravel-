@@ -6,7 +6,12 @@
             window.addEventListener('list-pengawasan:action', (e) => {
                 const action = e?.detail?.action || '';
                 if (action === 'tambah_keterangan') {
+<<<<<<< HEAD
                     if (!this.lpPerms.keterangan_checklist) return;
+=======
+                    if (!this.canWrite) return;
+                    if (!this.lpPerms.keterangan_checklist && !this.lpPerms.tambah_keterangan && !this.lpPerms.edit_keterangan) return;
+>>>>>>> 5bbfafa4714313ecd188d93b32e14bc3791dd1b2
                     this.activePanel = 'tambah_keterangan';
                     return;
                 }
@@ -26,6 +31,26 @@
                     if (first) this.openManagePengawasUser(first);
                 }
             });
+
+            try {
+                const params = new URLSearchParams(window.location.search || '');
+                const action = params.get('action') || '';
+                if (action === 'tambah_keterangan') {
+                    if (this.canWrite && (this.lpPerms.keterangan_checklist || this.lpPerms.tambah_keterangan || this.lpPerms.edit_keterangan)) {
+                        this.activePanel = 'tambah_keterangan';
+                    }
+                } else if (action === 'edit_keterangan') {
+                    if (this.canWrite && this.lpPerms.edit_keterangan) {
+                        this.activePanel = 'edit_keterangan';
+                    }
+                }
+                if (action === 'tambah_keterangan' || action === 'edit_keterangan') {
+                    params.delete('action');
+                    const qs = params.toString();
+                    const nextUrl = window.location.pathname + (qs ? `?${qs}` : '') + window.location.hash;
+                    window.history.replaceState({}, '', nextUrl);
+                }
+            } catch (e) {}
         },
         sidebarOpen: false,
         activePanel: '',
@@ -325,14 +350,50 @@
                 this.showToast('Terjadi kesalahan sistem');
             }
         },
+<<<<<<< HEAD
         addNewKeteranganOption() {
             if (!this.lpPerms.edit_keterangan) return;
+=======
+        async addNewKeteranganOption() {
+            if (!this.canWrite) return;
+            if (!this.lpPerms.tambah_keterangan && !this.lpPerms.edit_keterangan) return;
+>>>>>>> 5bbfafa4714313ecd188d93b32e14bc3791dd1b2
             const label = this.newOptionLabel?.trim();
             if (!label) return;
-            if (!this.options.includes(label)) this.options.push(label);
+
+            if (!this.options.includes(label)) {
+                try {
+                    const response = await fetch('/list-pengawasan/keterangan', {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
+                        },
+                        body: JSON.stringify({ name: label })
+                    });
+                    if (!response.ok) {
+                        const d = await response.json().catch(() => ({}));
+                        this.showToast(d.message || 'Gagal menambah keterangan');
+                        return;
+                    }
+                    this.options.push(label);
+                } catch (e) {
+                    console.error(e);
+                    this.showToast('Terjadi kesalahan sistem');
+                    return;
+                }
+            }
+
             if (!this.selectedKeterangan.includes(label)) this.selectedKeterangan.push(label);
             this.newOptionLabel = '';
-            this.saveKeterangan();
+            if (this.lpPerms.keterangan_checklist) {
+                this.saveKeterangan();
+            } else {
+                this.showToast('Keterangan berhasil ditambahkan');
+            }
         },
         openRenameOption(name) {
             if (!this.lpPerms.edit_keterangan) return;
@@ -717,19 +778,32 @@
                     <div class="text-sm text-gray-600 dark:text-gray-300">Tambah opsi keterangan baru lalu otomatis dimasukkan ke kegiatan ini.</div>
                     <div class="flex items-center justify-between">
                         <div class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Keterangan yang tersedia</div>
+<<<<<<< HEAD
                         <button type="button" x-show="lpPerms.keterangan_checklist" @click="saveKeterangan()" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-colors">Simpan</button>
+=======
+                        <button type="button" x-show="canWrite && lpPerms.keterangan_checklist" @click="saveKeterangan()" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-colors">Simpan</button>
+>>>>>>> 5bbfafa4714313ecd188d93b32e14bc3791dd1b2
                     </div>
                     <div class="grid grid-cols-1 gap-2">
                         <template x-for="opt in options" :key="`opt-panel-${opt}`">
                             <label class="flex items-center p-2.5 border border-gray-200 rounded-lg shadow-sm cursor-pointer hover:bg-blue-50 hover:border-blue-200 transition-colors gap-3 dark:border-gray-700 dark:hover:bg-blue-900/20 dark:hover:border-blue-800">
+<<<<<<< HEAD
                                 <input type="checkbox" :value="opt" x-model="selectedKeterangan" :disabled="!lpPerms.keterangan_checklist" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-60">
+=======
+                                <input type="checkbox" :value="opt" x-model="selectedKeterangan" :disabled="!canWrite || !lpPerms.keterangan_checklist" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-60">
+>>>>>>> 5bbfafa4714313ecd188d93b32e14bc3791dd1b2
                                 <span class="text-sm font-medium text-gray-700 dark:text-gray-200" x-text="opt"></span>
                             </label>
                         </template>
                     </div>
                     <div class="flex items-center gap-2">
+<<<<<<< HEAD
                         <input x-model="newOptionLabel" :disabled="!lpPerms.edit_keterangan" type="text" placeholder="Nama keterangan baru" class="flex-1 bg-gray-50 border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none disabled:opacity-60 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 dark:placeholder:text-gray-500">
                         <button type="button" @click="addNewKeteranganOption()" :disabled="!lpPerms.edit_keterangan" class="px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold disabled:opacity-60">Tambah</button>
+=======
+                        <input x-model="newOptionLabel" :disabled="!canWrite || (!lpPerms.tambah_keterangan && !lpPerms.edit_keterangan)" type="text" placeholder="Nama keterangan baru" class="flex-1 bg-gray-50 border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none disabled:opacity-60 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 dark:placeholder:text-gray-500">
+                        <button type="button" @click="addNewKeteranganOption()" :disabled="!canWrite || (!lpPerms.tambah_keterangan && !lpPerms.edit_keterangan)" class="px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold disabled:opacity-60">Tambah</button>
+>>>>>>> 5bbfafa4714313ecd188d93b32e14bc3791dd1b2
                     </div>
                 </div>
             </div>

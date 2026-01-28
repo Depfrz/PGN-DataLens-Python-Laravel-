@@ -13,6 +13,10 @@
                     this.openManageProject();
                     return;
                 }
+                if (action === 'tambah_keterangan' || action === 'edit_keterangan') {
+                    this.redirectToProjectKeterangan(action);
+                    return;
+                }
             });
 
             window.addEventListener('storage', (e) => {
@@ -54,35 +58,28 @@
             if (!item) return;
             item.pengawas_users = payload?.pengawas_users || [];
         },
+        redirectToProjectKeterangan(action) {
+            if (!this.selectedPengawas) return;
+            if (!this.canWrite) return;
+            if (action !== 'tambah_keterangan' && action !== 'edit_keterangan') return;
+            window.location.href = `/list-pengawasan/${this.selectedPengawas.id}?action=${encodeURIComponent(action)}`;
+        },
         closeAllOverlays() {
             this.closeAdd();
             this.closeKeteranganMenu();
-            this.editKeteranganModal = false;
             this.deleteModal = false;
             this.deleteBuktiModal = false;
             this.deleteKeteranganBuktiModal = false;
-            this.deleteOptionModal = false;
-            this.renameOptionModal = false;
-            this.saveKeteranganConfirmModal = false;
         },
         search: '',
         statusFilter: 'all',
         sortBy: 'created_desc',
         addModal: false,
-        editKeteranganModal: false,
         deleteModal: false,
         deleteBuktiModal: false,
         deleteKeteranganBuktiModal: false,
-        deleteOptionModal: false,
-        renameOptionModal: false,
-        saveKeteranganConfirmModal: false,
         selectedPengawas: null,
-        selectedKeterangan: [],
         selectedKeteranganBukti: { item: null, label: '' },
-        newLabel: '',
-        deleteOptionName: '',
-        renameOptionOldName: '',
-        renameOptionNewName: '',
         toast: { show: false, message: '', timeoutId: null },
         editingId: null,
         editPengawas: { nama: '' },
@@ -311,6 +308,7 @@
                 alert('Terjadi kesalahan sistem');
             }
         },
+<<<<<<< HEAD
         openEditKeterangan(item) {
             if (!this.lpPerms.keterangan_checklist) return;
             this.selectedPengawas = JSON.parse(JSON.stringify(item));
@@ -474,6 +472,8 @@
             if (!this.selectedKeterangan.includes(label)) this.selectedKeterangan.push(label);
             this.newLabel = '';
         },
+=======
+>>>>>>> 5bbfafa4714313ecd188d93b32e14bc3791dd1b2
         hasKeterangan(item, label) {
             if (!item || !item.keterangan) return false;
             return item.keterangan.some(k => k.label === label);
@@ -586,6 +586,7 @@
                 this.showToast('Terjadi kesalahan sistem');
             }
         },
+<<<<<<< HEAD
         async saveKeterangan() {
             if (!this.lpPerms.keterangan_checklist) return;
             const cleaned = (this.selectedKeterangan || [])
@@ -631,6 +632,8 @@
             this.saveKeteranganConfirmModal = false;
             await this.saveKeterangan();
         },
+=======
+>>>>>>> 5bbfafa4714313ecd188d93b32e14bc3791dd1b2
         openDelete(item) {
             if (!this.lpPerms.nama_proyek) return;
             this.selectedPengawas = item;
@@ -916,6 +919,7 @@
                                         </div>
                                     </div>
 
+<<<<<<< HEAD
                                     <div class="flex items-center gap-1 flex-shrink-0" x-show="lpPerms.nama_proyek">
                                         <template x-if="editingId !== item.id">
                                             <div class="flex items-center gap-1">
@@ -946,6 +950,9 @@
                                             </div>
                                         </template>
                                     </div>
+=======
+                                    <div class="flex items-center gap-1 flex-shrink-0"></div>
+>>>>>>> 5bbfafa4714313ecd188d93b32e14bc3791dd1b2
                                 </div>
 
                                 <div class="mt-4 grid grid-cols-2 gap-3">
@@ -970,11 +977,14 @@
                                             <template x-if="editingDeadlineId !== item.id">
                                                 <div class="flex items-center justify-between gap-2">
                                                     <span class="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate" x-text="item.deadline_display || '-'"></span>
+<<<<<<< HEAD
                                                     <button x-show="lpPerms.deadline" :disabled="!lpPerms.deadline" type="button" @click="startEditDeadline(item)" class="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors dark:text-gray-400 dark:hover:text-blue-300 dark:hover:bg-blue-900/20" title="Edit Deadline">
                                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
                                                     <path d="M21.731 2.269a2.625 2.625 0 00-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 000-3.712zM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 00-1.32 2.214l-.8 2.685a.75.75 0 00.933.933l2.685-.8a5.25 5.25 0 002.214-1.32L19.513 8.2z" />
                                                 </svg>
                                             </button>
+=======
+>>>>>>> 5bbfafa4714313ecd188d93b32e14bc3791dd1b2
                                                 </div>
                                             </template>
                                         </div>
@@ -1086,36 +1096,7 @@
                                             </template>
                                         </div>
 
-                                        <div class="flex items-center gap-1 flex-shrink-0" x-show="canWrite && lpPerms.nama_proyek">
-                                            <template x-if="editingId !== item.id">
-                                                <div class="flex items-center gap-1">
-                                                    <button @click="startEdit(item)" :disabled="!canWrite || !lpPerms.nama_proyek" class="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors dark:text-gray-400 dark:hover:text-blue-300 dark:hover:bg-blue-900/20" title="Edit Nama Proyek">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
-                                                            <path d="M21.731 2.269a2.625 2.625 0 00-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 000-3.712zM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 00-1.32 2.214l-.8 2.685a.75.75 0 00.933.933l2.685-.8a5.25 5.25 0 002.214-1.32L19.513 8.2z" />
-                                                        </svg>
-                                                    </button>
-                                                    <button @click="openDelete(item)" :disabled="!canWrite || !lpPerms.nama_proyek" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors dark:hover:bg-red-900/20" title="Hapus Proyek">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                                                        </svg>
-                                                    </button>
-                                                </div>
-                                            </template>
-                                            <template x-if="editingId === item.id">
-                                                <div class="flex items-center gap-1">
-                                                    <button @click="saveEdit(item)" class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors dark:hover:bg-green-900/20" title="Simpan">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
-                                                            <path fill-rule="evenodd" d="M16.704 4.294a.75.75 0 01.002 1.06l-8.25 8.25a.75.75 0 01-1.06 0l-3.75-3.75a.75.75 0 011.06-1.06l3.22 3.22 7.72-7.72a.75.75 0 011.058 0z" clip-rule="evenodd" />
-                                                        </svg>
-                                                    </button>
-                                                    <button @click="cancelEdit()" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors dark:hover:bg-red-900/20" title="Batal">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                                        </svg>
-                                                    </button>
-                                                </div>
-                                            </template>
-                                        </div>
+                                        <div class="flex items-center gap-1 flex-shrink-0"></div>
                                     </div>
                                 </td>
 
@@ -1154,11 +1135,14 @@
                                     <template x-if="editingDeadlineId !== item.id">
                                         <div class="flex items-center justify-between gap-2">
                                             <span class="text-gray-700 text-sm dark:text-gray-300 truncate" x-text="item.deadline_display || '-'"></span>
+<<<<<<< HEAD
                                             <button x-show="lpPerms.deadline" :disabled="!lpPerms.deadline" type="button" @click="startEditDeadline(item)" class="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors dark:text-gray-400 dark:hover:text-blue-300 dark:hover:bg-blue-900/20" title="Edit Deadline">
                                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
                                                     <path d="M21.731 2.269a2.625 2.625 0 00-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 000-3.712zM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 00-1.32 2.214l-.8 2.685a.75.75 0 00.933.933l2.685-.8a5.25 5.25 0 002.214-1.32L19.513 8.2z" />
                                                 </svg>
                                             </button>
+=======
+>>>>>>> 5bbfafa4714313ecd188d93b32e14bc3791dd1b2
                                         </div>
                                     </template>
                                 </td>
@@ -1251,7 +1235,11 @@
                                     type="button"
                                     class="flex-1 text-left text-xs sm:text-sm"
                                     @click="toggleKeteranganFromTable(keteranganMenu.item, opt)"
+<<<<<<< HEAD
                                     :disabled="!lpPerms.keterangan_checklist"
+=======
+                                    :disabled="!canWrite || !lpPerms.keterangan_checklist"
+>>>>>>> 5bbfafa4714313ecd188d93b32e14bc3791dd1b2
                                 >
                                     <div
                                         class="flex items-center gap-3 rounded-lg border border-transparent px-1 py-0.5"
@@ -1303,11 +1291,15 @@
                             </div>
                         </template>
                     </div>
+<<<<<<< HEAD
                     <div class="border-t border-gray-100 dark:border-gray-700 px-3 py-2 flex justify-end" x-show="lpPerms.keterangan_checklist">
+=======
+                    <div class="border-t border-gray-100 dark:border-gray-700 px-3 py-2 flex justify-end" x-show="canWrite && (lpPerms.keterangan_checklist || lpPerms.tambah_keterangan || lpPerms.edit_keterangan)">
+>>>>>>> 5bbfafa4714313ecd188d93b32e14bc3791dd1b2
                         <button
                             type="button"
                             class="text-[11px] font-medium text-blue-600 hover:text-blue-700 hover:underline dark:text-blue-300 dark:hover:text-blue-200"
-                            @click="openEditKeterangan(keteranganMenu.item); closeKeteranganMenu()"
+                            @click="redirectToProjectKeterangan('edit_keterangan')"
                         >
                             Edit keterangan
                         </button>
@@ -1402,6 +1394,7 @@
             </div>
         </template>
 
+<<<<<<< HEAD
         <!-- Edit Keterangan Modal -->
         <div x-show="editKeteranganModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity" style="display: none;">
             <div class="bg-white rounded-xl p-5 sm:p-6 w-[92vw] max-w-[560px] shadow-2xl transform transition-all dark:bg-gray-800 max-h-[85vh] overflow-y-auto">
@@ -1521,6 +1514,8 @@
             </div>
         </div>
 
+=======
+>>>>>>> 5bbfafa4714313ecd188d93b32e14bc3791dd1b2
         <!-- Delete Modal -->
         <div x-show="deleteModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity" style="display: none;">
             <div class="bg-white rounded-xl p-5 sm:p-6 w-[92vw] max-w-[480px] shadow-2xl transform transition-all dark:bg-gray-800">
