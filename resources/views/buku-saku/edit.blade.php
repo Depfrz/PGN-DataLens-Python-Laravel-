@@ -241,6 +241,8 @@
                     fileState.classList.remove('hidden');
                     fileNameDisplay.textContent = file.name;
                     fileSizeDisplay.textContent = (file.size / 1024).toFixed(2) + ' KB';
+                    const baseName = file.name.replace(/\.[^/.]+$/, '');
+                    titleInput.value = baseName;
                 } else {
                     // Don't revert to empty state if there's an existing file, just show current file info (or logic handled by blade)
                     // But here client side, if they clear input, we might want to show "Current File" again.
