@@ -212,21 +212,22 @@
             }
         },
         async saveKeterangan() {
-            if (!this.canWrite || !this.lpPerms.bukti) return;
+            if (!this.canWrite) return;
+            if (!this.lpPerms.bukti && !this.lpPerms.tambah_keterangan && !this.lpPerms.edit_keterangan) return;
             const cleaned = (this.selectedKeterangan || [])
                 .map(label => (typeof label === 'string' ? label.trim() : ''))
                 .filter(Boolean);
             
             try {
                 const response = await fetch(`/list-pengawasan/kegiatan/${this.project.id}/keterangan`, {
-                    method: 'PATCH',
+                    method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest',
                         'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
                     },
-                    body: JSON.stringify({ keterangan: cleaned })
+                    body: JSON.stringify({ keterangan: cleaned, options: this.options })
                 });
                 if (response.ok) {
                     const data = await response.json();
@@ -246,6 +247,33 @@
             const canSaveKeterangan = !!this.lpPerms.bukti;
             if (!canSaveDetail && !canSaveKeterangan) return;
 
+            // Commit pending modal changes before saving
+            if (this.keteranganModal?.open) {
+                const val = (this.keteranganModal.value || '').trim();
+                if (val) {
+                    if (this.keteranganModal.mode === 'add') {
+                        if (!this.options.includes(val)) {
+                            this.options.push(val);
+                        }
+                    } else if (this.keteranganModal.mode === 'edit') {
+                        const idx = this.options.indexOf(this.keteranganModal.originalValue);
+                        if (idx !== -1) {
+                            if (val !== this.keteranganModal.originalValue && this.options.includes(val)) {
+                                this.showToast('Keterangan sudah ada');
+                            } else {
+                                this.options[idx] = val;
+                                const selIdx = this.selectedKeterangan.indexOf(this.keteranganModal.originalValue);
+                                if (selIdx !== -1) this.selectedKeterangan[selIdx] = val;
+                                const kIdx = (this.project.keterangan || []).findIndex(k => k.label === this.keteranganModal.originalValue);
+                                if (kIdx !== -1) this.project.keterangan[kIdx].label = val;
+                            }
+                        }
+                    }
+                }
+                this.keteranganModal.open = false;
+                this.selectedKeteranganOption = null;
+            }
+
             const detailPayload = {
                 nama_kegiatan: this.editProject.nama?.trim() || '',
                 deskripsi: this.editProject.deskripsi?.trim() || '',
@@ -260,7 +288,7 @@
             try {
                 if (canSaveDetail) {
                     const response = await fetch(`/list-pengawasan/kegiatan/${this.project.id}`, {
-                        method: 'PUT',
+                        method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                             'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
@@ -282,14 +310,14 @@
                         .filter(Boolean);
 
                     const response = await fetch(`/list-pengawasan/kegiatan/${this.project.id}/keterangan`, {
-                        method: 'PATCH',
+                        method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                             'Accept': 'application/json',
                             'X-Requested-With': 'XMLHttpRequest',
                             'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
                         },
-                        body: JSON.stringify({ keterangan: cleaned })
+                        body: JSON.stringify({ keterangan: cleaned, options: this.options })
                     });
                     if (!response.ok) {
                         const d = await response.json().catch(() => ({}));
@@ -299,6 +327,27 @@
                     const data = await response.json().catch(() => ({}));
                     this.project.keterangan = data.keterangan || this.project.keterangan || [];
                     this.selectedKeterangan = (this.project.keterangan || []).map(k => k.label);
+                    if (data.options) this.options = data.options;
+                } else if (this.lpPerms.tambah_keterangan || this.lpPerms.edit_keterangan) {
+                    const response = await fetch(`/list-pengawasan/kegiatan/${this.project.id}/keterangan`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
+                        },
+                        body: JSON.stringify({ keterangan: [], options: this.options })
+                    });
+                    if (!response.ok) {
+                        const d = await response.json().catch(() => ({}));
+                        this.showToast(d.message || 'Gagal menyimpan perubahan');
+                        return;
+                    }
+                    const data = await response.json().catch(() => ({}));
+                    this.project.keterangan = data.keterangan || this.project.keterangan || [];
+                    this.selectedKeterangan = (this.project.keterangan || []).map(k => k.label);
+                    if (data.options) this.options = data.options;
                 }
 
                 allSaved = true;
@@ -450,7 +499,7 @@
             this.keteranganModal.originalValue = value;
             this.keteranganModal.open = true;
         },
-        saveKeteranganOption() {
+        async saveKeteranganOption() {
             if (!this.canWrite) return;
             if (this.keteranganModal.mode === 'add' && !this.lpPerms.tambah_keterangan) return;
             if (this.keteranganModal.mode === 'edit' && !this.lpPerms.edit_keterangan) return;
@@ -478,6 +527,24 @@
                     if (kIdx !== -1) this.project.keterangan[kIdx].label = val;
                 }
             }
+            await this.saveKeterangan();
+            try {
+                const res = await fetch(`/list-pengawasan/kegiatan/${this.project.id}`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                if (res.ok) {
+                    const d = await res.json().catch(() => ({}));
+                    if (d.options) this.options = d.options;
+                    if (d.keterangan) {
+                        this.project.keterangan = d.keterangan;
+                        this.selectedKeterangan = (this.project.keterangan || []).map(k => k.label);
+                    }
+                }
+            } catch (e) {}
             this.keteranganModal.open = false;
             this.selectedKeteranganOption = null;
         },
@@ -633,7 +700,7 @@
                                     </label>
                                 </div>
 
-                                <div x-show="canWrite && lpPerms.bukti && selectedKeterangan.includes(opt)" class="mt-auto pt-3 border-t border-gray-100 dark:border-gray-700">
+                                <div x-show="canWrite && lpPerms.bukti" class="mt-auto pt-3 border-t border-gray-100 dark:border-gray-700">
                                     <template x-if="!getKeteranganBukti(opt)">
                                         <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors cursor-pointer text-xs w-full justify-center sm:w-auto sm:justify-start" @click.stop>
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">

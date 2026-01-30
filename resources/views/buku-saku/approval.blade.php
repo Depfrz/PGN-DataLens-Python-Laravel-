@@ -123,7 +123,7 @@
                         </td>
                         <td class="px-4 py-3 whitespace-nowrap text-sm font-medium">
                             <div class="flex space-x-2">
-                                @if(auth()->user()->id === $doc->user_id || auth()->user()->hasAnyRole(['Admin', 'Supervisor']))
+                                @if(auth()->user()->id === $doc->user_id || auth()->user()->hasAnyRole(['Admin', 'Supervisor']) || ($hasWriteAccess ?? false))
                                     <!-- Edit Button -->
                                     <a href="{{ route('buku-saku.edit', $doc->id) }}" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-1.5 px-3 rounded text-xs flex items-center transition-colors">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -1138,6 +1138,10 @@ class ListPengawasanController extends Controller
             ->orderBy('pengawas_kegiatan_keterangan.id')
             ->get()
             ->map(function ($k) {
+                // Skip if marked as inactive
+                if (str_starts_with($k->label, '__inactive__')) {
+                    return null;
+                }
                 return [
                     'label' => $k->label,
                     'bukti' => $k->bukti_path ? [
@@ -1150,6 +1154,7 @@ class ListPengawasanController extends Controller
                     ] : null,
                 ];
             })
+            ->filter()
             ->values()
             ->toArray();
 
@@ -1187,6 +1192,8 @@ class ListPengawasanController extends Controller
             ->orderBy('pengawas_kegiatan_keterangan.label')
             ->pluck('pengawas_kegiatan_keterangan.label')
             ->filter(fn($v) => $v !== null && $v !== '')
+            ->map(fn($l) => str_replace('__inactive__', '', $l)) // Clean prefix
+            ->unique()
             ->values()
             ->toArray();
         $users = User::orderBy('name')->get(['id', 'name', 'email'])->toArray();
@@ -1330,73 +1337,102 @@ class ListPengawasanController extends Controller
             return response()->json(['message' => 'Unauthorized action.'], 403);
         }
 
-        if (!$this->getListPengawasanPermissions($user)['bukti']) {
+        $permission = $this->getListPengawasanPermissions($user);
+        if (!($permission['bukti'] || $permission['tambah_keterangan'] || $permission['edit_keterangan'])) {
             return response()->json(['message' => 'Unauthorized action.'], 403);
         }
 
         $data = $request->validate([
             'keterangan' => ['array'],
             'keterangan.*' => ['nullable', 'string', 'max:255'],
+            'options' => ['nullable', 'array'],
+            'options.*' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $labels = collect($data['keterangan'] ?? [])
+        $selectedLabels = $permission['bukti']
+            ? collect($data['keterangan'] ?? [])
+                ->map(fn($l) => trim((string) $l))
+                ->filter()
+                ->unique()
+                ->values()
+            : collect();
+
+        // Use provided options or fallback to selected
+        $availableOptions = collect($data['options'] ?? $selectedLabels)
             ->map(fn($l) => trim((string) $l))
             ->filter()
             ->unique()
             ->values();
 
-        $permission = $this->getListPengawasanPermissions($user);
+        // Ensure selected are in available
+        $availableOptions = $availableOptions->merge($selectedLabels)->unique()->values();
 
+        // Current existing in DB
         $existing = DB::table('pengawas_kegiatan_keterangan')
             ->where('pengawas_kegiatan_id', $act->id)
-            ->select(
-                'id',
-                'label',
-                'bukti_path',
-                'bukti_original_name',
-                'bukti_mime',
-                'bukti_size',
-                'bukti_uploaded_at'
-            )
+            ->select('id', 'label', 'bukti_path')
             ->get();
+        
+        $existingCleanLabels = $existing->map(function($row) {
+            return str_replace('__inactive__', '', $row->label);
+        })->unique()->values()->all();
 
-        $existingLabels = $existing
-            ->pluck('label')
-            ->filter()
-            ->unique()
-            ->values()
-            ->all();
-
-        if (!$permission['tambah_keterangan'] && $labels->isNotEmpty()) {
-            $unknown = $labels->reject(fn($l) => in_array($l, $existingLabels, true));
-            if ($unknown->isNotEmpty()) {
-                return response()->json(['message' => 'Unauthorized action.'], 403);
+        if (!$permission['tambah_keterangan']) {
+            $newlyAdded = $availableOptions->reject(fn($l) => in_array($l, $existingCleanLabels, true));
+            if ($newlyAdded->isNotEmpty()) {
+                return response()->json(['message' => 'Unauthorized action (adding new options).'], 403);
             }
         }
-        $newLabels = $labels->values()->all();
 
-        // Delete removed
-        $toDeleteLabels = array_diff($existingLabels, $newLabels);
-        if (!empty($toDeleteLabels)) {
-            $toDeleteIds = $existing->whereIn('label', $toDeleteLabels)->pluck('id');
-            foreach ($existing->whereIn('id', $toDeleteIds) as $row) {
-                if ($row->bukti_path) Storage::disk('public')->delete($row->bukti_path);
+        $finalStoreLabels = [];
+        foreach ($availableOptions as $cleanLabel) {
+            $existingRow = $existing->first(function($row) use ($cleanLabel) {
+                return str_replace('__inactive__', '', $row->label) === $cleanLabel;
+            });
+            if ($permission['bukti']) {
+                $finalStoreLabels[$cleanLabel] = $selectedLabels->contains($cleanLabel)
+                    ? $cleanLabel
+                    : '__inactive__' . $cleanLabel;
+            } else {
+                if ($existingRow) {
+                    $finalStoreLabels[$cleanLabel] = $existingRow->label;
+                } else {
+                    $finalStoreLabels[$cleanLabel] = '__inactive__' . $cleanLabel;
+                }
             }
-            DB::table('pengawas_kegiatan_keterangan')->whereIn('id', $toDeleteIds)->delete();
         }
 
-        // Add new
-        foreach ($newLabels as $label) {
-            if (in_array($label, $existingLabels, true)) {
-                continue;
-            }
+        $keptIds = [];
 
-            DB::table('pengawas_kegiatan_keterangan')->insert([
-                'pengawas_kegiatan_id' => $act->id,
-                'label' => $label,
-                'created_at' => now(),
-                'updated_at' => now()
-            ]);
+        foreach ($finalStoreLabels as $cleanLabel => $storeLabel) {
+            $existingRow = $existing->first(function($row) use ($cleanLabel) {
+                return $row->label === $cleanLabel || $row->label === '__inactive__' . $cleanLabel;
+            });
+
+            if ($existingRow) {
+                if ($existingRow->label !== $storeLabel) {
+                    DB::table('pengawas_kegiatan_keterangan')
+                        ->where('id', $existingRow->id)
+                        ->update(['label' => $storeLabel, 'updated_at' => now()]);
+                }
+                $keptIds[] = $existingRow->id;
+            } else {
+                $id = DB::table('pengawas_kegiatan_keterangan')->insertGetId([
+                    'pengawas_kegiatan_id' => $act->id,
+                    'label' => $storeLabel,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+                $keptIds[] = $id;
+            }
+        }
+
+        $toDeleteRows = $existing->whereNotIn('id', $keptIds);
+        foreach ($toDeleteRows as $row) {
+            if ($row->bukti_path) Storage::disk('public')->delete($row->bukti_path);
+        }
+        if ($toDeleteRows->isNotEmpty()) {
+            DB::table('pengawas_kegiatan_keterangan')->whereIn('id', $toDeleteRows->pluck('id'))->delete();
         }
 
         $finalList = DB::table('pengawas_kegiatan_keterangan')
@@ -1412,6 +1448,7 @@ class ListPengawasanController extends Controller
             ->orderBy('pengawas_kegiatan_keterangan.id')
             ->get()
             ->map(function ($k) {
+                if (str_starts_with($k->label, '__inactive__')) return null;
                 return [
                     'label' => $k->label,
                     'bukti' => $k->bukti_path ? [
@@ -1424,6 +1461,7 @@ class ListPengawasanController extends Controller
                     ] : null,
                 ];
             })
+            ->filter()
             ->values()
             ->toArray();
 
@@ -1433,6 +1471,8 @@ class ListPengawasanController extends Controller
             ->orderBy('pengawas_kegiatan_keterangan.label')
             ->pluck('pengawas_kegiatan_keterangan.label')
             ->filter(fn($v) => $v !== null && $v !== '')
+            ->map(fn($l) => str_replace('__inactive__', '', $l))
+            ->unique()
             ->values()
             ->toArray();
 
@@ -1465,9 +1505,10 @@ class ListPengawasanController extends Controller
             'bukti' => ['required', 'file', 'max:5120', 'mimes:pdf,jpg,jpeg,png'],
         ]);
 
+        $label = trim($data['label']);
         $row = DB::table('pengawas_kegiatan_keterangan')
             ->where('pengawas_kegiatan_id', $act->id)
-            ->where('label', trim($data['label']))
+            ->whereIn('label', [$label, '__inactive__' . $label])
             ->orderByDesc('id')
             ->first();
 

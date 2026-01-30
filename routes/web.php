@@ -6,25 +6,18 @@ use App\Http\Controllers\IntegrasiSistemController;
 use App\Http\Controllers\ManagementUserController;
 use App\Http\Controllers\ListPengawasanController;
 use App\Http\Controllers\BukuSakuController;
+use App\Http\Controllers\SystemController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HistoryController;
 use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', [SystemController::class, 'welcome']);
 
 // --- HELPER UNTUK FIX HOSTING (Cache & Route Clear) ---
-Route::get('/fix-hosting', function() {
-    try {
-        \Illuminate\Support\Facades\Artisan::call('optimize:clear');
-        return "<h1>BERHASIL!</h1> <p>Cache hosting sudah dibersihkan.</p> <p>Silakan coba akses kembali.</p>";
-    } catch (\Exception $e) {
-        return "GAGAL: " . $e->getMessage();
-    }
-});
+Route::get('/fix-hosting', [SystemController::class, 'fixHosting']);
+Route::get('/optimize-hosting', [SystemController::class, 'optimizeHosting']);
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified', 'admin.single.session'])
@@ -88,6 +81,9 @@ Route::middleware(['auth', 'verified', 'admin.single.session'])->group(function 
     Route::put('/list-pengawasan/kegiatan/{activity}', [ListPengawasanController::class, 'updateKegiatan'])
         ->whereNumber('activity')
         ->name('list-pengawasan.kegiatan.update');
+    Route::post('/list-pengawasan/kegiatan/{activity}', [ListPengawasanController::class, 'updateKegiatan'])
+        ->whereNumber('activity'); // Fallback for hosting
+
     Route::delete('/list-pengawasan/kegiatan/{activity}', [ListPengawasanController::class, 'destroyKegiatan'])
         ->whereNumber('activity')
         ->name('list-pengawasan.kegiatan.destroy');
@@ -102,6 +98,9 @@ Route::middleware(['auth', 'verified', 'admin.single.session'])->group(function 
 
     Route::patch('/list-pengawasan/kegiatan/{activity}/keterangan', [ListPengawasanController::class, 'updateKeteranganKegiatan'])
         ->whereNumber('activity');
+    Route::post('/list-pengawasan/kegiatan/{activity}/keterangan', [ListPengawasanController::class, 'updateKeteranganKegiatan'])
+        ->whereNumber('activity'); // Fallback for hosting
+
     Route::post('/list-pengawasan/kegiatan/{activity}/bukti', [ListPengawasanController::class, 'uploadBuktiKegiatan'])
         ->whereNumber('activity');
     Route::delete('/list-pengawasan/kegiatan/{activity}/bukti', [ListPengawasanController::class, 'deleteBuktiKegiatan'])
@@ -156,48 +155,7 @@ Route::middleware(['auth', 'verified', 'admin.single.session'])->group(function 
         Route::get('/hapus-dokumen', [BukuSakuController::class, 'hapusDokumenIndex'])->name('hapus-dokumen');
         
         // Fix History Route (Temporary)
-        Route::get('/fix-history', function () {
-            $documents = \App\Models\BukuSakuDocument::all();
-            $count = 0;
-            foreach ($documents as $doc) {
-                // Backfill Create Log
-                $exists = \App\Models\AuditLog::where('module', 'Buku Saku')
-                    ->where('description', 'Menambahkan dokumen: ' . $doc->title)
-                    ->exists();
-                
-                if (!$exists) {
-                    \App\Models\AuditLog::create([
-                        'user_id' => $doc->user_id,
-                        'action' => 'create',
-                        'module' => 'Buku Saku',
-                        'description' => 'Menambahkan dokumen: ' . $doc->title,
-                        'created_at' => $doc->created_at,
-                        'updated_at' => $doc->created_at,
-                    ]);
-                    $count++;
-                }
-                
-                // Backfill Update Log
-                if ($doc->updated_at != $doc->created_at) {
-                     $existsUpdate = \App\Models\AuditLog::where('module', 'Buku Saku')
-                        ->where('description', 'like', 'Mengupdate dokumen: ' . $doc->title . '%')
-                        ->exists();
-                        
-                     if (!$existsUpdate) {
-                        \App\Models\AuditLog::create([
-                            'user_id' => $doc->user_id, // Default to creator for old data
-                            'action' => 'update',
-                            'module' => 'Buku Saku',
-                            'description' => 'Mengupdate dokumen: ' . $doc->title . ' (Dipulihkan Sistem)',
-                            'created_at' => $doc->updated_at,
-                            'updated_at' => $doc->updated_at,
-                        ]);
-                        $count++;
-                     }
-                }
-            }
-            return redirect()->route('buku-saku.history')->with('success', "Berhasil memulihkan $count riwayat aktivitas.");
-        });
+        Route::get('/fix-history', [SystemController::class, 'fixHistoryBukuSaku']);
 
         Route::post('/tags', [BukuSakuController::class, 'storeTag'])->name('tags.store');
         Route::delete('/tags/{id}', [BukuSakuController::class, 'destroyTag'])->name('tags.destroy');

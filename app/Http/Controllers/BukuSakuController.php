@@ -233,7 +233,15 @@ class BukuSakuController extends Controller
 
         $availableTags = BukuSakuTag::all();
 
-        return view('buku-saku.index', compact('documents', 'otherDocuments', 'hasSearch', 'query', 'resultsNotFound', 'availableTags'));
+        // Check write access for current user
+        $user = Auth::user();
+        $moduleIds = \App\Models\Module::whereIn('name', ['Pengecekan File', 'Upload Dokumen', 'Buku Saku'])->pluck('id');
+        $hasWriteAccess = \App\Models\ModuleAccess::where('user_id', $user->id)
+            ->whereIn('module_id', $moduleIds)
+            ->where('can_write', true)
+            ->exists();
+
+        return view('buku-saku.index', compact('documents', 'otherDocuments', 'hasSearch', 'query', 'resultsNotFound', 'availableTags', 'hasWriteAccess'));
     }
 
     public function upload()
@@ -328,8 +336,15 @@ class BukuSakuController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        // Check permission (Owner or Admin/Supervisor)
-        if ($document->user_id !== $user->id && !$user->hasAnyRole(['Admin', 'Supervisor'])) {
+        // Check permission (Admin, Supervisor, Owner, OR 'Pengecekan File' writer)
+        $moduleIds = \App\Models\Module::whereIn('name', ['Pengecekan File', 'Upload Dokumen', 'Buku Saku'])->pluck('id');
+        $hasWriteAccess = \App\Models\ModuleAccess::where('user_id', $user->id)
+            ->whereIn('module_id', $moduleIds)
+            ->where('can_write', true)
+            ->exists();
+
+        // Check permission (Owner or Admin/Supervisor or hasWriteAccess)
+        if ($document->user_id !== $user->id && !$user->hasAnyRole(['Admin', 'Supervisor']) && !$hasWriteAccess) {
              return redirect()->back()->with('error', 'Anda tidak memiliki izin untuk mengedit dokumen ini.');
         }
 
@@ -424,8 +439,15 @@ class BukuSakuController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        // Allow owner or Admin/Supervisor to delete
-        if ($document->user_id !== $user->id && !$user->hasAnyRole(['Admin', 'Supervisor'])) {
+        // Check module access for "Pengecekan File"
+        $moduleIds = \App\Models\Module::whereIn('name', ['Pengecekan File', 'Upload Dokumen', 'Buku Saku'])->pluck('id');
+        $hasWriteAccess = \App\Models\ModuleAccess::where('user_id', $user->id)
+            ->whereIn('module_id', $moduleIds)
+            ->where('can_write', true)
+            ->exists();
+
+        // Allow owner or Admin/Supervisor or user with write access to delete
+        if ($document->user_id !== $user->id && !$user->hasAnyRole(['Admin', 'Supervisor']) && !$hasWriteAccess) {
              return redirect()->back()->with('error', 'Anda tidak memiliki izin untuk menghapus dokumen ini.');
         }
         
@@ -460,13 +482,23 @@ class BukuSakuController extends Controller
 
     public function approvalIndex()
     {
+        /** @var User $user */
+        $user = Auth::user();
+
+        // Check module access for "Pengecekan File"
+        $moduleIds = \App\Models\Module::whereIn('name', ['Pengecekan File', 'Upload Dokumen', 'Buku Saku'])->pluck('id');
+        $hasWriteAccess = \App\Models\ModuleAccess::where('user_id', $user->id)
+            ->whereIn('module_id', $moduleIds)
+            ->where('can_write', true)
+            ->exists();
+
         // Now just a list of all documents (Management view)
         // Or "Kelola Dokumen"
         $documents = BukuSakuDocument::with(['user', 'approver'])
             ->orderBy('created_at', 'desc')
             ->get();
             
-        return view('buku-saku.approval', compact('documents'));
+        return view('buku-saku.approval', compact('documents', 'hasWriteAccess'));
     }
 
     // approve/reject removed/deprecated
