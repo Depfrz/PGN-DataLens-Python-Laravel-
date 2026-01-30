@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\BukuSakuDocument;
 use App\Models\BukuSakuTag;
 use App\Models\User;
+use App\Models\AuditLog;
 use App\Notifications\SystemNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -15,6 +16,45 @@ class BukuSakuController extends Controller
 {
     public function index(Request $request)
     {
+        // --- AUTO-FIX HISTORY START ---
+        // Jika user mengakses halaman ini dengan parameter ?fix_history=true
+        if ($request->has('fix_history') && $request->input('fix_history') == 'true') {
+            $docs = \App\Models\BukuSakuDocument::all();
+            $count = 0;
+            foreach ($docs as $doc) {
+                // Backfill Create Log
+                $exists = \App\Models\AuditLog::where('module', 'Buku Saku')->where('description', 'Menambahkan dokumen: ' . $doc->title)->exists();
+                if (!$exists) {
+                    \App\Models\AuditLog::create([
+                        'user_id' => $doc->user_id,
+                        'action' => 'create',
+                        'module' => 'Buku Saku',
+                        'description' => 'Menambahkan dokumen: ' . $doc->title,
+                        'created_at' => $doc->created_at,
+                        'updated_at' => $doc->created_at,
+                    ]);
+                    $count++;
+                }
+                // Backfill Update Log
+                if ($doc->updated_at != $doc->created_at) {
+                     $existsUpdate = \App\Models\AuditLog::where('module', 'Buku Saku')->where('description', 'like', 'Mengupdate dokumen: ' . $doc->title . '%')->exists();
+                     if (!$existsUpdate) {
+                        \App\Models\AuditLog::create([
+                            'user_id' => $doc->user_id,
+                            'action' => 'update',
+                            'module' => 'Buku Saku',
+                            'description' => 'Mengupdate dokumen: ' . $doc->title . ' (Dipulihkan Sistem)',
+                            'created_at' => $doc->updated_at,
+                            'updated_at' => $doc->updated_at,
+                        ]);
+                        $count++;
+                     }
+                }
+            }
+            return redirect()->route('buku-saku.history')->with('success', "Otomatis memulihkan $count riwayat.");
+        }
+        // --- AUTO-FIX HISTORY END ---
+
         $query = $request->input('q');
         $selectedTags = $request->input('selected_tags', []);
         $hasSearch = !empty($query) || !empty($selectedTags);
@@ -255,6 +295,16 @@ class BukuSakuController extends Controller
             'valid_until' => $request->valid_until ? \Carbon\Carbon::parse($request->valid_until)->addYears(5) : null,
         ]);
 
+        // Log Activity
+        AuditLog::create([
+            'user_id' => Auth::id(),
+            'action' => 'create',
+            'module' => 'Buku Saku',
+            'description' => 'Menambahkan dokumen: ' . $request->title,
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+
         // Notify All Users about new document
         $allUsers = User::all();
         Notification::send($allUsers, new SystemNotification(
@@ -294,8 +344,14 @@ class BukuSakuController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        // Check permission
-        if ($document->user_id !== $user->id && !$user->hasAnyRole(['Admin', 'Supervisor'])) {
+        // Check permission (Admin, Supervisor, Owner, OR 'Pengecekan File' writer)
+        $moduleIds = \App\Models\Module::whereIn('name', ['Pengecekan File', 'Upload Dokumen', 'Buku Saku'])->pluck('id');
+        $hasWriteAccess = \App\Models\ModuleAccess::where('user_id', $user->id)
+            ->whereIn('module_id', $moduleIds)
+            ->where('can_write', true)
+            ->exists();
+
+        if ($document->user_id !== $user->id && !$user->hasAnyRole(['Admin', 'Supervisor']) && !$hasWriteAccess) {
              return redirect()->back()->with('error', 'Anda tidak memiliki izin untuk mengedit dokumen ini.');
         }
 
@@ -350,6 +406,16 @@ class BukuSakuController extends Controller
 
         $document->update($data);
 
+        // Log Activity (Update)
+        \App\Models\AuditLog::create([
+            'user_id' => \Illuminate\Support\Facades\Auth::id(),
+            'action' => 'update',
+            'module' => 'Buku Saku',
+            'description' => 'Mengupdate dokumen: ' . $document->title,
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+
         return redirect()->route('buku-saku.index')->with('success', 'Dokumen berhasil diperbarui.');
     }
 
@@ -378,6 +444,16 @@ class BukuSakuController extends Controller
         }
         
         $document->delete();
+
+        // Log Activity
+        AuditLog::create([
+            'user_id' => Auth::id(),
+            'action' => 'delete',
+            'module' => 'Buku Saku',
+            'description' => 'Menghapus dokumen: ' . $document->title,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+        ]);
 
         return redirect()->back()->with('success', 'Dokumen "' . $document->title . '" berhasil dihapus.');
     }
@@ -422,16 +498,13 @@ class BukuSakuController extends Controller
 
     public function history()
     {
-        // "Riwayat Dokumen" - All documents (uploaded by everyone or just me?)
-        // Usually history implies logs. But here it might mean "All Documents List".
-        // Let's show all documents for now, or maybe just "My Uploads".
-        // Context: "riwayat dokumen itu juga perlu bisa geser kiri kanan" -> Table view.
-        // I'll show all documents here.
-        $documents = BukuSakuDocument::with('user')
+        // "Riwayat Dokumen" - Activity Log for Buku Saku
+        $logs = AuditLog::where('module', 'Buku Saku')
+            ->with('user')
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(20);
             
-        return view('buku-saku.history', compact('documents'));
+        return view('buku-saku.history', compact('logs'));
     }
     
     public function show(BukuSakuDocument $document)

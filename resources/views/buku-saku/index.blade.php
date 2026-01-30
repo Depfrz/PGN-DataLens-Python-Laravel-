@@ -38,7 +38,7 @@
             <div class="relative min-w-[200px]">
                 <button @click="open = !open" @click.away="open = false" type="button" 
                     class="w-full bg-white border border-gray-300 text-gray-700 py-2.5 px-4 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 flex justify-between items-center">
-                    <span x-text="selected.length > 0 ? selected.length + ' Kategori Dipilih' : 'Filter Kategori'"></span>
+                    <span x-text="selected.length > 0 ? selected.length + ' Tags Dipilih' : 'Filter Tags'"></span>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 transition-transform duration-200" :class="{'rotate-180': open}" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                     </svg>
@@ -151,7 +151,7 @@
                                         <span class="hidden sm:inline">&bull;</span>
                                         <span>{{ $doc->file_size }}</span>
                                         <span class="hidden sm:inline">&bull;</span>
-                                        <span>{{ $doc->created_at->diffForHumans() }}</span>
+                                        <span>{{ $doc->updated_at->diffForHumans() }}</span>
                                     </div>
 
                                     <p class="text-sm text-gray-600 mb-2 line-clamp-2">{{ $doc->description }}</p>

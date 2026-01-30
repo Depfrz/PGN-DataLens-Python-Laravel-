@@ -25,7 +25,7 @@
                                 <span class="hidden sm:inline">&bull;</span>
                                 <span>{{ $doc->file_size }}</span>
                                 <span class="hidden sm:inline">&bull;</span>
-                                <span>{{ $doc->created_at->diffForHumans() }}</span>
+                                <span>{{ $doc->updated_at->diffForHumans() }}</span>
                             </div>
                         </div>
                     </div>

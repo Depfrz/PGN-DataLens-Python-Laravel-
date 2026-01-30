@@ -31,7 +31,7 @@
                         </svg>
                     </div>
                     <p id="fileNameDisplay" class="text-base text-gray-800 font-medium truncate max-w-xs mx-auto">File Saat Ini: {{ $document->title . '.' . $document->file_type }}</p>
-                    <p id="fileSizeDisplay" class="text-sm text-gray-500 mt-1">{{ $document->file_size }}</p>
+                    <p id="fileSizeDisplay" class="text-sm text-gray-500 mt-1">{{ $document->file_size }} @if($document->updated_at) - {{ $document->updated_at->diffForHumans() }} @endif</p>
                     <p class="text-sm text-blue-500 mt-2 font-medium">Klik atau drop file baru untuk mengganti</p>
                 </div>
             </div>
@@ -240,7 +240,21 @@
                     emptyState.classList.add('hidden');
                     fileState.classList.remove('hidden');
                     fileNameDisplay.textContent = file.name;
-                    fileSizeDisplay.textContent = (file.size / 1024).toFixed(2) + ' KB';
+                    
+                    let sizeText = '';
+                    if (file.size < 1024 * 1024) {
+                         sizeText = (file.size / 1024).toFixed(2) + ' KB';
+                    } else {
+                         sizeText = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+                    }
+                    
+                    const now = new Date();
+                    const timeText = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+                    fileSizeDisplay.textContent = sizeText + ' - ' + timeText;
+
+                    // Auto-fill title with filename (without extension)
+                    const baseName = file.name.replace(/\.[^/.]+$/, '');
+                    titleInput.value = baseName;
                 } else {
                     // Don't revert to empty state if there's an existing file, just show current file info (or logic handled by blade)
                     // But here client side, if they clear input, we might want to show "Current File" again.
